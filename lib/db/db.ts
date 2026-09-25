@@ -18,9 +18,11 @@ const DATA_DIR = path.join(process.cwd(), "data");
 const DB_FILE = path.join(DATA_DIR, "verdalia.db.json");
 
 function ensureDirectoryExists(dirPath: string) {
-  if (!fs.existsSync(dirPath)) {
-    fs.mkdirSync(dirPath, { recursive: true });
-  }
+  try {
+    if (!fs.existsSync(dirPath)) {
+      fs.mkdirSync(dirPath, { recursive: true });
+    }
+  } catch {}
 }
 
 let cachedState: DatabaseState | null = null;
@@ -32,31 +34,30 @@ export function getDatabase(): DatabaseState {
 
   ensureDirectoryExists(DATA_DIR);
 
-  if (!fs.existsSync(DB_FILE)) {
-    const initialState = getInitialDatabaseState();
-    fs.writeFileSync(DB_FILE, JSON.stringify(initialState, null, 2), "utf-8");
-    cachedState = initialState;
-    return cachedState;
-  }
-
   try {
-    const raw = fs.readFileSync(DB_FILE, "utf-8");
-    cachedState = JSON.parse(raw);
-    return cachedState!;
-  } catch (error) {
-    const fallback = getInitialDatabaseState();
+    if (fs.existsSync(DB_FILE)) {
+      const raw = fs.readFileSync(DB_FILE, "utf-8");
+      cachedState = JSON.parse(raw);
+      if (cachedState) return cachedState;
+    }
+  } catch {}
+
+  const fallback = getInitialDatabaseState();
+  cachedState = fallback;
+  try {
     fs.writeFileSync(DB_FILE, JSON.stringify(fallback, null, 2), "utf-8");
-    cachedState = fallback;
-    return cachedState;
-  }
+  } catch {}
+  return cachedState;
 }
 
 export function saveDatabase(state: DatabaseState): void {
   ensureDirectoryExists(DATA_DIR);
   cachedState = state;
-  const tempPath = `${DB_FILE}.tmp`;
-  fs.writeFileSync(tempPath, JSON.stringify(state, null, 2), "utf-8");
-  fs.renameSync(tempPath, DB_FILE);
+  try {
+    const tempPath = `${DB_FILE}.tmp`;
+    fs.writeFileSync(tempPath, JSON.stringify(state, null, 2), "utf-8");
+    fs.renameSync(tempPath, DB_FILE);
+  } catch {}
 }
 
 export const db = {

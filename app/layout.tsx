@@ -125,7 +125,12 @@ export default function RootLayout({
     process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
 
   // Fetch site settings server-side — available instantly on first render
-  const siteSettings = db.siteSettings.get();
+  let siteSettings;
+  try {
+    siteSettings = db.siteSettings.get();
+  } catch {
+    siteSettings = undefined;
+  }
 
   const jsonLd = [
     buildOrganizationJsonLd(siteUrl),
