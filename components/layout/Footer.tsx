@@ -295,7 +295,6 @@ export const Footer: React.FC = () => {
               </a>
             )}
           </div>
-          <p className="text-verdalia-light font-medium">{f.developedBy}</p>
         </div>
       </div>
     </footer>

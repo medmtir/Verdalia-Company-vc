@@ -182,21 +182,21 @@ export default function HomePage() {
                 {dict.hero.badge}
               </p>
 
-              <h1 className="font-serif text-4xl sm:text-5xl md:text-6xl lg:text-[4.25rem] font-bold leading-[1.08] tracking-tight mb-6">
+              <h1 className="font-serif text-3xl sm:text-5xl md:text-6xl lg:text-[4.25rem] font-bold leading-[1.1] tracking-tight mb-5 sm:mb-6">
                 {dict.hero.title}{" "}
                 <span className="italic font-normal text-verdalia-gold block sm:inline">
                   {dict.hero.titleAccent}
                 </span>
               </h1>
 
-              <p className="text-base sm:text-lg text-gray-200/95 font-light leading-relaxed mb-10 max-w-xl">
+              <p className="text-sm sm:text-lg text-gray-200/95 font-light leading-relaxed mb-8 sm:mb-10 max-w-xl">
                 {dict.hero.subtitle}
               </p>
 
-              <div className="flex flex-wrap items-center gap-4">
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4 w-full sm:w-auto">
                 <Link
                   href="/products"
-                  className="btn-gold px-8 py-4 text-xs font-bold tracking-widest uppercase flex items-center gap-2"
+                  className="btn-gold px-8 py-3.5 sm:py-4 text-xs font-bold tracking-widest uppercase flex items-center justify-center gap-2 text-center shadow-lg"
                 >
                   <span>{dict.hero.discoverBtn}</span>
                   <ArrowRight className="w-4 h-4" />
@@ -204,7 +204,7 @@ export default function HomePage() {
 
                 <button
                   onClick={() => handleOpenQuote()}
-                  className="px-8 py-4 text-xs font-bold tracking-widest uppercase text-white rounded border border-white/35 hover:bg-white hover:text-verdalia-dark transition-all duration-300"
+                  className="px-8 py-3.5 sm:py-4 text-xs font-bold tracking-widest uppercase text-white rounded border border-white/35 hover:bg-white hover:text-verdalia-dark transition-all duration-300 text-center"
                 >
                   {dict.hero.quoteBtn}
                 </button>
@@ -271,7 +271,7 @@ export default function HomePage() {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center">
               {/* Photo Collage Column */}
-              <div className="lg:col-span-6 relative">
+              <div className="lg:col-span-6 relative pb-12 lg:pb-0">
                 <div className="relative z-10 w-4/5 rounded-lg overflow-hidden shadow-luxury border-4 border-white aspect-[4/3]">
                   <Image
                     src="/images/facility/storage-tanks.jpg"
@@ -597,16 +597,16 @@ export default function HomePage() {
 
             {/* Packaging Preview Cards underneath video */}
             <div className="mt-14 max-w-5xl mx-auto">
-              <div className="flex items-center justify-between mb-6">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
                 <div>
-                  <h3 className="font-serif text-xl font-bold text-white">
+                  <h3 className="font-serif text-lg sm:text-xl font-bold text-white">
                     {locale === "fr" ? "Conditionnements Disponibles à l'Export" : locale === "ar" ? "أشكال التعبئة المتوفرة للتصدير" : "Available Export Formats"}
                   </h3>
                   <p className="text-xs text-gray-400">
                     {locale === "fr" ? "Solutions adaptées aux volumes industriels et semi-vrac" : locale === "ar" ? "حلول ملائمة للكميات الصناعية والتوزيع" : "Tailored solutions for industrial bulk and distribution"}
                   </p>
                 </div>
-                <Link href="/export" className="text-xs font-bold text-verdalia-gold hover:underline flex items-center gap-1">
+                <Link href="/export" className="text-xs font-bold text-verdalia-gold hover:underline flex items-center gap-1 self-start sm:self-auto">
                   <span>{locale === "fr" ? "Voir tous les formats" : locale === "ar" ? "عرض جميع الأنواع" : "View all formats"}</span>
                   <ArrowRight className="w-3.5 h-3.5" />
                 </Link>

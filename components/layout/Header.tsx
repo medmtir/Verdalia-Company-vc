@@ -102,8 +102,8 @@ export const Header: React.FC = () => {
 
         {/* Mobile Navigation Drawer */}
         {mobileMenuOpen && (
-          <div className="lg:hidden border-t border-verdalia-border bg-verdalia-offwhite px-5 py-6 shadow-xl animate-fade-in space-y-4">
-            <nav className="flex flex-col space-y-3">
+          <div className="lg:hidden border-t border-verdalia-border bg-verdalia-offwhite/98 backdrop-blur-xl px-4 py-5 shadow-2xl animate-fade-in space-y-4">
+            <nav className="flex flex-col space-y-1.5">
               {navLinks.map((link) => {
                 const isActive =
                   link.href === "/"
@@ -114,27 +114,39 @@ export const Header: React.FC = () => {
                     key={link.href}
                     href={link.href}
                     onClick={() => setMobileMenuOpen(false)}
-                    className={`text-sm font-semibold tracking-wider uppercase py-2 transition-colors ${
+                    className={`text-xs font-bold tracking-wider uppercase py-3 px-4 rounded-xl transition-all flex items-center justify-between ${
                       isActive
-                        ? "text-verdalia-olive font-bold border-l-2 border-verdalia-olive pl-3"
-                        : "text-verdalia-dark hover:text-verdalia-olive"
+                        ? "bg-verdalia-olive text-white shadow-sm"
+                        : "text-verdalia-dark hover:bg-verdalia-beige/60 hover:text-verdalia-olive"
                     }`}
                   >
-                    {link.label}
+                    <span>{link.label}</span>
+                    {isActive ? (
+                      <span className="w-1.5 h-1.5 rounded-full bg-verdalia-gold"></span>
+                    ) : (
+                      <span className="text-gray-300 text-xs font-mono">›</span>
+                    )}
                   </Link>
                 );
               })}
             </nav>
 
-            <div className="pt-3 border-t border-verdalia-border">
+            <div className="pt-3 border-t border-verdalia-border/60 space-y-3">
+              <div className="pb-1">
+                <span className="text-[10px] font-bold uppercase tracking-widest text-verdalia-olive mb-1.5 block">
+                  Langue / Language
+                </span>
+                <LanguageSelector variant="mobile" />
+              </div>
+
               <button
                 onClick={() => {
                   setMobileMenuOpen(false);
                   setQuoteModalOpen(true);
                 }}
-                className="w-full btn-primary py-3 text-xs"
+                className="w-full btn-primary py-3.5 text-xs font-bold uppercase tracking-widest shadow-md flex items-center justify-center gap-2"
               >
-                {n.requestQuote}
+                <span>{n.requestQuote}</span>
               </button>
             </div>
           </div>

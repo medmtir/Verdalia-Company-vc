@@ -17,12 +17,12 @@ export const VerdaliaLogo: React.FC<VerdaliaLogoProps> = ({
 }) => {
   const sizeClass =
     variant === "compact"
-      ? "h-10 w-auto"
+      ? "h-8 sm:h-10 w-auto"
       : variant === "footer"
-      ? "h-14 w-auto"
+      ? "h-12 sm:h-14 w-auto"
       : variant === "admin"
-      ? "h-11 w-auto"
-      : "h-11 md:h-12 w-auto";
+      ? "h-9 sm:h-11 w-auto"
+      : "h-9 sm:h-11 md:h-12 w-auto";
 
   // Slight brighten on dark footer so green mark stays readable
   const toneClass =
@@ -32,7 +32,7 @@ export const VerdaliaLogo: React.FC<VerdaliaLogoProps> = ({
 
   const content = (
     <div
-      className={`inline-flex items-center gap-2.5 select-none transition-opacity hover:opacity-90 ${className}`}
+      className={`inline-flex items-center gap-2 sm:gap-2.5 select-none transition-opacity hover:opacity-90 ${className}`}
     >
       <Image
         src="/images/verdalia-logo.png"
@@ -43,11 +43,11 @@ export const VerdaliaLogo: React.FC<VerdaliaLogoProps> = ({
         priority={variant === "header"}
       />
       {variant === "header" && (
-        <div className="flex flex-col justify-center">
-          <span className="font-serif font-extrabold text-[15px] sm:text-[18px] tracking-[0.08em] text-verdalia-dark leading-none uppercase">
+        <div className="flex flex-col justify-center leading-none">
+          <span className="font-serif font-extrabold text-[13px] sm:text-[17px] tracking-[0.08em] text-verdalia-dark uppercase">
             Verdalia
           </span>
-          <span className="text-[7.5px] sm:text-[9px] uppercase tracking-[0.22em] text-verdalia-gold font-bold mt-0.5">
+          <span className="text-[6.5px] sm:text-[8.5px] uppercase tracking-[0.22em] text-verdalia-gold font-bold mt-0.5">
             Company VC
           </span>
         </div>
