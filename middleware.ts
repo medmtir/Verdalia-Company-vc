@@ -14,9 +14,24 @@ export function middleware(request: NextRequest) {
     }
   }
 
+  // Protect admin API routes (except authentication)
+  if (
+    pathname.startsWith("/api/admin/") &&
+    !pathname.startsWith("/api/admin/auth/login")
+  ) {
+    const token = request.cookies.get("verdalia_admin_token")?.value;
+    if (!token) {
+      return NextResponse.json(
+        { error: "Accès non autorisé. Session administrateur requise." },
+        { status: 401 }
+      );
+    }
+  }
+
   return NextResponse.next();
 }
 
 export const config = {
-  matcher: ["/admin/dashboard/:path*"],
+  matcher: ["/admin/dashboard/:path*", "/api/admin/:path*"],
 };
+

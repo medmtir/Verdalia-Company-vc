@@ -16,6 +16,10 @@ export const SEO_BY_LOCALE: Record<
     meta_description:
       "Exportateur d'huile d'olive tunisienne en vrac : extra vierge, bio, raffinée et grignons. Flexitank, IBC, fûts. Fournisseur B2B Tunisie pour importateurs.",
     keywords: [
+      "Verdalia",
+      "Verdalia Company VC",
+      "Verdalia Tunisie",
+      "Verdalia olive oil",
       "huile d'olive Tunisie",
       "huile olivier Tunisie",
       "huile d'olive tunisienne",
@@ -27,6 +31,7 @@ export const SEO_BY_LOCALE: Record<
       "achat huile d'olive Tunisie",
       "export huile d'olive",
       "huile d'olive en gros Tunisie",
+      "societe huile d olive tunisie",
       "olive oil Tunisia",
       "huile olive export",
       "grignons d'olive Tunisie",
@@ -40,6 +45,10 @@ export const SEO_BY_LOCALE: Record<
     meta_description:
       "Tunisian olive oil exporter: extra virgin, organic, refined and pomace in bulk. Flexitank, IBC, drums. B2B supplier from Tunisia for importers worldwide.",
     keywords: [
+      "Verdalia",
+      "Verdalia Company VC",
+      "Verdalia Tunisia",
+      "Verdalia olive oil",
       "Tunisian olive oil",
       "olive oil Tunisia",
       "Tunisian olive oil exporter",
@@ -62,6 +71,10 @@ export const SEO_BY_LOCALE: Record<
     meta_description:
       "تصدير زيت الزيتون التونسي بالجملة: بكر ممتاز، عضوي، مكرر وتفل. فليكسي تانك وحاويات IBC. مورد B2B من تونس للمستوردين.",
     keywords: [
+      "فيرداليا",
+      "شركة فيرداليا",
+      "Verdalia",
+      "Verdalia Company VC",
       "زيت زيتون تونسي",
       "تصدير زيت الزيتون تونس",
       "مورد زيت زيتون تونسي",
@@ -77,10 +90,12 @@ export const SEO_BY_LOCALE: Record<
   },
   es: {
     meta_title:
-      "Aceite de Oliva Túnez | Exportación a Granel – Verdalia",
+      "Aceite de Oliva Túnez | Exportación a Granel – Verdalia Company VC",
     meta_description:
       "Exportador de aceite de oliva tunecino a granel: virgen extra, ecológico, refinado y orujo. Flexitank, IBC, bidones. Proveedor B2B desde Túnez.",
     keywords: [
+      "Verdalia",
+      "Verdalia Company VC",
       "aceite de oliva Túnez",
       "aceite de oliva tunecino",
       "exportador aceite de oliva Túnez",
@@ -95,10 +110,12 @@ export const SEO_BY_LOCALE: Record<
   },
   it: {
     meta_title:
-      "Olio d'Oliva Tunisia | Esportazione Sfusa – Verdalia",
+      "Olio d'Oliva Tunisia | Esportazione Sfusa – Verdalia Company VC",
     meta_description:
       "Esportatore di olio d'oliva tunisino sfuso: extra vergine, biologico, raffinato e sansa. Flexitank, IBC, fusti. Fornitore B2B dalla Tunisia.",
     keywords: [
+      "Verdalia",
+      "Verdalia Company VC",
       "olio d'oliva Tunisia",
       "olio d'oliva tunisino",
       "esportatore olio d'oliva Tunisia",

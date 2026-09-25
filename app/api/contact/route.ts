@@ -66,6 +66,14 @@ export async function POST(req: NextRequest) {
       const buffer = Buffer.from(bytes);
 
       const safeExt = path.extname(file.name).toLowerCase();
+      const ALLOWED_EXTENSIONS = [".pdf", ".doc", ".docx", ".png", ".jpg", ".jpeg", ".webp"];
+      if (!ALLOWED_EXTENSIONS.includes(safeExt)) {
+        return NextResponse.json(
+          { error: "Format de fichier non autorisé. Formats acceptés : PDF, DOC, DOCX, PNG, JPG, WEBP." },
+          { status: 400 }
+        );
+      }
+
       const safeFilename = `${Date.now()}-${Math.random()
         .toString(36)
         .substring(2, 9)}${safeExt}`;

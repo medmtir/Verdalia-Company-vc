@@ -1,10 +1,18 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { cookies } from "next/headers";
 import { Montserrat, Playfair_Display } from 'next/font/google';
 import "./globals.css";
 import { I18nProvider } from "@/lib/i18n/context";
 import { SiteSettingsProvider } from "@/lib/context/site-settings-context";
 import { db } from "@/lib/db/db";
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
+  viewportFit: "cover",
+  themeColor: "#203A1A",
+};
 
 const montserrat = Montserrat({
   subsets: ['latin'],
@@ -41,7 +49,7 @@ export async function generateMetadata(): Promise<Metadata> {
     cookieLocale && isValidLocale(cookieLocale) ? cookieLocale : DEFAULT_LOCALE;
   const seo = SEO_BY_LOCALE[locale];
   const siteUrl =
-    process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+    process.env.NEXT_PUBLIC_SITE_URL || "https://verdalia-company-vc.vercel.app";
 
   const languages: Record<string, string> = {};
   for (const loc of LOCALES) {
@@ -122,7 +130,7 @@ export default function RootLayout({
     cookieLocale && isValidLocale(cookieLocale) ? cookieLocale : DEFAULT_LOCALE;
   const meta = LOCALE_METAS[locale];
   const siteUrl =
-    process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+    process.env.NEXT_PUBLIC_SITE_URL || "https://verdalia-company-vc.vercel.app";
 
   // Fetch site settings server-side — available instantly on first render
   let siteSettings;

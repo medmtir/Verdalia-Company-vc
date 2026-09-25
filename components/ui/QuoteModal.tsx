@@ -101,6 +101,11 @@ export const PRODUCT_IMAGES: Record<string, string> = {
 
 export const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+/** Strips trailing asterisks from dictionary labels so we can render a single uniform asterisk */
+export const cleanLabel = (text?: string): string => {
+  return (text || "").replace(/\s*\*+$/, "").trim();
+};
+
 interface QuoteModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -146,12 +151,13 @@ export const QuoteModal: React.FC<QuoteModalProps> = ({
   const [phoneSearch, setPhoneSearch] = useState("");
   const [mounted, setMounted] = useState(false);
 
+  const countryRef = useRef<HTMLDivElement>(null);
+  const phoneRef = useRef<HTMLDivElement>(null);
+  const modalScrollRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     setMounted(true);
   }, []);
-
-  const countryRef = useRef<HTMLDivElement>(null);
-  const phoneRef = useRef<HTMLDivElement>(null);
 
   // Close dropdowns when clicking outside
   useEffect(() => {
@@ -328,8 +334,14 @@ export const QuoteModal: React.FC<QuoteModalProps> = ({
       });
 
       setSubmitted(true);
+      if (modalScrollRef.current) {
+        modalScrollRef.current.scrollTo({ top: 0, behavior: "smooth" });
+      }
     } catch (err: any) {
       setError(err.message || f.errorMessage);
+      if (modalScrollRef.current) {
+        modalScrollRef.current.scrollTo({ top: 0, behavior: "smooth" });
+      }
     } finally {
       setSubmitting(false);
     }
@@ -337,15 +349,23 @@ export const QuoteModal: React.FC<QuoteModalProps> = ({
 
   return createPortal(
     <div
-      className="fixed inset-0 z-[99999] flex items-center justify-center p-3 sm:p-4 bg-verdalia-dark/70 backdrop-blur-md animate-fade-in"
+      className="fixed inset-0 z-[99999] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-verdalia-dark/75 backdrop-blur-md animate-fade-in overflow-hidden"
       style={{ backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)" }}
       dir={dir}
     >
-      <div className="relative w-full max-w-2xl max-h-[92vh] overflow-y-auto bg-verdalia-offwhite rounded-2xl shadow-2xl border border-verdalia-border">
+      <div
+        ref={modalScrollRef}
+        className="relative w-full max-w-2xl h-[92vh] sm:h-auto sm:max-h-[90vh] overflow-y-auto overflow-x-hidden bg-verdalia-offwhite rounded-t-2xl sm:rounded-2xl shadow-2xl border-t sm:border border-verdalia-border flex flex-col"
+      >
+        {/* Mobile Drag Indicator */}
+        <div className="sm:hidden flex justify-center pt-2.5 pb-1 bg-verdalia-offwhite/95">
+          <div className="w-10 h-1 rounded-full bg-verdalia-border" />
+        </div>
+
         {/* Header with Product Banner Preview */}
         <div className="sticky top-0 z-20 bg-verdalia-offwhite/95 backdrop-blur border-b border-verdalia-border">
           {productImage && !submitted && (
-            <div className="relative w-full h-28 sm:h-36 overflow-hidden bg-verdalia-dark">
+            <div className="relative w-full h-24 sm:h-36 overflow-hidden bg-verdalia-dark">
               <Image
                 src={productImage}
                 alt={formData.productInterest}
@@ -354,14 +374,14 @@ export const QuoteModal: React.FC<QuoteModalProps> = ({
                 className="object-cover object-center opacity-90 transition-all duration-500"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-verdalia-offwhite via-verdalia-dark/40 to-transparent" />
-              <div className="absolute bottom-2 left-6 bg-verdalia-dark/85 backdrop-blur-sm text-verdalia-gold text-[10px] font-bold tracking-widest uppercase px-3 py-1 rounded-md border border-verdalia-gold/30 flex items-center gap-1.5 shadow-sm">
+              <div className="absolute bottom-2 left-4 sm:left-6 bg-verdalia-dark/85 backdrop-blur-sm text-verdalia-gold text-[10px] font-bold tracking-widest uppercase px-3 py-1 rounded-md border border-verdalia-gold/30 flex items-center gap-1.5 shadow-sm">
                 <span className="w-1.5 h-1.5 rounded-full bg-verdalia-gold animate-pulse"></span>
                 <span>{formData.productInterest}</span>
               </div>
             </div>
           )}
 
-          <div className="flex items-center justify-between px-6 py-3.5">
+          <div className="flex items-center justify-between px-4 sm:px-6 py-3">
             <div>
               <h3 className="font-serif text-lg sm:text-xl font-bold text-verdalia-dark">
                 {f.title}
@@ -370,7 +390,7 @@ export const QuoteModal: React.FC<QuoteModalProps> = ({
             </div>
             <button
               onClick={onClose}
-              className="p-2 text-verdalia-gray hover:text-verdalia-dark hover:bg-verdalia-beige rounded-full transition-colors"
+              className="p-2 text-verdalia-gray hover:text-verdalia-dark hover:bg-verdalia-beige rounded-full transition-colors flex-shrink-0"
               aria-label="Close modal"
             >
               <X className="w-5 h-5" />
@@ -379,27 +399,30 @@ export const QuoteModal: React.FC<QuoteModalProps> = ({
         </div>
 
         {/* Content Body */}
-        <div className="p-6">
+        <div className="p-4 sm:p-6 flex-1">
           {submitted ? (
             /* ====================================================
                SUCCESS SCREEN WITH ATTACHED IMAGE/FILE PREVIEW
                ==================================================== */
-            <div className="py-6 text-center animate-fade-in space-y-6">
-              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-emerald-100 text-emerald-700 shadow-sm">
-                <CheckCircle className="w-10 h-10" />
+            <div className="py-6 text-center animate-fade-in space-y-5 px-1 sm:px-4">
+              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-emerald-100 text-emerald-700 shadow-md ring-8 ring-emerald-50">
+                <CheckCircle className="w-9 h-9" />
               </div>
 
               <div>
-                <h4 className="font-serif text-2xl font-bold text-verdalia-dark mb-1">
-                  Inquiry Received Successfully!
+                <span className="text-[10px] font-bold uppercase tracking-widest text-verdalia-olive bg-verdalia-olive/10 px-3 py-1 rounded-full inline-block mb-2">
+                  Demande reçue avec succès
+                </span>
+                <h4 className="font-serif text-xl sm:text-2xl font-bold text-verdalia-dark mb-1.5">
+                  Merci ! Votre demande a été reçue
                 </h4>
-                <p className="text-xs sm:text-sm text-verdalia-gray max-w-md mx-auto">
+                <p className="text-xs sm:text-sm text-verdalia-gray max-w-md mx-auto leading-relaxed">
                   {f.successMessage}
                 </p>
               </div>
 
               {/* Submitted Details Recap */}
-              <div className="bg-white p-5 rounded-xl border border-verdalia-border shadow-sm text-left max-w-lg mx-auto text-xs space-y-3">
+              <div className="bg-white p-4 sm:p-5 rounded-xl border border-verdalia-border shadow-sm text-left max-w-lg mx-auto text-xs space-y-2.5">
                 <div className="flex items-center justify-between border-b border-gray-100 pb-2">
                   <span className="text-gray-400 font-medium">Demandeur:</span>
                   <span className="font-bold text-verdalia-dark">
@@ -455,9 +478,9 @@ export const QuoteModal: React.FC<QuoteModalProps> = ({
                     setSubmitted(false);
                     onClose();
                   }}
-                  className="btn-primary px-8 py-3 text-xs"
+                  className="btn-primary w-full sm:w-auto px-8 py-3.5 text-xs font-bold uppercase tracking-wider shadow-md"
                 >
-                  Close Window
+                  Fermer la fenêtre
                 </button>
               </div>
             </div>
@@ -487,10 +510,10 @@ export const QuoteModal: React.FC<QuoteModalProps> = ({
               )}
 
               {/* Full Name & Company */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 sm:gap-4">
                 <div>
                   <label className="block text-xs font-semibold uppercase tracking-wider text-verdalia-dark mb-1">
-                    {f.fullName} *
+                    {cleanLabel(f.fullName)} <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
@@ -499,14 +522,14 @@ export const QuoteModal: React.FC<QuoteModalProps> = ({
                     onChange={(e) =>
                       setFormData({ ...formData, fullName: e.target.value })
                     }
-                    className="w-full px-3.5 py-2.5 text-xs bg-white border border-verdalia-border rounded-lg focus:outline-none focus:border-verdalia-olive focus:ring-1 focus:ring-verdalia-olive"
+                    className="w-full px-3.5 py-2.5 text-base sm:text-xs bg-white border border-verdalia-border rounded-lg focus:outline-none focus:border-verdalia-olive focus:ring-1 focus:ring-verdalia-olive"
                     placeholder="e.g. Jean Dupont"
                   />
                 </div>
 
                 <div>
                   <label className="block text-xs font-semibold uppercase tracking-wider text-verdalia-dark mb-1">
-                    {f.companyName} *
+                    {cleanLabel(f.companyName)} <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
@@ -515,23 +538,23 @@ export const QuoteModal: React.FC<QuoteModalProps> = ({
                     onChange={(e) =>
                       setFormData({ ...formData, companyName: e.target.value })
                     }
-                    className="w-full px-3.5 py-2.5 text-xs bg-white border border-verdalia-border rounded-lg focus:outline-none focus:border-verdalia-olive focus:ring-1 focus:ring-verdalia-olive"
+                    className="w-full px-3.5 py-2.5 text-base sm:text-xs bg-white border border-verdalia-border rounded-lg focus:outline-none focus:border-verdalia-olive focus:ring-1 focus:ring-verdalia-olive"
                     placeholder="Global Olive Imports S.A."
                   />
                 </div>
               </div>
 
               {/* Country (Searchable Select) & Email */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 sm:gap-4">
                 {/* Searchable Country Selector */}
                 <div className="relative" ref={countryRef}>
                   <label className="block text-xs font-semibold uppercase tracking-wider text-verdalia-dark mb-1">
-                    {f.country} *
+                    {cleanLabel(f.country)} <span className="text-red-500">*</span>
                   </label>
                   <button
                     type="button"
                     onClick={() => setCountryDropdownOpen(!countryDropdownOpen)}
-                    className="w-full flex items-center justify-between px-3.5 py-2.5 text-xs bg-white border border-verdalia-border rounded-lg text-left hover:border-verdalia-olive transition-colors focus:outline-none focus:ring-1 focus:ring-verdalia-olive"
+                    className="w-full flex items-center justify-between px-3.5 py-2.5 text-base sm:text-xs bg-white border border-verdalia-border rounded-lg text-left hover:border-verdalia-olive transition-colors focus:outline-none focus:ring-1 focus:ring-verdalia-olive"
                   >
                     <span className="flex items-center gap-2.5 truncate">
                       <CountryFlag iso={formData.countryIso} flag={formData.countryFlag} />
@@ -544,7 +567,7 @@ export const QuoteModal: React.FC<QuoteModalProps> = ({
 
                   {/* Searchable Dropdown Popover */}
                   {countryDropdownOpen && (
-                    <div className="absolute top-full left-0 right-0 z-50 mt-1 bg-white border border-verdalia-border rounded-xl shadow-xl overflow-hidden animate-fade-in">
+                    <div className="absolute top-full left-0 right-0 z-50 mt-1 bg-white border border-verdalia-border rounded-xl shadow-xl overflow-hidden animate-fade-in max-w-[calc(100vw-2.5rem)]">
                       <div className="p-2 border-b border-gray-100 bg-gray-50 flex items-center gap-2">
                         <Search className="w-3.5 h-3.5 text-gray-400 ml-1" />
                         <input
@@ -553,7 +576,7 @@ export const QuoteModal: React.FC<QuoteModalProps> = ({
                           value={countrySearch}
                           onChange={(e) => setCountrySearch(e.target.value)}
                           placeholder="Rechercher un pays..."
-                          className="w-full bg-transparent text-xs py-1 outline-none text-gray-800 placeholder-gray-400"
+                          className="w-full bg-transparent text-base sm:text-xs py-1 outline-none text-gray-800 placeholder-gray-400"
                         />
                         {countrySearch && (
                           <button
@@ -613,7 +636,7 @@ export const QuoteModal: React.FC<QuoteModalProps> = ({
                 <div>
                   <div className="flex items-center justify-between mb-1">
                     <label className="block text-xs font-semibold uppercase tracking-wider text-verdalia-dark">
-                      {f.email} *
+                      {cleanLabel(f.email)} <span className="text-red-500">*</span>
                     </label>
                     {isEmailValid === true && (
                       <span className="text-[10px] text-emerald-600 font-semibold flex items-center gap-1">
@@ -633,7 +656,7 @@ export const QuoteModal: React.FC<QuoteModalProps> = ({
                     onChange={(e) =>
                       setFormData({ ...formData, email: e.target.value })
                     }
-                    className={`w-full px-3.5 py-2.5 text-xs bg-white border rounded-lg focus:outline-none transition-colors ${
+                    className={`w-full px-3.5 py-2.5 text-base sm:text-xs bg-white border rounded-lg focus:outline-none transition-colors ${
                       isEmailValid === false
                         ? "border-red-400 focus:border-red-500 focus:ring-1 focus:ring-red-300"
                         : isEmailValid === true
@@ -646,12 +669,12 @@ export const QuoteModal: React.FC<QuoteModalProps> = ({
               </div>
 
               {/* Phone (Flag + Country Code + Digits only) & Product Interest */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 sm:gap-4">
                 {/* Phone Field */}
                 <div>
                   <div className="flex items-center justify-between mb-1">
                     <label className="block text-xs font-semibold uppercase tracking-wider text-verdalia-dark">
-                      {f.phone}
+                      {cleanLabel(f.phone)}
                     </label>
                     {formData.phoneNumber && (
                       <span
@@ -682,7 +705,7 @@ export const QuoteModal: React.FC<QuoteModalProps> = ({
                       </button>
 
                       {phoneDropdownOpen && (
-                        <div className="absolute top-full left-0 z-50 mt-1 w-64 bg-white border border-verdalia-border rounded-xl shadow-xl overflow-hidden animate-fade-in">
+                        <div className="absolute top-full left-0 z-50 mt-1 w-64 bg-white border border-verdalia-border rounded-xl shadow-xl overflow-hidden animate-fade-in max-w-[calc(100vw-2.5rem)]">
                           <div className="p-2 border-b border-gray-100 bg-gray-50 flex items-center gap-2">
                             <Search className="w-3.5 h-3.5 text-gray-400 ml-1" />
                             <input
@@ -691,7 +714,7 @@ export const QuoteModal: React.FC<QuoteModalProps> = ({
                               value={phoneSearch}
                               onChange={(e) => setPhoneSearch(e.target.value)}
                               placeholder="Rechercher code..."
-                              className="w-full bg-transparent text-xs py-1 outline-none text-gray-800 placeholder-gray-400"
+                              className="w-full bg-transparent text-base sm:text-xs py-1 outline-none text-gray-800 placeholder-gray-400"
                             />
                           </div>
 
@@ -739,7 +762,7 @@ export const QuoteModal: React.FC<QuoteModalProps> = ({
                       pattern="[0-9]*"
                       value={formData.phoneNumber}
                       onChange={(e) => handlePhoneChange(e.target.value)}
-                      className={`flex-1 px-3.5 py-2.5 text-xs bg-white border border-verdalia-border rounded-r-lg focus:outline-none transition-colors ${
+                      className={`flex-1 px-3.5 py-2.5 text-base sm:text-xs bg-white border border-verdalia-border rounded-r-lg focus:outline-none transition-colors ${
                         isPhoneValid === true
                           ? "border-emerald-400 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-300"
                           : "focus:border-verdalia-olive focus:ring-1 focus:ring-verdalia-olive"
@@ -753,7 +776,7 @@ export const QuoteModal: React.FC<QuoteModalProps> = ({
                 {/* Product Interest */}
                 <div>
                   <label className="block text-xs font-semibold uppercase tracking-wider text-verdalia-dark mb-1">
-                    {f.productInterest} *
+                    {cleanLabel(f.productInterest)} <span className="text-red-500">*</span>
                   </label>
                   <select
                     required
@@ -764,7 +787,7 @@ export const QuoteModal: React.FC<QuoteModalProps> = ({
                         productInterest: e.target.value,
                       })
                     }
-                    className="w-full px-3.5 py-2.5 text-xs bg-white border border-verdalia-border rounded-lg focus:outline-none focus:border-verdalia-olive focus:ring-1 focus:ring-verdalia-olive cursor-pointer"
+                    className="w-full px-3.5 py-2.5 text-base sm:text-xs bg-white border border-verdalia-border rounded-lg focus:outline-none focus:border-verdalia-olive focus:ring-1 focus:ring-verdalia-olive cursor-pointer"
                   >
                     <option value="Organic Olive Oil">Huile d’olive biologique (Bio)</option>
                     <option value="Extra Virgin Olive Oil">Huile d’olive extra vierge (EVOO)</option>
@@ -777,10 +800,10 @@ export const QuoteModal: React.FC<QuoteModalProps> = ({
               </div>
 
               {/* Quantity & Destination Country / Port */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 sm:gap-4">
                 <div>
                   <label className="block text-xs font-semibold uppercase tracking-wider text-verdalia-dark mb-1">
-                    {f.estimatedQuantity}
+                    {cleanLabel(f.estimatedQuantity)}
                   </label>
                   <input
                     type="text"
@@ -788,14 +811,14 @@ export const QuoteModal: React.FC<QuoteModalProps> = ({
                     onChange={(e) =>
                       setFormData({ ...formData, quantity: e.target.value })
                     }
-                    className="w-full px-3.5 py-2.5 text-xs bg-white border border-verdalia-border rounded-lg focus:outline-none focus:border-verdalia-olive focus:ring-1 focus:ring-verdalia-olive"
+                    className="w-full px-3.5 py-2.5 text-base sm:text-xs bg-white border border-verdalia-border rounded-lg focus:outline-none focus:border-verdalia-olive focus:ring-1 focus:ring-verdalia-olive"
                     placeholder="ex: 1 x 20ft Flexitank (22,000L) / 10 cuves IBC"
                   />
                 </div>
 
                 <div>
                   <label className="block text-xs font-semibold uppercase tracking-wider text-verdalia-dark mb-1">
-                    {f.destinationCountry}
+                    {cleanLabel(f.destinationCountry)}
                   </label>
                   <input
                     type="text"
@@ -806,7 +829,7 @@ export const QuoteModal: React.FC<QuoteModalProps> = ({
                         destinationCountry: e.target.value,
                       })
                     }
-                    className="w-full px-3.5 py-2.5 text-xs bg-white border border-verdalia-border rounded-lg focus:outline-none focus:border-verdalia-olive focus:ring-1 focus:ring-verdalia-olive"
+                    className="w-full px-3.5 py-2.5 text-base sm:text-xs bg-white border border-verdalia-border rounded-lg focus:outline-none focus:border-verdalia-olive focus:ring-1 focus:ring-verdalia-olive"
                     placeholder="ex: Port de Marseille, Hambourg, Houston..."
                   />
                 </div>
@@ -815,7 +838,7 @@ export const QuoteModal: React.FC<QuoteModalProps> = ({
               {/* Message */}
               <div>
                 <label className="block text-xs font-semibold uppercase tracking-wider text-verdalia-dark mb-1">
-                  {f.message} *
+                  {cleanLabel(f.message)} <span className="text-red-500">*</span>
                 </label>
                 <textarea
                   required
@@ -824,7 +847,7 @@ export const QuoteModal: React.FC<QuoteModalProps> = ({
                   onChange={(e) =>
                     setFormData({ ...formData, message: e.target.value })
                   }
-                  className="w-full px-3.5 py-2.5 text-xs bg-white border border-verdalia-border rounded-lg focus:outline-none focus:border-verdalia-olive focus:ring-1 focus:ring-verdalia-olive resize-none"
+                  className="w-full px-3.5 py-2.5 text-base sm:text-xs bg-white border border-verdalia-border rounded-lg focus:outline-none focus:border-verdalia-olive focus:ring-1 focus:ring-verdalia-olive resize-none"
                   placeholder="Spécifications techniques, Incoterms souhaités (FOB / CIF), planning prévisionnel d'enlèvement..."
                 ></textarea>
               </div>
@@ -832,7 +855,7 @@ export const QuoteModal: React.FC<QuoteModalProps> = ({
               {/* Upload File with Instant Image Preview */}
               <div>
                 <label className="block text-xs font-semibold uppercase tracking-wider text-verdalia-dark mb-1">
-                  {f.uploadFile} (Cahier des charges / Document / Image)
+                  {cleanLabel(f.uploadFile)} (Cahier des charges / Document / Image)
                 </label>
 
                 {!file ? (
@@ -904,13 +927,13 @@ export const QuoteModal: React.FC<QuoteModalProps> = ({
                       privacyConsent: e.target.checked,
                     })
                   }
-                  className="mt-1 h-4 w-4 rounded border-verdalia-border text-verdalia-olive focus:ring-verdalia-olive cursor-pointer"
+                  className="mt-1 h-4 w-4 rounded border-verdalia-border text-verdalia-olive focus:ring-verdalia-olive cursor-pointer flex-shrink-0"
                 />
                 <label
                   htmlFor="modal-consent"
-                  className="text-xs text-verdalia-gray leading-relaxed cursor-pointer"
+                  className="text-xs text-verdalia-gray leading-relaxed cursor-pointer select-none"
                 >
-                  {f.privacyConsent}
+                  {cleanLabel(f.privacyConsent)} <span className="text-red-500">*</span>
                 </label>
               </div>
 

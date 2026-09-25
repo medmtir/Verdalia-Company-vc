@@ -12,6 +12,7 @@ import {
   CountryFlag,
   PRODUCT_IMAGES,
   EMAIL_REGEX,
+  cleanLabel,
 } from "@/components/ui/QuoteModal";
 import {
   Phone,
@@ -589,10 +590,10 @@ export default function ContactPage() {
                     )}
 
                     {/* Full Name & Company */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 sm:gap-4">
                       <div>
                         <label className="block text-xs font-semibold uppercase tracking-wider text-verdalia-dark mb-1">
-                          {f.fullName} *
+                          {cleanLabel(f.fullName)} <span className="text-red-500">*</span>
                         </label>
                         <input
                           type="text"
@@ -601,14 +602,14 @@ export default function ContactPage() {
                           onChange={(e) =>
                             setFormData({ ...formData, fullName: e.target.value })
                           }
-                          className="w-full px-3.5 py-2.5 text-xs bg-white border border-verdalia-border rounded-lg focus:outline-none focus:border-verdalia-olive focus:ring-1 focus:ring-verdalia-olive"
+                          className="w-full px-3.5 py-2.5 text-base sm:text-xs bg-white border border-verdalia-border rounded-lg focus:outline-none focus:border-verdalia-olive focus:ring-1 focus:ring-verdalia-olive"
                           placeholder="ex: Jean Dupont"
                         />
                       </div>
 
                       <div>
                         <label className="block text-xs font-semibold uppercase tracking-wider text-verdalia-dark mb-1">
-                          {f.companyName} *
+                          {cleanLabel(f.companyName)} <span className="text-red-500">*</span>
                         </label>
                         <input
                           type="text"
@@ -617,23 +618,23 @@ export default function ContactPage() {
                           onChange={(e) =>
                             setFormData({ ...formData, companyName: e.target.value })
                           }
-                          className="w-full px-3.5 py-2.5 text-xs bg-white border border-verdalia-border rounded-lg focus:outline-none focus:border-verdalia-olive focus:ring-1 focus:ring-verdalia-olive"
+                          className="w-full px-3.5 py-2.5 text-base sm:text-xs bg-white border border-verdalia-border rounded-lg focus:outline-none focus:border-verdalia-olive focus:ring-1 focus:ring-verdalia-olive"
                           placeholder="Global Olive Imports S.A."
                         />
                       </div>
                     </div>
 
                     {/* Country (Searchable Select) & Email */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 sm:gap-4">
                       {/* Searchable Country Selector */}
                       <div className="relative" ref={countryRef}>
                         <label className="block text-xs font-semibold uppercase tracking-wider text-verdalia-dark mb-1">
-                          {f.country} *
+                          {cleanLabel(f.country)} <span className="text-red-500">*</span>
                         </label>
                         <button
                           type="button"
                           onClick={() => setCountryDropdownOpen(!countryDropdownOpen)}
-                          className="w-full flex items-center justify-between px-3.5 py-2.5 text-xs bg-white border border-verdalia-border rounded-lg text-left hover:border-verdalia-olive transition-colors focus:outline-none focus:ring-1 focus:ring-verdalia-olive"
+                          className="w-full flex items-center justify-between px-3.5 py-2.5 text-base sm:text-xs bg-white border border-verdalia-border rounded-lg text-left hover:border-verdalia-olive transition-colors focus:outline-none focus:ring-1 focus:ring-verdalia-olive"
                         >
                           <span className="flex items-center gap-2.5 truncate">
                             <CountryFlag iso={formData.countryIso} flag={formData.countryFlag} />
@@ -646,7 +647,7 @@ export default function ContactPage() {
 
                         {/* Searchable Dropdown Popover */}
                         {countryDropdownOpen && (
-                          <div className="absolute top-full left-0 right-0 z-50 mt-1 bg-white border border-verdalia-border rounded-xl shadow-xl overflow-hidden animate-fade-in">
+                          <div className="absolute top-full left-0 right-0 z-50 mt-1 bg-white border border-verdalia-border rounded-xl shadow-xl overflow-hidden animate-fade-in max-w-[calc(100vw-2.5rem)]">
                             <div className="p-2 border-b border-gray-100 bg-gray-50 flex items-center gap-2">
                               <Search className="w-3.5 h-3.5 text-gray-400 ml-1" />
                               <input
@@ -655,7 +656,7 @@ export default function ContactPage() {
                                 value={countrySearch}
                                 onChange={(e) => setCountrySearch(e.target.value)}
                                 placeholder="Rechercher un pays..."
-                                className="w-full bg-transparent text-xs py-1 outline-none text-gray-800 placeholder-gray-400"
+                                className="w-full bg-transparent text-base sm:text-xs py-1 outline-none text-gray-800 placeholder-gray-400"
                               />
                               {countrySearch && (
                                 <button
@@ -715,7 +716,7 @@ export default function ContactPage() {
                       <div>
                         <div className="flex items-center justify-between mb-1">
                           <label className="block text-xs font-semibold uppercase tracking-wider text-verdalia-dark">
-                            {f.email} *
+                            {cleanLabel(f.email)} <span className="text-red-500">*</span>
                           </label>
                           {isEmailValid === true && (
                             <span className="text-[10px] text-emerald-600 font-semibold flex items-center gap-1">
@@ -735,7 +736,7 @@ export default function ContactPage() {
                           onChange={(e) =>
                             setFormData({ ...formData, email: e.target.value })
                           }
-                          className={`w-full px-3.5 py-2.5 text-xs bg-white border rounded-lg focus:outline-none transition-colors ${
+                          className={`w-full px-3.5 py-2.5 text-base sm:text-xs bg-white border rounded-lg focus:outline-none transition-colors ${
                             isEmailValid === false
                               ? "border-red-400 focus:border-red-500 focus:ring-1 focus:ring-red-300"
                               : isEmailValid === true
@@ -748,12 +749,12 @@ export default function ContactPage() {
                     </div>
 
                     {/* Phone (Flag + Country Code + Digits only) & Product Interest */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 sm:gap-4">
                       {/* Phone Field */}
                       <div>
                         <div className="flex items-center justify-between mb-1">
                           <label className="block text-xs font-semibold uppercase tracking-wider text-verdalia-dark">
-                            {f.phone}
+                            {cleanLabel(f.phone)}
                           </label>
                           {formData.phoneNumber && (
                             <span
@@ -784,7 +785,7 @@ export default function ContactPage() {
                             </button>
 
                             {phoneDropdownOpen && (
-                              <div className="absolute top-full left-0 z-50 mt-1 w-64 bg-white border border-verdalia-border rounded-xl shadow-xl overflow-hidden animate-fade-in">
+                              <div className="absolute top-full left-0 z-50 mt-1 w-64 bg-white border border-verdalia-border rounded-xl shadow-xl overflow-hidden animate-fade-in max-w-[calc(100vw-2.5rem)]">
                                 <div className="p-2 border-b border-gray-100 bg-gray-50 flex items-center gap-2">
                                   <Search className="w-3.5 h-3.5 text-gray-400 ml-1" />
                                   <input
@@ -793,7 +794,7 @@ export default function ContactPage() {
                                     value={phoneSearch}
                                     onChange={(e) => setPhoneSearch(e.target.value)}
                                     placeholder="Rechercher code..."
-                                    className="w-full bg-transparent text-xs py-1 outline-none text-gray-800 placeholder-gray-400"
+                                    className="w-full bg-transparent text-base sm:text-xs py-1 outline-none text-gray-800 placeholder-gray-400"
                                   />
                                 </div>
 
@@ -841,7 +842,7 @@ export default function ContactPage() {
                             pattern="[0-9]*"
                             value={formData.phoneNumber}
                             onChange={(e) => handlePhoneChange(e.target.value)}
-                            className={`flex-1 px-3.5 py-2.5 text-xs bg-white border border-verdalia-border rounded-r-lg focus:outline-none transition-colors ${
+                            className={`flex-1 px-3.5 py-2.5 text-base sm:text-xs bg-white border border-verdalia-border rounded-r-lg focus:outline-none transition-colors ${
                               isPhoneValid === true
                                 ? "border-emerald-400 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-300"
                                 : "focus:border-verdalia-olive focus:ring-1 focus:ring-verdalia-olive"
@@ -855,7 +856,7 @@ export default function ContactPage() {
                       {/* Product Interest */}
                       <div>
                         <label className="block text-xs font-semibold uppercase tracking-wider text-verdalia-dark mb-1">
-                          {f.productInterest} *
+                          {cleanLabel(f.productInterest)} <span className="text-red-500">*</span>
                         </label>
                         <select
                           required
@@ -866,7 +867,7 @@ export default function ContactPage() {
                               productInterest: e.target.value,
                             })
                           }
-                          className="w-full px-3.5 py-2.5 text-xs bg-white border border-verdalia-border rounded-lg focus:outline-none focus:border-verdalia-olive focus:ring-1 focus:ring-verdalia-olive cursor-pointer"
+                          className="w-full px-3.5 py-2.5 text-base sm:text-xs bg-white border border-verdalia-border rounded-lg focus:outline-none focus:border-verdalia-olive focus:ring-1 focus:ring-verdalia-olive cursor-pointer"
                         >
                           <option value="Organic Olive Oil">Huile d’olive biologique (Bio)</option>
                           <option value="Extra Virgin Olive Oil">Huile d’olive extra vierge (EVOO)</option>
@@ -879,10 +880,10 @@ export default function ContactPage() {
                     </div>
 
                     {/* Quantity & Destination Country / Port */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 sm:gap-4">
                       <div>
                         <label className="block text-xs font-semibold uppercase tracking-wider text-verdalia-dark mb-1">
-                          {f.estimatedQuantity}
+                          {cleanLabel(f.estimatedQuantity)}
                         </label>
                         <input
                           type="text"
@@ -890,14 +891,14 @@ export default function ContactPage() {
                           onChange={(e) =>
                             setFormData({ ...formData, quantity: e.target.value })
                           }
-                          className="w-full px-3.5 py-2.5 text-xs bg-white border border-verdalia-border rounded-lg focus:outline-none focus:border-verdalia-olive focus:ring-1 focus:ring-verdalia-olive"
+                          className="w-full px-3.5 py-2.5 text-base sm:text-xs bg-white border border-verdalia-border rounded-lg focus:outline-none focus:border-verdalia-olive focus:ring-1 focus:ring-verdalia-olive"
                           placeholder="ex: 1 x 20ft Flexitank (22,000L) / 10 cuves IBC"
                         />
                       </div>
 
                       <div>
                         <label className="block text-xs font-semibold uppercase tracking-wider text-verdalia-dark mb-1">
-                          {f.destinationCountry}
+                          {cleanLabel(f.destinationCountry)}
                         </label>
                         <input
                           type="text"
@@ -908,7 +909,7 @@ export default function ContactPage() {
                               destinationCountry: e.target.value,
                             })
                           }
-                          className="w-full px-3.5 py-2.5 text-xs bg-white border border-verdalia-border rounded-lg focus:outline-none focus:border-verdalia-olive focus:ring-1 focus:ring-verdalia-olive"
+                          className="w-full px-3.5 py-2.5 text-base sm:text-xs bg-white border border-verdalia-border rounded-lg focus:outline-none focus:border-verdalia-olive focus:ring-1 focus:ring-verdalia-olive"
                           placeholder="ex: Port de Marseille, Hambourg, Houston..."
                         />
                       </div>
@@ -917,7 +918,7 @@ export default function ContactPage() {
                     {/* Message */}
                     <div>
                       <label className="block text-xs font-semibold uppercase tracking-wider text-verdalia-dark mb-1">
-                        {f.message} *
+                        {cleanLabel(f.message)} <span className="text-red-500">*</span>
                       </label>
                       <textarea
                         required
@@ -926,7 +927,7 @@ export default function ContactPage() {
                         onChange={(e) =>
                           setFormData({ ...formData, message: e.target.value })
                         }
-                        className="w-full px-3.5 py-2.5 text-xs bg-white border border-verdalia-border rounded-lg focus:outline-none focus:border-verdalia-olive focus:ring-1 focus:ring-verdalia-olive resize-none"
+                        className="w-full px-3.5 py-2.5 text-base sm:text-xs bg-white border border-verdalia-border rounded-lg focus:outline-none focus:border-verdalia-olive focus:ring-1 focus:ring-verdalia-olive resize-none"
                         placeholder="Spécifications techniques, Incoterms souhaités (FOB / CIF), planning prévisionnel d'enlèvement..."
                       ></textarea>
                     </div>
@@ -934,7 +935,7 @@ export default function ContactPage() {
                     {/* Upload File with Instant Image Preview */}
                     <div>
                       <label className="block text-xs font-semibold uppercase tracking-wider text-verdalia-dark mb-1">
-                        {f.uploadFile} (Cahier des charges / Document / Image)
+                        {cleanLabel(f.uploadFile)} (Cahier des charges / Document / Image)
                       </label>
 
                       {!file ? (
@@ -1006,13 +1007,13 @@ export default function ContactPage() {
                             privacyConsent: e.target.checked,
                           })
                         }
-                        className="mt-1 h-4 w-4 rounded border-verdalia-border text-verdalia-olive focus:ring-verdalia-olive cursor-pointer"
+                        className="mt-1 h-4 w-4 rounded border-verdalia-border text-verdalia-olive focus:ring-verdalia-olive cursor-pointer flex-shrink-0"
                       />
                       <label
                         htmlFor="page-consent"
-                        className="text-xs text-verdalia-gray leading-relaxed cursor-pointer"
+                        className="text-xs text-verdalia-gray leading-relaxed cursor-pointer select-none"
                       >
-                        {f.privacyConsent}
+                        {cleanLabel(f.privacyConsent)} <span className="text-red-500">*</span>
                       </label>
                     </div>
 
