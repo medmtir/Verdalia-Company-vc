@@ -1,0 +1,920 @@
+import bcrypt from "bcryptjs";
+import { DatabaseState } from "@/lib/types";
+
+export function getInitialDatabaseState(): DatabaseState {
+  const initialPasswordHash = bcrypt.hashSync("Verdalia2026!Export", 10);
+
+  return {
+    admins: [
+      {
+        id: "admin-1",
+        email: "admin@verdalia.com",
+        password_hash: initialPasswordHash,
+        name: "Verdalia Executive",
+        role: "superadmin",
+        created_at: new Date().toISOString(),
+      },
+    ],
+    products: [
+      {
+        id: "prod-1",
+        slug: "organic-olive-oil",
+        image_url: "/images/products/olive-bio.jpg",
+        is_active: true,
+        sort_order: 1,
+        specs: {
+          acidity: "< 0.5%",
+          variety: "Chemlali & Chetoui",
+          extraction: "Cold Extraction (< 27°C)",
+          origin: "Tunisia (Organic certified terroirs)",
+          packaging: "Flexitank, IBC (1,000L), Drums (200L)",
+          moq: "1 x 20ft Container (approx. 21 Metric Tons)",
+        },
+        translations: {
+          en: {
+            name: "Organic Olive Oil",
+            short_description:
+              "Carefully selected organic olive oil produced from olives cultivated according to organic farming principles. A natural choice for customers looking for authenticity and quality.",
+            full_description:
+              "Verdalia Certified Organic Olive Oil is sourced from certified organic groves in Tunisia. Grown without chemical pesticides or synthetic fertilizers, hand-harvested, and cold-extracted within hours, this oil delivers high polyphenol counts, a smooth organoleptic profile, and complete international compliance.",
+            formats: [
+              "Bulk Flexitank (22,000 Liters)",
+              "IBC Containers (1,000 Liters)",
+              "Drums (200 Liters)",
+            ],
+          },
+          fr: {
+            name: "Huile d'Olive Biologique",
+            short_description:
+              "Huile d'olive biologique issue d'oliviers cultivés selon les principes de l'agriculture biologique. Un choix naturel garantissant authenticité et haute pureté.",
+            full_description:
+              "L'huile d'olive biologique Verdalia provient de vergers tunisiens certifiés. Sans pesticides ni engrais de synthèse, extraite à froid dès la récolte, elle présente une remarquable teneur en antioxydants naturels et répond à tous les référentiels bio internationaux.",
+            formats: [
+              "Vrac Flexitank (22 000 Litres)",
+              "Cuves IBC (1 000 Litres)",
+              "Fûts (200 Litres)",
+              "Bidons métal (5 Litres)",
+            ],
+          },
+          ar: {
+            name: "زيت زيتون بيولوجي عضوي",
+            short_description:
+              "زيت زيتون عضوي منتقى بعناية ومستخرج من زيتون مزروع وفق مبادئ الفلاحة البيولوجية، خيار طبيعي للمستوردين الباحثين عن الأصالة والنقاء التام.",
+            full_description:
+              "يتم إنتاج زيت الزيتون العضوي من فيرداليا من مزارع تونسية خاضعة لأدق معايير الرقابة البيولوجية الدولية. يتميز بنسب بوليفينول مرتفعة ومذاق متوازن ونقاء تام.",
+            formats: [
+              "شحن سائب فليكسي تانك (22,000 لتر)",
+              "حاويات IBC (1,000 لتر)",
+              "براميل سعة 200 لتر",
+              "عبوات زجاجية (250 مل، 500 مل، 750 مل، 1 لتر)",
+              "صفائح معدنية (5 لتر)",
+            ],
+          },
+          es: {
+            name: "Aceite de Oliva Ecológico",
+            short_description:
+              "Aceite de oliva ecológico cuidadosamente seleccionado, cultivado bajo estrictas normas de agricultura ecológica. Ideal para mercados exigentes de alta gama.",
+            full_description:
+              "El aceite ecológico de Verdalia procede de olivares certificados en Túnez. Sin pesticidas ni abonos químicos, extraído en frío inmediatamente tras la cosecha, con alto contenido de polifenoles y máxima frescura.",
+            formats: [
+              "Granel Flexitank (22.000 Litros)",
+              "Contenedores IBC (1.000 Litros)",
+              "Bidones (200 Litros)",
+              "Latas metálicas (5 Litros)",
+            ],
+          },
+          it: {
+            name: "Olio d'Oliva Biologico",
+            short_description:
+              "Olio d'oliva biologico selezionato, ottenuto da olive coltivate secondo i principi dell'agricoltura biologica. Una scelta naturale all'insegna dell'eccellenza.",
+            full_description:
+              "L'olio biologico Verdalia nasce da uliveti tunisini certificati. Estratto a freddo a poche ore dalla raccolta, garantisce un profilo organolettico impeccabile e un'elevata concentrazione di polifenoli.",
+            formats: [
+              "Sfuso Flexitank (22.000 Litri)",
+              "Cisterne IBC (1.000 Litri)",
+              "Fusti (200 Litri)",
+            ],
+          },
+        },
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      },
+      {
+        id: "prod-2",
+        slug: "extra-virgin-olive-oil",
+        image_url: "/images/products/extra-vierge.jpg",
+        is_active: true,
+        sort_order: 2,
+        specs: {
+          acidity: "< 0.8% (typical < 0.4%)",
+          variety: "Chemlali & Chetoui",
+          extraction: "First Cold Pressed / Continuous Centrifugation (< 27°C)",
+          origin: "Tunisia (Central & Northern terroirs)",
+          packaging: "Flexitank, IBC (1,000L), Drums (200L)",
+          moq: "1 x 20ft Container",
+        },
+        translations: {
+          en: {
+            name: "Extra Virgin Olive Oil",
+            short_description:
+              "High-quality extra virgin olive oil made from carefully selected olives. It is suitable for food distributors, retailers, restaurants and premium international markets.",
+            full_description:
+              "Our flagship Extra Virgin Olive Oil balances fruitiness, delicate bitterness, and peppery notes. Extracted through continuous cold mechanical methods without any chemical alteration, it preserves natural vitamins and fatty acid profiles conforming to International Olive Council (IOC) standards.",
+            formats: [
+              "Bulk Flexitank (22,000 Liters)",
+              "IBC Containers (1,000 Liters)",
+              "Food Grade Drums (200 Liters)",
+            ],
+          },
+          fr: {
+            name: "Huile d'Olive Vierge Extra",
+            short_description:
+              "Huile d'olive vierge extra de qualité supérieure obtenue à partir d'olives rigoureusement sélectionnées. Idéale pour la distribution alimentaire, la restauration et le retail.",
+            full_description:
+              "Notre huile vierge extra phare allie fruité équilibré et ardence délicate. Obtenue par première extraction à froid conformément aux normes du Conseil Oléicole International (COI), elle garantit une stabilité exemplaire.",
+            formats: [
+              "Vrac Flexitank (22 000 Litres)",
+              "Cuves IBC (1 000 Litres)",
+              "Fûts alimentaires (200 Litres)",
+              "Bidons métal (3L, 5L)",
+            ],
+          },
+          ar: {
+            name: "زيت زيتون بكر ممتاز",
+            short_description:
+              "زيت زيتون بكر ممتاز فائق الجودة مستخلص من زيتون منتقى بعناية، مناسب للموزعين، والمطاعم، وتجارة التجزئة، والأسواق العالمية الراقية.",
+            full_description:
+              "يعتبر الزيت البكر الممتاز منتجنا الرئيسي، حيث يتميز بنكهة متوازنة وحموضة منخفضة للغاية. مستخلص ميكانيكياً على البارد دون أي معالجة كيميائية طبقاً لمواصفات المجلس الدولي للزيتون.",
+            formats: [
+              "شحن سائب فليكسي تانك (22,000 لتر)",
+              "حاويات IBC (1,000 لتر)",
+              "براميل غذائية (200 لتر)",
+              "صفائح معدنية (3 لتر، 5 لتر)",
+            ],
+          },
+          es: {
+            name: "Aceite de Oliva Virgen Extra",
+            short_description:
+              "Aceite de oliva virgen extra de máxima calidad elaborado a partir de aceitunas seleccionadas. Ideal para distribuidores, supermercados y gastronomía.",
+            full_description:
+              "Elaborado mediante extracción mecánica en frío. Cumple rigurosamente las normas del Consejo Oleícola Internacional, ofreciendo un perfil frutado impecable y gran estabilidad a la oxidación.",
+            formats: [
+              "Granel Flexitank (22.000 Litros)",
+              "Contenedores IBC (1.000 Litros)",
+              "Bidones industriales (200 Litros)",
+              "Latas metálicas (3L, 5L)",
+            ],
+          },
+          it: {
+            name: "Olio Extra Vergine di Oliva",
+            short_description:
+              "Olio extravergine di oliva di alta qualità ottenuto da olive accuratamente selezionate. Perfetto per distributori alimentari, supermercati e ristorazione professionale.",
+            full_description:
+              "Estratto a freddo tramite procedimenti puramente meccanici. Rispetta rigorosamente gli standard del Consiglio Oleicolo Internazionale (COI), garantendo profumi freschi e acidità minima.",
+            formats: [
+              "Sfuso Flexitank (22.000 Litri)",
+              "Cisterne IBC (1.000 Litri)",
+              "Fusti (200 Litri)",
+            ],
+          },
+        },
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      },
+      {
+        id: "prod-3",
+        slug: "refined-olive-oil",
+        image_url: "/images/products/raffine.jpg",
+        is_active: true,
+        sort_order: 3,
+        specs: {
+          acidity: "< 0.3%",
+          variety: "Mediterranean Blend",
+          extraction: "Refining & Neutralization process",
+          origin: "Tunisia",
+          packaging: "Flexitank, IBC (1,000L), Drums (200L)",
+          moq: "1 x 20ft Container",
+        },
+        translations: {
+          en: {
+            name: "Refined Olive Oil",
+            short_description:
+              "Refined olive oil intended for professional and commercial applications, available according to customer requirements and export specifications.",
+            full_description:
+              "Ideal for industrial food processing, frying stability, canning, and blending. It features a light neutral flavor, very low acidity, high thermal resistance, and long shelf-life suitability.",
+            formats: [
+              "Bulk Flexitank (22,000 Liters)",
+              "IBC Containers (1,000 Liters)",
+              "Industrial Steel Drums (200 Liters)",
+            ],
+          },
+          fr: {
+            name: "Huile d'Olive Raffinée",
+            short_description:
+              "Huile d'olive raffinée destinée aux applications professionnelles et agroalimentaires, disponible selon les exigences techniques de chaque client.",
+            full_description:
+              "Idéale pour l'industrie de transformation alimentaire, les conserveries et la friture professionnelle. Saveur neutre, acidité minime et excellente résistance aux températures élevées.",
+            formats: [
+              "Vrac Flexitank (22 000 Litres)",
+              "Cuves IBC (1 000 Litres)",
+              "Fûts industriels (200 Litres)",
+            ],
+          },
+          ar: {
+            name: "زيت زيتون مكرر",
+            short_description:
+              "زيت زيتون مكرر مخصص للتطبيقات المهنية والصناعية، متوفر وفقاً للمواصفات الفنية ومتطلبات كل مستورد.",
+            full_description:
+              "مثالي للصناعات الغذائية التحويلية ومصانع التعليب والقلي التجاري، بفضل حموضته المنخفضة للغاية ونكهته المحايدة ومقاومته الممتازة للحرارة.",
+            formats: [
+              "شحن سائب فليكسي تانك (22,000 لتر)",
+              "حاويات IBC (1,000 لتر)",
+              "براميل صناعية (200 لتر)",
+            ],
+          },
+          es: {
+            name: "Aceite de Oliva Refinado",
+            short_description:
+              "Aceite de oliva refinado destinado a aplicaciones profesionales y agroindustriales, disponible según los requerimientos de cada comprador.",
+            full_description:
+              "Excelente para la industria alimentaria, conservas y fritura profesional, gracias a su sabor neutro, acidez muy baja y elevada estabilidad térmica.",
+            formats: [
+              "Granel Flexitank (22.000 Litros)",
+              "Contenedores IBC (1.000 Litros)",
+              "Bidones de acero (200 Litros)",
+            ],
+          },
+          it: {
+            name: "Olio d'Oliva Raffinato",
+            short_description:
+              "Olio d'oliva raffinato destinato ad applicazioni industriali e commerciali, fornito secondo le specifiche tecniche di esportazione del cliente.",
+            full_description:
+              "Ideale per l'industria alimentare, conserve e fritture professionali. Si distingue per sapore neutro, acidità bassissima ed elevata resistenza alle alte temperature.",
+            formats: [
+              "Sfuso Flexitank (22.000 Litri)",
+              "Cisterne IBC (1.000 Litri)",
+              "Fusti in acciaio (200 Litri)",
+            ],
+          },
+        },
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      },
+      {
+        id: "prod-4",
+        slug: "olive-pomace-oil",
+        image_url: "/images/products/grignons.jpg",
+        is_active: true,
+        sort_order: 4,
+        specs: {
+          acidity: "< 1.0%",
+          variety: "Olive Pomace Extraction",
+          extraction: "Solvent extraction followed by refining & virgin blending",
+          origin: "Tunisia",
+          packaging: "Flexitank, IBC (1,000L), Drums (200L)",
+          moq: "1 x 20ft Container",
+        },
+        translations: {
+          en: {
+            name: "Olive Pomace Oil",
+            short_description:
+              "Olive pomace oil intended for professional, commercial and industrial markets according to the specifications and requirements of each buyer.",
+            full_description:
+              "A cost-effective solution tailored for high-heat cooking, catering sectors, and food manufacturing. Offered raw (crude) or refined and blended with extra virgin olive oil.",
+            formats: [
+              "Bulk Flexitank (22,000 Liters)",
+              "IBC Containers (1,000 Liters)",
+              "Drums (200 Liters)",
+              ],
+          },
+          fr: {
+            name: "Huile de Grignons d'Olive",
+            short_description:
+              "Huile de grignons d'olive destinée aux marchés professionnels, commerciaux et industriels selon les spécifications de chaque acheteur.",
+            full_description:
+              "Solution économique et performante conçue pour la restauration collective, la friture industrielle et les usages agroalimentaires.",
+            formats: [
+              "Vrac Flexitank (22 000 Litres)",
+              "Cuves IBC (1 000 Litres)",
+              "Fûts métalliques (200 Litres)",
+            ],
+          },
+          ar: {
+            name: "زيت تفل الزيتون (الفتورة)",
+            short_description:
+              "زيت تفل الزيتون مخصص للأسواق التجارية والصناعية والمطاعم الكبرى وفقاً لاحتياجات وشروط كل مشترٍ.",
+            full_description:
+              "خيار اقتصادي ممتاز للمطاعم الكبرى والمصانع الغذائية، مناسب للطهي في درجات حرارة عالية، متوفر سائباً أو في عبوات مختلفة.",
+            formats: [
+              "شحن سائب فليكسي تانك (22,000 لتر)",
+              "حاويات IBC (1,000 لتر)",
+              "براميل (200 لتر)",
+            ],
+          },
+          es: {
+            name: "Aceite de Orujo de Oliva",
+            short_description:
+              "Aceite de orujo de oliva destinado a mercados profesionales, comerciales e industriales según las especificaciones de cada importador.",
+            full_description:
+              "Solución competitiva para hostelería, frituras y producción industrial de alimentos.",
+            formats: [
+              "Granel Flexitank (22.000 Litros)",
+              "Contenedores IBC (1.000 Litros)",
+              "Bidones (200 Litros)",
+            ],
+          },
+          it: {
+            name: "Olio di Sansa di Oliva",
+            short_description:
+              "Olio di sansa di oliva destinato ai mercati professionali, commerciali e industriali in base alle specifiche di ciascun acquirente.",
+            full_description:
+              "Una soluzione economica ideale per la ristorazione, la frittura e la preparazione alimentare su larga scala.",
+            formats: [
+              "Sfuso Flexitank (22.000 Litri)",
+              "Cisterne IBC (1.000 Litri)",
+              "Fusti (200 Litri)",
+            ],
+          },
+        },
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      },
+    ],
+    certifications: [
+      {
+        id: "cert-1",
+        code: "BRC",
+        badge_url: "/images/certs/brc.svg",
+        document_url: null,
+        cert_number: null,
+        issue_date: null,
+        expiry_date: null,
+        is_active: true,
+        sort_order: 1,
+        translations: {
+          en: {
+            name: "BRC Global Standard",
+            issuer: "British Retail Consortium",
+            description:
+              "Global Food Safety Standard benchmark ensuring operational hygiene, hazard control, and continuous process verification.",
+          },
+          fr: {
+            name: "Standard Mondial BRC",
+            issuer: "British Retail Consortium",
+            description:
+              "Norme internationale de sécurité alimentaire garantissant l'hygiène opérationnelle et la maîtrise rigoureuse des processus.",
+          },
+          ar: {
+            name: "معيار السلامة العالمية BRC",
+            issuer: "اتحاد التجزئة البريطاني",
+            description:
+              "المعيار العالمي لسلامة الأغذية الذي يضمن أعلى درجات النظافة التشغيلية والتحكم في المخاطر وجودة الإنتاج.",
+          },
+          es: {
+            name: "Estándar Global BRC",
+            issuer: "British Retail Consortium",
+            description:
+              "Norma de seguridad alimentaria que garantiza la higiene operativa y el control riguroso de procesos.",
+          },
+          it: {
+            name: "Standard Globale BRC",
+            issuer: "British Retail Consortium",
+            description:
+              "Standard globale di sicurezza alimentare che assicura igiene operativa e conformità dei processi produttivi.",
+          },
+        },
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      },
+      {
+        id: "cert-2",
+        code: "ISO22000",
+        badge_url: "/images/certs/iso22000.svg",
+        document_url: null,
+        cert_number: null,
+        issue_date: null,
+        expiry_date: null,
+        is_active: true,
+        sort_order: 2,
+        translations: {
+          en: {
+            name: "ISO 22000",
+            issuer: "International Organization for Standardization",
+            description:
+              "Food safety management system covering interactive communication, system management, prerequisite programs, and HACCP principles.",
+          },
+          fr: {
+            name: "ISO 22000",
+            issuer: "Organisation Internationale de Normalisation",
+            description:
+              "Système de management de la sécurité des denrées alimentaires couvrant les principes HACCP et la traçabilité intégrale.",
+          },
+          ar: {
+            name: "شهادة آيزو 22000",
+            issuer: "المنظمة الدولية للمعايير (ISO)",
+            description:
+              "نظام إدارة سلامة الأغذية القائم على مبادئ تحليل المخاطر ونقاط التحكم الحرجة (HACCP) والتتبع الشامل.",
+          },
+          es: {
+            name: "ISO 22000",
+            issuer: "Organización Internacional de Normalización",
+            description:
+              "Sistema de gestión de inocuidad alimentaria basado en comunicación interactiva, programas de prerrequisitos y principios HACCP.",
+          },
+          it: {
+            name: "ISO 22000",
+            issuer: "Organizzazione Internazionale per la Standardizzazione",
+            description:
+              "Sistema di gestione per la sicurezza alimentare che integra i principi HACCP e la tracciabilità lungo l'intera filiera.",
+          },
+        },
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      },
+      {
+        id: "cert-3",
+        code: "IFS",
+        badge_url: "/images/certs/ifs.svg",
+        document_url: null,
+        cert_number: null,
+        issue_date: null,
+        expiry_date: null,
+        is_active: true,
+        sort_order: 3,
+        translations: {
+          en: {
+            name: "IFS Food",
+            issuer: "International Featured Standards",
+            description:
+              "Recognized benchmark evaluating manufacturing processes, packaging integrity, and product safety for major international retailers.",
+          },
+          fr: {
+            name: "IFS Food",
+            issuer: "International Featured Standards",
+            description:
+              "Référentiel reconnu évaluant les processus de conditionnement et la sécurité des produits pour la distribution internationale.",
+          },
+          ar: {
+            name: "شهادة المعايير المتميزة IFS Food",
+            issuer: "المعايير الدولية المميزة",
+            description:
+              "معيار معترف به دولياً لتقييم عمليات التعبئة والتصنيع وسلامة المنتجات لصالح كبرى سلاسل التوزيع العالمية.",
+          },
+          es: {
+            name: "IFS Food",
+            issuer: "International Featured Standards",
+            description:
+              "Norma de auditoría para fabricantes de alimentos que garantiza procesos de calidad y seguridad para la gran distribución.",
+          },
+          it: {
+            name: "IFS Food",
+            issuer: "International Featured Standards",
+            description:
+              "Standard internazionale riconosciuto per la valutazione dei processi di produzione e confezionamento per la GDO.",
+          },
+        },
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      },
+      {
+        id: "cert-4",
+        code: "BIOLOGIQUE",
+        badge_url: "/images/certs/organic.svg",
+        document_url: null,
+        cert_number: null,
+        issue_date: null,
+        expiry_date: null,
+        is_active: true,
+        sort_order: 4,
+        translations: {
+          en: {
+            name: "Certified Organic (Biologique)",
+            issuer: "Accredited Organic Certification Body",
+            description:
+              "Strict certification confirming 100% organic agricultural methods without chemical fertilizers, synthetic insecticides, or GMOs.",
+          },
+          fr: {
+            name: "Agriculture Biologique",
+            issuer: "Organisme de Certification Agréé",
+            description:
+              "Certification rigoureuse attestant d'une culture 100% bio exempte de produits chimiques de synthèse et d'OGM.",
+          },
+          ar: {
+            name: "شهادة الفلاحة البيولوجية العضوية",
+            issuer: "هيئة مراقبة وتصديق بيولوجي معتمدة",
+            description:
+              "شهادة موثقة تثبت التزام الزراعة بالمعايير العضوية الخالية تماماً من المبيدات الكيميائية والأسمدة الصناعية.",
+          },
+          es: {
+            name: "Agricultura Ecológica",
+            issuer: "Organismo Certificador Acreditado",
+            description:
+              "Certificación que garantiza un cultivo 100% ecológico, sin pesticidas químicos ni organismos modificados genéticamente.",
+          },
+          it: {
+            name: "Certificazione Biologica",
+            issuer: "Ente di Certificazione Autorizzato",
+            description:
+              "Certificazione che attesta una coltivazione 100% biologica senza concimi chimici, pesticidi sintetici né OGM.",
+          },
+        },
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      },
+      {
+        id: "cert-5",
+        code: "HALAL",
+        badge_url: "/images/certs/halal.svg",
+        document_url: null,
+        cert_number: null,
+        issue_date: null,
+        expiry_date: null,
+        is_active: true,
+        sort_order: 5,
+        translations: {
+          en: {
+            name: "Halal Certification",
+            issuer: "Recognized Islamic Halal Authority",
+            description:
+              "Compliance certification validating that production and processing strictly follow Islamic dietary guidelines and hygiene laws.",
+          },
+          fr: {
+            name: "Certification Halal",
+            issuer: "Autorité Islamique Agréée",
+            description:
+              "Attestation garantissant la conformité stricte des processus de production aux préceptes et exigences halal.",
+          },
+          ar: {
+            name: "شهادة حلال (Halal Certified)",
+            issuer: "هيئة اعتماد الحلال المعتمدة",
+            description:
+              "شهادة رسمية تؤكد التزام كافة مراحل الإنتاج والتعبئة بالمعايير والضوابط الشرعية والصحية الإسلامية.",
+          },
+          es: {
+            name: "Certificación Halal",
+            issuer: "Autoridad Halal Reconocida",
+            description:
+              "Certificado que valida el cumplimiento estricto de las normas y pautas dietéticas islámicas.",
+          },
+          it: {
+            name: "Certificazione Halal",
+            issuer: "Autorità Islamica Riconosciuta",
+            description:
+              "Certificazione che attesta la conformità della produzione alle linee guida e ai requisiti dietetici islamici.",
+          },
+        },
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      },
+      {
+        id: "cert-6",
+        code: "KOSHER",
+        badge_url: "/images/certs/kosher.svg",
+        document_url: null,
+        cert_number: null,
+        issue_date: null,
+        expiry_date: null,
+        is_active: true,
+        sort_order: 6,
+        translations: {
+          en: {
+            name: "Kosher Certification",
+            issuer: "Accredited Rabbinical Supervision Agency",
+            description:
+              "Ensures all handling, storage facilities, and bottling lines adhere to orthodox Kosher dietary standards.",
+          },
+          fr: {
+            name: "Certification Casher",
+            issuer: "Organisme de Contrôle Rabbinique Agréé",
+            description:
+              "Garantit la conformité stricte des installations, du stockage et de l'embouteillage aux règles de la cacherout.",
+          },
+          ar: {
+            name: "شهادة كوشير (Kosher Certified)",
+            issuer: "هيئة الرقابة الغذائية المعتمدة",
+            description:
+              "توثيق مطابقة منشآت التخزين والمعالجة والتعبئة للضوابط الغذائية المعمول بها دولياً.",
+          },
+          es: {
+            name: "Certificación Kosher",
+            issuer: "Agencia de Supervisión Rabínica",
+            description:
+              "Garantiza que las instalaciones de producción y embotellado cumplen con las leyes dietéticas Kosher.",
+          },
+          it: {
+            name: "Certificazione Kosher",
+            issuer: "Agenzia di Supervisione Rabbinica",
+            description:
+              "Assicura che tutte le strutture di stoccaggio e imbottigliamento rispettino gli standard alimentari Kosher.",
+          },
+        },
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      },
+    ],
+    publications: [
+      {
+        id: "pub-1",
+        slug: "tunisian-olive-harvest-season-outlook",
+        image_url:
+          "/images/facility/storage-tanks.jpg",
+        status: "published",
+        published_at: "2026-09-15T09:00:00Z",
+        cta_label: "Inquire About Contracts",
+        cta_url: "/contact",
+        sort_order: 1,
+        translations: {
+          en: {
+            title: "Tunisian Olive Harvest: Outstanding Quality and Oil Yields",
+            short_description:
+              "With optimal Mediterranean rainfall and sun hours, Tunisian olive groves yield high polyphenol concentrations and exceptional taste profiles for the upcoming export season.",
+            content:
+              "Tunisia remains one of the world's leading olive oil exporters, celebrated for its unique Chemlali and Chetoui varietals. At Verdalia Company VC, we are securing prime forward contracts with importers in North America, Europe, and Asia seeking authentic extra virgin olive oils with certified laboratory profiles.",
+          },
+          fr: {
+            title: "Campagne Oléicole Tunisienne : Qualité Exceptionnelle et Rendements Élevés",
+            short_description:
+              "Grâce à des conditions climatiques idéales, les oliveraies tunisiennes affichent des concentrations élevées en polyphénols pour la nouvelle saison d'exportation.",
+            content:
+              "La Tunisie confirme son rôle de premier plan parmi les plus grands exportateurs mondiaux d'huile d'olive. Verdalia Company VC accompagne ses clients internationaux dans la réservation de volumes contractuels avec traçabilité intégrale.",
+          },
+          ar: {
+            title: "موسم جني الزيتون في تونس: جودة استثنائية ونسب زيوت ممتازة",
+            short_description:
+              "بفضل المناخ المتوسطي المثالي، تتميز صابة الزيتون التونسية بتركيزات عالية من مضادات الأكسدة وجودة ممتازة لموسم التصدير الجديد.",
+            content:
+              "تواصل تونس ترسيخ مكانتها كأحد أكبر مصدري زيت الزيتون في العالم بفضل أصنافها المميزة مثل الشملالي والشتوي. تعمل شركة فيرداليا على تلبية طلبات شركائها الدوليين بأسعار تنافسية وجودة موثقة.",
+          },
+          es: {
+            title: "Campaña del Olivar Tunecino: Calidad Sobresaliente y Gran Rendimiento",
+            short_description:
+              "Condiciones meteorológicas favorables garantizan aceites de oliva virgen extra con elevado contenido de polifenoles para la exportación mundial.",
+            content:
+              "Túnez consolida su posición clave en el mercado internacional de aceites. Verdalia Company VC abre reservas de contratos de suministro para importadores globales.",
+          },
+          it: {
+            title: "Raccolta delle Olive in Tunisia: Qualità Straordinaria e Rese Ottimali",
+            short_description:
+              "Un clima mediterraneo ideale regala oli extravergini di oliva ricchi di polifenoli e con profili aromatici di altissimo livello per l'export.",
+            content:
+              "La Tunisia si conferma leader mondiale nell'esportazione di olio d'oliva. Verdalia Company VC offre soluzioni di fornitura continua per importatori e catene distributive.",
+          },
+        },
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      },
+    ],
+    messages: [],
+    media_files: [
+      { id: 'media-1', name: 'verdalia-logo.jpg', url: '/images/verdalia-logo.jpg', size: 'Official Brand Asset', type: 'Logo', created_at: new Date().toISOString() },
+      { id: 'media-2', name: 'storage-tanks.jpg', url: '/images/facility/storage-tanks.jpg', size: 'Facility Photo', type: 'Facility', created_at: new Date().toISOString() },
+      { id: 'media-3', name: 'semis.jpg', url: '/images/facility/semis.jpg', size: 'Logistics Photo', type: 'Logistics', created_at: new Date().toISOString() },
+      { id: 'media-4', name: 'olive-bio.jpg', url: '/images/products/olive-bio.jpg', size: 'Product Photo', type: 'Product', created_at: new Date().toISOString() },
+      { id: 'media-5', name: 'extra-vierge.jpg', url: '/images/products/extra-vierge.jpg', size: 'Product Photo', type: 'Product', created_at: new Date().toISOString() },
+      { id: 'media-6', name: 'raffine.jpg', url: '/images/products/raffine.jpg', size: 'Product Photo', type: 'Product', created_at: new Date().toISOString() },
+      { id: 'media-7', name: 'grignons.jpg', url: '/images/products/grignons.jpg', size: 'Product Photo', type: 'Product', created_at: new Date().toISOString() },
+      { id: 'media-8', name: 'iheb-boussalem.jpg', url: '/images/cards/iheb-boussalem.jpg', size: 'Business Card', type: 'Executive', created_at: new Date().toISOString() },
+      { id: 'media-9', name: 'aymen-braham.jpg', url: '/images/cards/aymen-braham.jpg', size: 'Business Card', type: 'Executive', created_at: new Date().toISOString() },
+      { id: 'media-10', name: 'badie-amarie.jpg', url: '/images/cards/badie-amarie.jpg', size: 'Business Card', type: 'Executive', created_at: new Date().toISOString() },
+      { id: 'media-11', name: 'brc.svg', url: '/images/certs/brc.svg', size: 'Vector SVG', type: 'Certification', created_at: new Date().toISOString() },
+      { id: 'media-12', name: 'iso22000.svg', url: '/images/certs/iso22000.svg', size: 'Vector SVG', type: 'Certification', created_at: new Date().toISOString() },
+      { id: 'media-13', name: 'organic.svg', url: '/images/certs/organic.svg', size: 'Vector SVG', type: 'Certification', created_at: new Date().toISOString() },
+      { id: 'media-14', name: 'halal.svg', url: '/images/certs/halal.svg', size: 'Vector SVG', type: 'Certification', created_at: new Date().toISOString() },
+    ],
+    site_settings: {
+      company_name: "VERDALIA COMPANY VC",
+      tagline: "Quality • Commitment • Delivery",
+      country: "Tunisia",
+      address: "Tunisia",
+      general_email: "contact@verdalia.com",
+      general_phone: "+216 53 228 867",
+      whatsapp: "+216 53 228 867",
+      developer_credit: {
+        name: "Mohamed Mtir",
+        whatsapp: "+216 97 836 606",
+        email: "medmtir80@gmail.com",
+      },
+      partners: [
+        {
+          name: "Iheb Boussalem",
+          role: "Managing Director & Partner",
+          phone: "+216 53 228 867",
+          whatsapp: "+216 53 228 867",
+          email: "Bousalemiheb8@gmail.com",
+          notes: "Commercial & Executive Director",
+        },
+        {
+          name: "Aymen Braham",
+          role: "Sales Manager & Partner",
+          phone: "+216 98 462 421",
+          whatsapp: "+216 98 462 421",
+          email: "aymen_braham@outlook.fr",
+          notes: "International B2B Sales & Client Relations",
+        },
+        {
+          name: "Badie Amarie",
+          role: "Purchasing Manager & Partner",
+          phone: "+216 26 540 868",
+          whatsapp: "+216 26 540 868",
+          email: "amari.badi31989@gmail.com",
+          notes: "Owner of Amari Olive Mill & Terroir Sourcing",
+        },
+      ],
+      social_links: {
+        linkedin: "https://linkedin.com",
+        instagram: "https://instagram.com",
+        facebook: "https://facebook.com",
+      },
+      seo: {
+        fr: {
+          meta_title:
+            "Huile d'Olive Tunisie | Export Vrac – Verdalia Company VC",
+          meta_description:
+            "Exportateur d'huile d'olive tunisienne en vrac : extra vierge, bio, raffinée et grignons. Flexitank, IBC, fûts. Fournisseur B2B Tunisie pour importateurs.",
+          keywords: [
+            "huile d'olive Tunisie",
+            "huile olivier Tunisie",
+            "huile d'olive tunisienne",
+            "exportateur huile d'olive Tunisie",
+            "huile d'olive extra vierge Tunisie",
+            "huile d'olive biologique Tunisie",
+            "huile d'olive vrac Tunisie",
+            "fournisseur huile d'olive Tunisie",
+            "achat huile d'olive Tunisie",
+            "export huile d'olive",
+            "huile d'olive en gros Tunisie",
+            "olive oil Tunisia",
+            "huile olive export",
+            "grignons d'olive Tunisie",
+            "flexitank huile d'olive",
+          ],
+        },
+        en: {
+          meta_title:
+            "Tunisian Olive Oil Exporter | Bulk Export – Verdalia Company VC",
+          meta_description:
+            "Tunisian olive oil exporter: extra virgin, organic, refined and pomace in bulk. Flexitank, IBC, drums. B2B supplier from Tunisia for importers worldwide.",
+          keywords: [
+            "Tunisian olive oil",
+            "olive oil Tunisia",
+            "Tunisian olive oil exporter",
+            "bulk olive oil Tunisia",
+            "extra virgin olive oil Tunisia",
+            "organic olive oil Tunisia",
+            "olive oil supplier Tunisia",
+            "wholesale olive oil Tunisia",
+            "olive oil export Tunisia",
+            "buy olive oil from Tunisia",
+            "pomace olive oil Tunisia",
+            "flexitank olive oil",
+            "huile d'olive Tunisie",
+          ],
+        },
+        ar: {
+          meta_title:
+            "زيت زيتون تونسي للتصدير | فيرداليا — تصدير بالجملة",
+          meta_description:
+            "تصدير زيت الزيتون التونسي بالجملة: بكر ممتاز، عضوي، مكرر وتفل. فليكسي تانك وحاويات IBC. مورد B2B من تونس للمستوردين.",
+          keywords: [
+            "زيت زيتون تونسي",
+            "تصدير زيت الزيتون تونس",
+            "مورد زيت زيتون تونسي",
+            "زيت زيتون بكر ممتاز تونس",
+            "زيت زيتون بيولوجي تونس",
+            "زيت زيتون بالجملة تونس",
+            "شراء زيت زيتون تونس",
+            "شركة تصدير زيت زيتون",
+            "زيت زيتون سائب",
+            "huile d'olive Tunisie",
+          ],
+        },
+        es: {
+          meta_title:
+            "Aceite de Oliva Túnez | Exportación a Granel – Verdalia",
+          meta_description:
+            "Exportador de aceite de oliva tunecino a granel: virgen extra, ecológico, refinado y orujo. Flexitank, IBC, bidones. Proveedor B2B desde Túnez.",
+          keywords: [
+            "aceite de oliva Túnez",
+            "aceite de oliva tunecino",
+            "exportador aceite de oliva Túnez",
+            "aceite de oliva virgen extra Túnez",
+            "aceite de oliva ecológico Túnez",
+            "aceite de oliva a granel Túnez",
+            "proveedor aceite de oliva Túnez",
+            "comprar aceite de oliva Túnez",
+            "huile d'olive Tunisie",
+          ],
+        },
+        it: {
+          meta_title:
+            "Olio d'Oliva Tunisia | Esportazione Sfusa – Verdalia",
+          meta_description:
+            "Esportatore di olio d'oliva tunisino sfuso: extra vergine, biologico, raffinato e sansa. Flexitank, IBC, fusti. Fornitore B2B dalla Tunisia.",
+          keywords: [
+            "olio d'oliva Tunisia",
+            "olio d'oliva tunisino",
+            "esportatore olio d'oliva Tunisia",
+            "olio extra vergine di oliva Tunisia",
+            "olio d'oliva biologico Tunisia",
+            "olio d'oliva sfuso Tunisia",
+            "fornitore olio d'oliva Tunisia",
+            "comprare olio d'oliva Tunisia",
+            "huile d'olive Tunisie",
+          ],
+        },
+      },
+    },
+    content_blocks: {
+      en: {
+        hero_title: "From Tunisia,",
+        hero_subtitle:
+          "Verdalia Company VC exports high-quality Tunisian olive oil to importers, distributors and business partners around the world.",
+        hero_badge: "PREMIUM TUNISIAN OLIVE OIL",
+        hero_cta_primary: "Discover Our Products",
+        hero_cta_secondary: "Request a Quote",
+        about_title: "A Tunisian Heritage, A Global Passion",
+        about_subtitle: "ABOUT VERDALIA COMPANY VC",
+        about_text:
+          "Verdalia Company VC is a Tunisian company dedicated to the export of olive oil for international markets. We connect the richness of Tunisian olive-growing traditions with the needs of global partners.",
+        why_choose_title: "Why Choose Verdalia",
+        why_choose_subtitle: "COMMITTED TO EXCELLENCE",
+        export_title: "Tunisian Olive Oil Exported Worldwide",
+        export_subtitle: "GLOBAL LOGISTICS & COMMERCIAL SUPPORT",
+        export_text:
+          "Verdalia Company VC supports international companies looking to source Tunisian olive oil. We work with importers, distributors and commercial partners to provide products adapted to their market requirements.",
+      },
+      fr: {
+        hero_title: "De la Tunisie,",
+        hero_subtitle:
+          "Verdalia Company VC exporte de l'huile d'olive tunisienne de qualité supérieure aux importateurs, distributeurs et partenaires commerciaux du monde entier.",
+        hero_badge: "HUILE D'OLIVE TUNISIENNE HAUT DE GAMME",
+        hero_cta_primary: "Découvrir Nos Produits",
+        hero_cta_secondary: "Demander un Devis",
+        about_title: "Un Héritage Tunisien, Une Passion Mondiale",
+        about_subtitle: "À PROPOS DE VERDALIA COMPANY VC",
+        about_text:
+          "Verdalia Company VC est une entreprise tunisienne dédiée à l'exportation d'huile d'olive vers les marchés internationaux. Nous relions la richesse du terroir oléicole tunisien aux attentes de nos partenaires mondiaux.",
+        why_choose_title: "Pourquoi Choisir Verdalia",
+        why_choose_subtitle: "ENGAGEMENT ET EXCELLENCE",
+        export_title: "L'Huile d'Olive Tunisienne Exportée dans le Monde",
+        export_subtitle: "LOGISTIQUE MONDIALE ET SUPPORT COMMERCIAL",
+        export_text:
+          "Verdalia Company VC accompagne les sociétés internationales désireuses d'importer de l'huile d'olive tunisienne. Nous proposons des produits parfaitement adaptés aux exigences de chaque marché.",
+      },
+      ar: {
+        hero_title: "من تونس،",
+        hero_subtitle:
+          "تقوم شركة فيرداليا في سي بتصدير زيت الزيتون التونسي عالي الجودة إلى المستوردين والموزعين والشركاء التجاريين في جميع أنحاء العالم.",
+        hero_badge: "زيت زيتون تونسي فائق الجودة",
+        hero_cta_primary: "اكتشف منتجاتنا",
+        hero_cta_secondary: "طلب عرض أسعار",
+        about_title: "عراقة تونسية وشغف عالمي",
+        about_subtitle: "عن شركة فيرداليا في سي",
+        about_text:
+          "فيرداليا هي شركة تونسية متخصصة في تصدير زيت الزيتون للأسواق الدولية. نربط عراقة التقاليد الفلاحية التونسية باحتياجات كبار الشركاء التجاريين حول العالم.",
+        why_choose_title: "لماذا تختار فيرداليا",
+        why_choose_subtitle: "التزام راسخ بالجودة",
+        export_title: "زيت زيتون تونسي مصدّر إلى العالم أجمع",
+        export_subtitle: "خدمات لوجستية وتجارية متكاملة",
+        export_text:
+          "تدعم شركة فيرداليا الشركات والمستوردين الدوليين في استيراد زيت الزيتون التونسي وتوفر حلولاً مرنة ومخصصة تلبي كافة متطلبات أسواقهم.",
+      },
+      es: {
+        hero_title: "Desde Túnez,",
+        hero_subtitle:
+          "Verdalia Company VC exporta aceite de oliva tunecino de alta calidad a importadores, distribuidores y socios comerciales de todo el mundo.",
+        hero_badge: "ACEITE DE OLIVA TUNECINO PREMIUM",
+        hero_cta_primary: "Descubrir Productos",
+        hero_cta_secondary: "Solicitar Cotización",
+        about_title: "Herencia Tunecina, Pasión Global",
+        about_subtitle: "SOBRE VERDALIA COMPANY VC",
+        about_text:
+          "Verdalia Company VC es una empresa tunecina dedicada a la exportación de aceite de oliva para mercados internacionales, uniendo la riqueza tradicional con la demanda global.",
+        why_choose_title: "Por Qué Elegir Verdalia",
+        why_choose_subtitle: "COMPROMISO Y EXCELENCIA",
+        export_title: "Aceite de Oliva Tunecino Exportado a Todo el Mundo",
+        export_subtitle: "LOGÍSTICA GLOBAL Y APOYO COMERCIAL",
+        export_text:
+          "Verdalia Company VC apoya a empresas internacionales que buscan importar aceite de oliva tunecino con soluciones adaptadas a sus mercados.",
+      },
+      it: {
+        hero_title: "Dalla Tunisia,",
+        hero_subtitle:
+          "Verdalia Company VC esporta olio d'oliva tunisino di alta qualità a importatori, distributori e partner commerciali in tutto il mondo.",
+        hero_badge: "OLIO D'OLIVA TUNISINO DI ALTA QUALITÀ",
+        hero_cta_primary: "Scopri i Nostri Prodotti",
+        hero_cta_secondary: "Richiedi Preventivo",
+        about_title: "Tradizione Tunisina, Passione Globale",
+        about_subtitle: "CHI È VERDALIA COMPANY VC",
+        about_text:
+          "Verdalia Company VC è un'azienda tunisina dedicata all'esportazione di olio d'oliva per i mercati internazionali, unendo tradizione e partnership globali.",
+        why_choose_title: "Perché Scegliere Verdalia",
+        why_choose_subtitle: "IMPEGNO PER L'ECCELLENZA",
+        export_title: "Olio d'Oliva Tunisino Esportato nel Mondo",
+        export_subtitle: "LOGISTICA GLOBALE E SUPPORTO COMMERCIALE",
+        export_text:
+          "Verdalia Company VC supporta le aziende internazionali nell'importazione di olio d'oliva tunisino di alta qualità, con soluzioni su misura per ogni mercato.",
+      },
+    },
+  };
+}

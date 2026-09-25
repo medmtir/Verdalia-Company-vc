@@ -1,0 +1,93 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --font-playfair: 'Playfair Display', Georgia, serif;
+  --font-montserrat: 'Montserrat', sans-serif;
+  --font-cairo: 'Cairo', sans-serif;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  color: #203A1A;
+  background-color: #FCFAF5;
+  font-family: var(--font-montserrat);
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+[dir="rtl"] {
+  font-family: var(--font-cairo);
+}
+
+[dir="rtl"] .font-serif {
+  font-family: var(--font-cairo);
+  font-weight: 800;
+}
+
+/* Custom scrollbars */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #F3EBDD;
+}
+::-webkit-scrollbar-thumb {
+  background: #9BAF78;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #355B24;
+}
+
+/* Luxury button styling */
+.btn-primary {
+  @apply inline-flex items-center justify-center px-6 py-3 text-sm font-semibold tracking-wider text-white uppercase transition-all duration-300 rounded bg-verdalia-olive hover:bg-verdalia-dark shadow-sm hover:shadow-md active:scale-[0.99];
+}
+
+.btn-secondary {
+  @apply inline-flex items-center justify-center px-6 py-3 text-sm font-semibold tracking-wider uppercase transition-all duration-300 rounded border border-verdalia-olive text-verdalia-olive hover:bg-verdalia-olive hover:text-white;
+}
+
+.btn-gold {
+  @apply inline-flex items-center justify-center px-6 py-3 text-sm font-semibold tracking-wider text-verdalia-dark uppercase transition-all duration-300 rounded bg-verdalia-gold hover:bg-yellow-500 shadow-sm hover:shadow-md;
+}
+
+/* Card hover animation */
+.card-hover {
+  @apply transition-all duration-300 hover:-translate-y-1 hover:shadow-luxury;
+}
+
+/* Subtle image reveal */
+.img-zoom-container {
+  overflow: hidden;
+}
+.img-zoom-container img {
+  transition: transform 0.6s cubic-bezier(0.25, 1, 0.5, 1);
+}
+.img-zoom-container:hover img {
+  transform: scale(1.05);
+}
+
+/* Hero background zoom animation */
+@keyframes subtle-zoom {
+  from { transform: scale(1.05); }
+  to   { transform: scale(1.12); }
+}
+.animate-subtle-zoom {
+  animation: subtle-zoom 20s ease-in-out infinite alternate;
+}
+
+/* Modal / drawer fade-in animation */
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-in {
+  animation: fade-in 0.3s ease-out forwards;
+}
