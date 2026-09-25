@@ -712,27 +712,45 @@ export default function MessagesManagementPage() {
 
               {/* File Attachment */}
               {selectedMessage.attachment_url && (
-                <div className="p-4 bg-amber-50/60 rounded-lg border border-amber-200 flex items-center justify-between">
-                  <div className="flex items-center gap-2.5">
-                    <Paperclip className="w-5 h-5 text-amber-700" />
-                    <div>
-                      <p className="font-bold text-amber-900">
-                        Specification Sheet / RFQ Document
-                      </p>
-                      <p className="text-[11px] text-amber-700">
-                        Uploaded by buyer
-                      </p>
+                <div className="p-4 bg-amber-50/60 rounded-xl border border-amber-200 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2.5">
+                      <Paperclip className="w-5 h-5 text-amber-700" />
+                      <div>
+                        <p className="font-bold text-amber-900 text-xs">
+                          Spécification / Document joint
+                        </p>
+                        <p className="text-[10px] text-amber-700">
+                          Pièce jointe envoyée par le client
+                        </p>
+                      </div>
                     </div>
+                    <a
+                      href={selectedMessage.attachment_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="btn-primary py-1.5 px-3 text-xs inline-flex items-center gap-1.5 shadow-sm"
+                    >
+                      <span>Ouvrir / Télécharger</span>
+                      <ExternalLink className="w-3.5 h-3.5" />
+                    </a>
                   </div>
-                  <a
-                    href={selectedMessage.attachment_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="btn-primary py-2 px-3 text-xs inline-flex items-center gap-1.5"
-                  >
-                    <span>Download File</span>
-                    <ExternalLink className="w-3.5 h-3.5" />
-                  </a>
+
+                  {/* Inline Image Preview */}
+                  {(selectedMessage.attachment_url.startsWith("data:image/") ||
+                    /\.(jpg|jpeg|png|webp|gif)(\?.*)?$/i.test(selectedMessage.attachment_url) ||
+                    selectedMessage.attachment_url.includes("supabase.co/storage")) && (
+                    <div className="relative w-full h-56 rounded-lg overflow-hidden border border-amber-200 bg-white flex items-center justify-center shadow-inner">
+                      <img
+                        src={selectedMessage.attachment_url}
+                        alt="Pièce jointe envoyée"
+                        className="w-full h-full object-contain p-2"
+                        onError={(e) => {
+                          (e.target as HTMLElement).style.display = "none";
+                        }}
+                      />
+                    </div>
+                  )}
                 </div>
               )}
 

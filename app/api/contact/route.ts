@@ -65,23 +65,59 @@ export async function POST(req: NextRequest) {
       const bytes = await file.arrayBuffer();
       const buffer = Buffer.from(bytes);
 
-      try {
-        const uploadsDir = path.join(process.cwd(), "public", "uploads");
-        if (!fs.existsSync(uploadsDir)) {
-          fs.mkdirSync(uploadsDir, { recursive: true });
+      const safeExt = path.extname(file.name).toLowerCase();
+      const safeFilename = `${Date.now()}-${Math.random()
+        .toString(36)
+        .substring(2, 9)}${safeExt}`;
+
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+      const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+      // 1. Upload to Supabase Storage (cloud hosting, persists permanently on Vercel)
+      if (supabaseUrl && supabaseKey) {
+        try {
+          const uploadRes = await fetch(
+            `${supabaseUrl}/storage/v1/object/verdalia-uploads/${safeFilename}`,
+            {
+              method: "POST",
+              headers: {
+                apikey: supabaseKey,
+                Authorization: `Bearer ${supabaseKey}`,
+                "Content-Type": file.type || "application/octet-stream",
+                "x-upsert": "true",
+              },
+              body: buffer,
+            }
+          );
+
+          if (uploadRes.ok) {
+            attachmentUrl = `${supabaseUrl}/storage/v1/object/public/verdalia-uploads/${safeFilename}`;
+          } else {
+            console.error("Supabase storage upload error:", await uploadRes.text());
+          }
+        } catch (sErr) {
+          console.error("Supabase upload exception:", sErr);
         }
+      }
 
-        const safeExt = path.extname(file.name).toLowerCase();
-        const safeFilename = `${Date.now()}-${Math.random()
-          .toString(36)
-          .substring(2, 9)}${safeExt}`;
-        const filePath = path.join(uploadsDir, safeFilename);
-
-        fs.writeFileSync(filePath, buffer);
-        attachmentUrl = `/uploads/${safeFilename}`;
-      } catch (uploadErr) {
-        console.warn("Local disk write not supported on serverless, using placeholder:", uploadErr);
-        attachmentUrl = `/uploads/${file.name}`;
+      // 2. If Supabase storage is not configured (e.g. offline dev), fallback to local disk or data URL
+      if (!attachmentUrl) {
+        try {
+          const uploadsDir = path.join(process.cwd(), "public", "uploads");
+          if (!fs.existsSync(uploadsDir)) {
+            fs.mkdirSync(uploadsDir, { recursive: true });
+          }
+          const filePath = path.join(uploadsDir, safeFilename);
+          fs.writeFileSync(filePath, buffer);
+          attachmentUrl = `/uploads/${safeFilename}`;
+        } catch (uploadErr) {
+          // In serverless without storage, encode image directly as Base64 Data URL so it NEVER gives 404
+          if (file.type && file.type.startsWith("image/") && file.size < 4 * 1024 * 1024) {
+            attachmentUrl = `data:${file.type};base64,${buffer.toString("base64")}`;
+          } else {
+            attachmentUrl = `/uploads/${safeFilename}`;
+          }
+        }
       }
     }
 
