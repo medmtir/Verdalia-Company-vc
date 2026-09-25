@@ -372,7 +372,7 @@ export default function MessagesManagementPage() {
         </div>
       )}
 
-      {/* Messages Table */}
+      {/* Messages Table & Mobile Cards */}
       <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
         {loading ? (
           <div className="py-20 text-center text-xs text-gray-500">
@@ -385,8 +385,102 @@ export default function MessagesManagementPage() {
               : t.noMatches}
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs">
+          <>
+            {/* Mobile Card View (md:hidden) */}
+            <div className="md:hidden divide-y divide-gray-100">
+              {filtered.map((msg) => (
+                <div
+                  key={msg.id}
+                  onClick={() => handleSelectMessage(msg)}
+                  className={`p-4 transition-colors cursor-pointer active:bg-gray-50 ${
+                    msg.status === "unread" ? "bg-amber-50/40" : "bg-white"
+                  } ${msg.status === "trash" ? "bg-red-50/20" : ""}`}
+                >
+                  <div className="flex items-start justify-between gap-2 mb-2">
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-1.5">
+                        {msg.status === "unread" && (
+                          <span className="w-2 h-2 rounded-full bg-amber-500 flex-shrink-0" />
+                        )}
+                        <p className="font-bold text-gray-900 text-sm truncate">
+                          {msg.full_name}
+                        </p>
+                      </div>
+                      <p className="text-gray-500 text-xs truncate mt-0.5">
+                        {msg.company_name} {msg.country ? `• ${msg.country}` : ""}
+                      </p>
+                    </div>
+                    <span
+                      className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider flex-shrink-0 ${
+                        msg.status === "unread"
+                          ? "bg-amber-100 text-amber-800"
+                          : msg.status === "contacted"
+                          ? "bg-blue-100 text-blue-800"
+                          : msg.status === "archived"
+                          ? "bg-gray-100 text-gray-700"
+                          : "bg-red-100 text-red-800"
+                      }`}
+                    >
+                      {msg.status}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center justify-between text-xs text-verdalia-dark font-medium bg-gray-50 p-2.5 rounded-lg mb-2.5 border border-gray-100">
+                    <span className="truncate">{msg.product_interest}</span>
+                    <span className="text-gray-400 text-[11px] font-normal flex-shrink-0 ml-2">
+                      {msg.quantity || "Non spécifié"}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center justify-between text-[11px] text-gray-500">
+                    <div className="flex items-center gap-3">
+                      <span>{new Date(msg.created_at).toLocaleDateString()}</span>
+                      {msg.attachment_url && (
+                        <span className="inline-flex items-center gap-1 text-verdalia-olive font-bold">
+                          <Paperclip className="w-3 h-3" />
+                          <span>Fichier</span>
+                        </span>
+                      )}
+                    </div>
+                    <div
+                      className="flex items-center gap-1"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      {statusFilter === "trash" ? (
+                        <>
+                          <button
+                            onClick={() => handleRestore(msg.id)}
+                            className="p-1.5 text-verdalia-olive hover:bg-emerald-50 rounded"
+                            title={t.restore}
+                          >
+                            <RotateCcw className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => openDeleteConfirm(msg, true)}
+                            className="p-1.5 text-red-500 hover:bg-red-50 rounded"
+                            title={t.permanentDelete}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </>
+                      ) : (
+                        <button
+                          onClick={() => openDeleteConfirm(msg, false)}
+                          className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded"
+                          title={t.moveToTrash}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Desktop Table View */}
+            <div className="hidden md:block overflow-x-auto">
+              <table className="w-full text-left text-xs">
               <thead className="bg-gray-50 text-gray-500 font-semibold border-b border-gray-200">
                 <tr>
                   <th className="px-6 py-3.5">{t.thCompany}</th>
@@ -523,7 +617,8 @@ export default function MessagesManagementPage() {
                 ))}
               </tbody>
             </table>
-          </div>
+            </div>
+          </>
         )}
       </div>
 
@@ -532,12 +627,12 @@ export default function MessagesManagementPage() {
           ==================================================== */}
       {mounted && confirmModal.isOpen && createPortal(
         <div
-          className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-verdalia-dark/75 backdrop-blur-md animate-fade-in"
+          className="fixed inset-0 z-[99999] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-verdalia-dark/75 backdrop-blur-md animate-fade-in"
           style={{ backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)" }}
         >
-          <div className="relative w-full max-w-md bg-verdalia-offwhite rounded-2xl shadow-2xl border border-verdalia-border overflow-hidden">
+          <div className="relative w-full max-w-md bg-verdalia-offwhite rounded-t-2xl sm:rounded-2xl shadow-2xl border border-verdalia-border overflow-hidden">
             {/* Header with Luxury Brand Accent */}
-            <div className="bg-[#172B13] p-6 text-white text-center relative">
+            <div className="bg-[#172B13] p-5 sm:p-6 text-white text-center relative">
               <button
                 onClick={() => setConfirmModal({ ...confirmModal, isOpen: false })}
                 className="absolute top-4 right-4 p-1.5 text-gray-400 hover:text-white rounded-full transition-colors"
@@ -607,19 +702,24 @@ export default function MessagesManagementPage() {
       {/* Message Detail Modal */}
       {mounted && selectedMessage && createPortal(
         <div
-          className="fixed inset-0 z-[99998] flex items-center justify-center p-4 bg-black/65 backdrop-blur-md animate-fade-in"
+          className="fixed inset-0 z-[99998] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/65 backdrop-blur-md animate-fade-in"
           style={{ backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)" }}
         >
-          <div className="relative w-full max-w-2xl bg-white rounded-xl shadow-2xl border border-gray-200 overflow-hidden flex flex-col max-h-[90vh]">
+          <div className="relative w-full max-w-2xl bg-white rounded-t-2xl sm:rounded-xl shadow-2xl border border-gray-200 overflow-hidden flex flex-col max-h-[94vh] sm:max-h-[90vh]">
+            {/* Mobile Sheet Drag Handle Indicator */}
+            <div className="sm:hidden flex justify-center pt-2.5 pb-1">
+              <span className="w-10 h-1 rounded-full bg-gray-300" />
+            </div>
+
             {/* Header */}
-            <div className="px-6 py-4 bg-gray-50 border-b border-gray-200 flex items-center justify-between">
+            <div className="px-4 sm:px-6 py-3 sm:py-4 bg-gray-50 border-b border-gray-200 flex items-center justify-between">
               <div>
-                <h3 className="font-serif text-lg font-bold text-verdalia-dark">
+                <h3 className="font-serif text-base sm:text-lg font-bold text-verdalia-dark">
                   Commercial Inquiry Details
                 </h3>
-                <p className="text-xs text-gray-500">
-                  ID: {selectedMessage.id} • Received on{" "}
-                  {new Date(selectedMessage.created_at).toLocaleString()}
+                <p className="text-[11px] sm:text-xs text-gray-500">
+                  ID: {selectedMessage.id.slice(0, 8)}... • Received on{" "}
+                  {new Date(selectedMessage.created_at).toLocaleDateString()}
                 </p>
               </div>
               <button
@@ -631,9 +731,9 @@ export default function MessagesManagementPage() {
             </div>
 
             {/* Scrollable Body */}
-            <div className="p-6 overflow-y-auto space-y-6 text-xs">
+            <div className="p-4 sm:p-6 overflow-y-auto space-y-4 sm:space-y-6 text-xs">
               {/* Buyer Information Box */}
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 p-4 bg-verdalia-offwhite rounded-lg border border-verdalia-border">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4 p-3.5 sm:p-4 bg-verdalia-offwhite rounded-lg border border-verdalia-border">
                 <div>
                   <span className="text-[10px] uppercase font-bold text-gray-400 block">
                     Full Name
@@ -664,7 +764,7 @@ export default function MessagesManagementPage() {
                   </span>
                   <a
                     href={`mailto:${selectedMessage.email}`}
-                    className="font-semibold text-verdalia-olive hover:underline"
+                    className="font-semibold text-verdalia-olive hover:underline break-all"
                   >
                     {selectedMessage.email}
                   </a>
@@ -691,8 +791,8 @@ export default function MessagesManagementPage() {
               </div>
 
               {/* Requirement Details */}
-              <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
-                <div className="flex justify-between items-center mb-2">
+              <div className="p-3.5 sm:p-4 bg-gray-50 rounded-lg border border-gray-200">
+                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-1 mb-2">
                   <span className="font-bold text-verdalia-dark text-sm">
                     Product: {selectedMessage.product_interest}
                   </span>
@@ -712,10 +812,10 @@ export default function MessagesManagementPage() {
 
               {/* File Attachment */}
               {selectedMessage.attachment_url && (
-                <div className="p-4 bg-amber-50/60 rounded-xl border border-amber-200 space-y-3">
-                  <div className="flex items-center justify-between">
+                <div className="p-3.5 sm:p-4 bg-amber-50/60 rounded-xl border border-amber-200 space-y-3">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                     <div className="flex items-center gap-2.5">
-                      <Paperclip className="w-5 h-5 text-amber-700" />
+                      <Paperclip className="w-5 h-5 text-amber-700 flex-shrink-0" />
                       <div>
                         <p className="font-bold text-amber-900 text-xs">
                           Spécification / Document joint
@@ -729,7 +829,7 @@ export default function MessagesManagementPage() {
                       href={selectedMessage.attachment_url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="btn-primary py-1.5 px-3 text-xs inline-flex items-center gap-1.5 shadow-sm"
+                      className="btn-primary py-1.5 px-3 text-xs inline-flex items-center justify-center gap-1.5 shadow-sm"
                     >
                       <span>Ouvrir / Télécharger</span>
                       <ExternalLink className="w-3.5 h-3.5" />
@@ -740,7 +840,7 @@ export default function MessagesManagementPage() {
                   {(selectedMessage.attachment_url.startsWith("data:image/") ||
                     /\.(jpg|jpeg|png|webp|gif)(\?.*)?$/i.test(selectedMessage.attachment_url) ||
                     selectedMessage.attachment_url.includes("supabase.co/storage")) && (
-                    <div className="relative w-full h-56 rounded-lg overflow-hidden border border-amber-200 bg-white flex items-center justify-center shadow-inner">
+                    <div className="relative w-full h-44 sm:h-56 rounded-lg overflow-hidden border border-amber-200 bg-white flex items-center justify-center shadow-inner">
                       <img
                         src={selectedMessage.attachment_url}
                         alt="Pièce jointe envoyée"
@@ -779,9 +879,9 @@ export default function MessagesManagementPage() {
             </div>
 
             {/* Footer Actions */}
-            <div className="px-6 py-4 bg-gray-50 border-t border-gray-200 flex flex-wrap items-center justify-between gap-3">
+            <div className="px-4 sm:px-6 py-3 sm:py-4 bg-gray-50 border-t border-gray-200 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
               {selectedMessage.status === "trash" ? (
-                <div className="flex items-center gap-3">
+                <div className="flex items-center justify-between sm:justify-start gap-3 w-full sm:w-auto">
                   <button
                     onClick={() => handleRestore(selectedMessage.id)}
                     className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-verdalia-olive text-white hover:bg-verdalia-dark transition-colors flex items-center gap-1.5"
@@ -799,25 +899,37 @@ export default function MessagesManagementPage() {
                 </div>
               ) : (
                 <>
-                  <div className="flex items-center gap-2">
-                    <span className="text-[11px] font-bold uppercase text-gray-400">
-                      Update Status:
+                  <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+                    <span className="text-[11px] font-bold uppercase text-gray-400 mr-1">
+                      Statut:
                     </span>
                     <button
                       onClick={() => updateStatus(selectedMessage.id, "unread")}
-                      className="px-2.5 py-1 text-[11px] font-semibold rounded bg-amber-100 text-amber-800 hover:bg-amber-200"
+                      className={`px-2.5 py-1 text-[11px] font-semibold rounded transition-colors ${
+                        selectedMessage.status === "unread"
+                          ? "bg-amber-500 text-white font-bold"
+                          : "bg-amber-100 text-amber-800 hover:bg-amber-200"
+                      }`}
                     >
                       Unread
                     </button>
                     <button
                       onClick={() => updateStatus(selectedMessage.id, "contacted")}
-                      className="px-2.5 py-1 text-[11px] font-semibold rounded bg-blue-100 text-blue-800 hover:bg-blue-200"
+                      className={`px-2.5 py-1 text-[11px] font-semibold rounded transition-colors ${
+                        selectedMessage.status === "contacted"
+                          ? "bg-blue-600 text-white font-bold"
+                          : "bg-blue-100 text-blue-800 hover:bg-blue-200"
+                      }`}
                     >
                       Contacted
                     </button>
                     <button
                       onClick={() => updateStatus(selectedMessage.id, "archived")}
-                      className="px-2.5 py-1 text-[11px] font-semibold rounded bg-gray-200 text-gray-700 hover:bg-gray-300"
+                      className={`px-2.5 py-1 text-[11px] font-semibold rounded transition-colors ${
+                        selectedMessage.status === "archived"
+                          ? "bg-gray-700 text-white font-bold"
+                          : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                      }`}
                     >
                       Archived
                     </button>
@@ -825,7 +937,7 @@ export default function MessagesManagementPage() {
 
                   <button
                     onClick={() => openDeleteConfirm(selectedMessage, false)}
-                    className="text-xs text-red-600 hover:text-red-800 font-semibold flex items-center gap-1"
+                    className="text-xs text-red-600 hover:text-red-800 font-semibold flex items-center justify-center gap-1 py-1"
                   >
                     <Trash2 className="w-3.5 h-3.5" />
                     <span>Mettre à la corbeille</span>

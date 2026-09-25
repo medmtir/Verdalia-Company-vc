@@ -418,29 +418,30 @@ function AdminDashboardInner({
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
         {/* Top Header Bar - Fixed permanently at top on scroll */}
-        <header className="bg-white border-b border-gray-200 px-6 py-3.5 flex items-center justify-between sticky top-0 z-30 flex-shrink-0 shadow-xs">
-          <div className="flex items-center gap-4">
+        <header className="bg-white border-b border-gray-200 px-3 sm:px-6 py-2.5 sm:py-3.5 flex items-center justify-between sticky top-0 z-30 flex-shrink-0 shadow-xs">
+          <div className="flex items-center gap-2 sm:gap-4 min-w-0">
             <button
               onClick={() => setMobileOpen(true)}
-              className="lg:hidden p-2 text-gray-600 hover:text-gray-900 rounded"
+              className="lg:hidden p-2 text-gray-600 hover:text-gray-900 rounded-lg hover:bg-gray-100 transition-colors flex-shrink-0"
+              aria-label="Open navigation menu"
             >
               <Menu className="w-5 h-5" />
             </button>
-            <h2 className="font-serif text-lg font-bold text-verdalia-dark">
+            <h2 className="font-serif text-sm sm:text-lg font-bold text-verdalia-dark truncate">
               {adminDict.header.title}
             </h2>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
             {/* Admin Language Switcher */}
             <div className="relative" ref={langRef}>
               <button
                 type="button"
                 onClick={() => setLangDropdownOpen(!langDropdownOpen)}
-                className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold text-verdalia-dark tracking-wider uppercase hover:text-verdalia-olive transition-colors rounded hover:bg-verdalia-beige/60 border border-gray-200 shadow-2xs"
+                className="flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 py-1.5 text-xs font-semibold text-verdalia-dark tracking-wider uppercase hover:text-verdalia-olive transition-colors rounded hover:bg-verdalia-beige/60 border border-gray-200 shadow-2xs"
                 title="Changer la langue du panneau d'administration"
               >
-                <Globe className="w-3.5 h-3.5 text-verdalia-olive" />
+                <Globe className="w-3.5 h-3.5 text-verdalia-olive flex-shrink-0" />
                 <span className="font-bold">{currentMeta.code.toUpperCase()}</span>
                 <ChevronDown
                   className={`w-3.5 h-3.5 transition-transform duration-200 text-gray-500 ${
@@ -450,7 +451,7 @@ function AdminDashboardInner({
               </button>
 
               {langDropdownOpen && (
-                <div className="absolute right-0 mt-2 w-44 py-1.5 bg-white rounded-xl shadow-2xl border border-gray-200 z-50 animate-fade-in">
+                <div className="absolute right-0 mt-2 w-44 py-1.5 bg-white rounded-xl shadow-2xl border border-gray-200 z-50 animate-fade-in max-w-[calc(100vw-1.5rem)]">
                   <div className="px-3 py-1.5 text-[10px] uppercase font-bold tracking-wider text-gray-400 border-b border-gray-100">
                     Language / Langue
                   </div>
@@ -510,9 +511,9 @@ function AdminDashboardInner({
                 )}
               </button>
 
-              {/* Notification Popover Dropdown */}
+              {/* Notification Popover Dropdown - Responsive on mobile */}
               {notificationsOpen && (
-                <div className="absolute right-0 mt-2 w-80 sm:w-96 bg-white rounded-xl shadow-2xl border border-gray-200 overflow-hidden z-50 animate-fade-in">
+                <div className="fixed sm:absolute inset-x-2 sm:inset-x-auto sm:right-0 top-14 sm:top-full mt-1 sm:mt-2 w-auto sm:w-96 max-w-[calc(100vw-1rem)] bg-white rounded-2xl sm:rounded-xl shadow-2xl border border-gray-200 overflow-hidden z-50 animate-fade-in">
                   <div className="p-3.5 bg-gray-50 border-b border-gray-100 flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <span className="font-serif text-xs font-bold text-verdalia-dark">
@@ -580,20 +581,29 @@ function AdminDashboardInner({
               )}
             </div>
 
+            {/* Live website link - Desktop pill & Mobile icon */}
             <Link
               href="/"
               target="_blank"
-              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold text-verdalia-olive bg-verdalia-beige/60 hover:bg-verdalia-beige rounded border border-verdalia-border transition-colors"
+              className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-verdalia-olive bg-verdalia-beige/60 hover:bg-verdalia-beige rounded border border-verdalia-border transition-colors"
             >
               <span>{adminDict.header.viewLiveWebsite}</span>
               <ExternalLink className="w-3.5 h-3.5" />
             </Link>
+            <Link
+              href="/"
+              target="_blank"
+              className="sm:hidden p-2 text-verdalia-olive hover:bg-verdalia-beige/60 rounded-lg border border-gray-200 transition-colors"
+              title={adminDict.header.viewLiveWebsite}
+            >
+              <ExternalLink className="w-4 h-4" />
+            </Link>
           </div>
         </header>
 
-        {/* Floating Toast Notification for New Incoming Requests */}
+        {/* Floating Toast Notification for New Incoming Requests - Responsive on mobile */}
         {toastNotification && (
-          <div className="fixed top-16 right-6 z-50 max-w-sm bg-[#172B13] text-white p-4 rounded-xl shadow-2xl border border-verdalia-gold/50 animate-bounce-short flex items-start gap-3">
+          <div className="fixed top-14 sm:top-16 inset-x-3 sm:inset-x-auto sm:right-6 z-50 max-w-sm bg-[#172B13] text-white p-4 rounded-xl shadow-2xl border border-verdalia-gold/50 animate-bounce-short flex items-start gap-3">
             <div className="w-9 h-9 rounded-full bg-verdalia-gold/20 flex items-center justify-center flex-shrink-0 text-verdalia-gold">
               <BellRing className="w-5 h-5 animate-pulse" />
             </div>
@@ -627,7 +637,7 @@ function AdminDashboardInner({
         )}
 
         {/* Main Content Scrollable Area */}
-        <main className="flex-1 overflow-y-auto p-6 md:p-8 bg-[#F8F7F4]">
+        <main className="flex-1 overflow-y-auto p-3.5 sm:p-6 md:p-8 bg-[#F8F7F4]">
           {children}
         </main>
       </div>
