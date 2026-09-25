@@ -8,7 +8,49 @@ import {
   TOKEN_COOKIE,
 } from "@/lib/auth";
 
+// ===== SECURITY: Brute force protection =====
+const loginAttempts = new Map<string, { count: number; resetAt: number; lockedUntil: number }>();
+const MAX_ATTEMPTS = 5;
+const ATTEMPT_WINDOW = 15 * 60 * 1000; // 15 minutes
+const LOCKOUT_DURATION = 30 * 60 * 1000; // 30 minutes lockout after max attempts
+
+function checkLoginRateLimit(ip: string): { allowed: boolean; retryAfter?: number } {
+  const now = Date.now();
+  const entry = loginAttempts.get(ip);
+
+  if (!entry || now > entry.resetAt) {
+    loginAttempts.set(ip, { count: 1, resetAt: now + ATTEMPT_WINDOW, lockedUntil: 0 });
+    return { allowed: true };
+  }
+
+  if (entry.lockedUntil > now) {
+    return { allowed: false, retryAfter: Math.ceil((entry.lockedUntil - now) / 1000) };
+  }
+
+  entry.count++;
+  if (entry.count > MAX_ATTEMPTS) {
+    entry.lockedUntil = now + LOCKOUT_DURATION;
+    return { allowed: false, retryAfter: Math.ceil(LOCKOUT_DURATION / 1000) };
+  }
+
+  return { allowed: true };
+}
+
+function resetLoginAttempts(ip: string) {
+  loginAttempts.delete(ip);
+}
+
 export async function POST(req: NextRequest) {
+  // Rate limit check
+  const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
+  const rateCheck = checkLoginRateLimit(ip);
+  if (!rateCheck.allowed) {
+    return NextResponse.json(
+      { error: `Too many login attempts. Please try again in ${rateCheck.retryAfter} seconds.` },
+      { status: 429, headers: { "Retry-After": String(rateCheck.retryAfter) } }
+    );
+  }
+
   try {
     const body = await req.json();
     const { email, password } = body;
@@ -36,6 +78,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    resetLoginAttempts(ip);
     db.admins.updateLastLogin(admin.id);
     const token = signAdminToken(admin);
 
