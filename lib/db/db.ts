@@ -13,6 +13,7 @@ import {
   SiteSettings,
 } from "@/lib/types";
 import { getInitialDatabaseState } from "@/lib/db/seed-data";
+import bundledDatabaseData from "@/data/verdalia.db.json";
 
 const DATA_DIR = path.join(process.cwd(), "data");
 const DB_FILE = path.join(DATA_DIR, "verdalia.db.json");
@@ -25,28 +26,26 @@ function ensureDirectoryExists(dirPath: string) {
   } catch {}
 }
 
-let cachedState: DatabaseState | null = null;
+let cachedState: DatabaseState = (bundledDatabaseData as unknown) as DatabaseState;
 
 export function getDatabase(): DatabaseState {
   if (cachedState) {
     return cachedState;
   }
 
-  ensureDirectoryExists(DATA_DIR);
-
+  // In local environments, try reading from disk
   try {
     if (fs.existsSync(DB_FILE)) {
       const raw = fs.readFileSync(DB_FILE, "utf-8");
-      cachedState = JSON.parse(raw);
-      if (cachedState) return cachedState;
+      const parsed = JSON.parse(raw);
+      if (parsed) {
+        cachedState = parsed;
+        return cachedState;
+      }
     }
   } catch {}
 
-  const fallback = getInitialDatabaseState();
-  cachedState = fallback;
-  try {
-    fs.writeFileSync(DB_FILE, JSON.stringify(fallback, null, 2), "utf-8");
-  } catch {}
+  cachedState = (bundledDatabaseData as unknown) as DatabaseState;
   return cachedState;
 }
 

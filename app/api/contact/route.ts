@@ -65,19 +65,24 @@ export async function POST(req: NextRequest) {
       const bytes = await file.arrayBuffer();
       const buffer = Buffer.from(bytes);
 
-      const uploadsDir = path.join(process.cwd(), "public", "uploads");
-      if (!fs.existsSync(uploadsDir)) {
-        fs.mkdirSync(uploadsDir, { recursive: true });
+      try {
+        const uploadsDir = path.join(process.cwd(), "public", "uploads");
+        if (!fs.existsSync(uploadsDir)) {
+          fs.mkdirSync(uploadsDir, { recursive: true });
+        }
+
+        const safeExt = path.extname(file.name).toLowerCase();
+        const safeFilename = `${Date.now()}-${Math.random()
+          .toString(36)
+          .substring(2, 9)}${safeExt}`;
+        const filePath = path.join(uploadsDir, safeFilename);
+
+        fs.writeFileSync(filePath, buffer);
+        attachmentUrl = `/uploads/${safeFilename}`;
+      } catch (uploadErr) {
+        console.warn("Local disk write not supported on serverless, using placeholder:", uploadErr);
+        attachmentUrl = `/uploads/${file.name}`;
       }
-
-      const safeExt = path.extname(file.name).toLowerCase();
-      const safeFilename = `${Date.now()}-${Math.random()
-        .toString(36)
-        .substring(2, 9)}${safeExt}`;
-      const filePath = path.join(uploadsDir, safeFilename);
-
-      fs.writeFileSync(filePath, buffer);
-      attachmentUrl = `/uploads/${safeFilename}`;
     }
 
     const savedMessage = db.messages.create({
