@@ -26,37 +26,56 @@ function ensureDirectoryExists(dirPath: string) {
   } catch {}
 }
 
-let cachedState: DatabaseState = (bundledDatabaseData as unknown) as DatabaseState;
+let cachedState: DatabaseState | null = null;
+let lastMtime: number = 0;
 
 export function getDatabase(): DatabaseState {
+  try {
+    if (fs.existsSync(DB_FILE)) {
+      const stats = fs.statSync(DB_FILE);
+      if (!cachedState || stats.mtimeMs !== lastMtime) {
+        const raw = fs.readFileSync(DB_FILE, "utf-8");
+        const parsed = JSON.parse(raw);
+        if (parsed && Array.isArray(parsed.messages)) {
+          cachedState = parsed;
+          lastMtime = stats.mtimeMs;
+          return cachedState!;
+        }
+      } else {
+        return cachedState;
+      }
+    }
+  } catch (err) {
+    console.error("Error reading database from disk:", err);
+  }
+
   if (cachedState) {
     return cachedState;
   }
 
-  // In local environments, try reading from disk
+  cachedState = JSON.parse(JSON.stringify(bundledDatabaseData)) as DatabaseState;
   try {
-    if (fs.existsSync(DB_FILE)) {
-      const raw = fs.readFileSync(DB_FILE, "utf-8");
-      const parsed = JSON.parse(raw);
-      if (parsed) {
-        cachedState = parsed;
-        return cachedState;
-      }
-    }
+    ensureDirectoryExists(DATA_DIR);
+    fs.writeFileSync(DB_FILE, JSON.stringify(cachedState, null, 2), "utf-8");
+    const stats = fs.statSync(DB_FILE);
+    lastMtime = stats.mtimeMs;
   } catch {}
 
-  cachedState = (bundledDatabaseData as unknown) as DatabaseState;
-  return cachedState;
+  return cachedState!;
 }
 
 export function saveDatabase(state: DatabaseState): void {
   ensureDirectoryExists(DATA_DIR);
   cachedState = state;
   try {
-    const tempPath = `${DB_FILE}.tmp`;
-    fs.writeFileSync(tempPath, JSON.stringify(state, null, 2), "utf-8");
-    fs.renameSync(tempPath, DB_FILE);
-  } catch {}
+    fs.writeFileSync(DB_FILE, JSON.stringify(state, null, 2), "utf-8");
+    try {
+      const stats = fs.statSync(DB_FILE);
+      lastMtime = stats.mtimeMs;
+    } catch {}
+  } catch (err) {
+    console.error("Error writing database to disk:", err);
+  }
 }
 
 export const db = {
@@ -258,8 +277,16 @@ export const db = {
 
       // Automatically purge trash older than 7 days
       const filtered = state.messages.filter((m) => {
-        if (m.status === "trash" && m.deleted_at) {
+        if (m.status === "trash") {
+          if (!m.deleted_at) {
+            m.deleted_at = new Date().toISOString();
+            return true;
+          }
           const deletedTime = new Date(m.deleted_at).getTime();
+          if (isNaN(deletedTime)) {
+            m.deleted_at = new Date().toISOString();
+            return true;
+          }
           if (now - deletedTime >= SEVEN_DAYS_MS) {
             return false; // Auto-deleted permanently after 7 days
           }
@@ -322,7 +349,7 @@ export const db = {
       const state = getDatabase();
       const index = state.messages.findIndex((m) => m.id === id);
       if (index === -1) return null;
-      state.messages[index].status = "read";
+      state.messages[index].status = "unread";
       delete state.messages[index].deleted_at;
       saveDatabase(state);
       return state.messages[index];
