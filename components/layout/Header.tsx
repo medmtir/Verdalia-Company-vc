@@ -50,7 +50,7 @@ export const Header: React.FC = () => {
           <VerdaliaLogo variant="header" href="/" />
 
           {/* Desktop Navigation Links */}
-          <nav className="hidden lg:flex items-center gap-7">
+          <nav className="hidden lg:flex items-center gap-5 xl:gap-7">
             {navLinks.map((link) => {
               const isActive =
                 link.href === "/"

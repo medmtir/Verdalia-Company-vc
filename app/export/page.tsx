@@ -288,7 +288,7 @@ export default function ExportPage() {
         </section>
 
         {/* 7-Step Export Process Timeline - Animated */}
-        <section className="bg-verdalia-beige/60 py-24 border-y border-verdalia-border mb-24 overflow-hidden">
+        <section className="bg-verdalia-beige/60 py-28 border-y border-verdalia-border mb-24 relative">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center max-w-2xl mx-auto mb-16">
               <span className="text-xs font-bold uppercase tracking-[0.2em] text-verdalia-olive">
@@ -329,20 +329,20 @@ export default function ExportPage() {
             `}</style>
 
             {/* Desktop: horizontal flow with arrows */}
-            <div className="hidden md:flex items-start gap-0">
+            <div className="hidden md:flex items-stretch gap-0 py-6">
               {steps.map((s, index) => (
                 <React.Fragment key={s.num}>
-                  <div className="group step-card flex-1 min-h-[280px] bg-white rounded-xl border border-verdalia-border shadow-card p-5 flex flex-col hover:shadow-luxury hover:scale-[1.05] transition-all duration-300 cursor-default">
-                    <div className="w-9 h-9 rounded-full bg-verdalia-olive text-white flex items-center justify-center text-xs font-bold mb-4 shadow group-hover:scale-110 transition-transform">
+                  <div className="group step-card relative flex-1 min-h-[300px] bg-white rounded-xl border border-verdalia-border shadow-card p-4 sm:p-5 flex flex-col transition-all duration-300 ease-out cursor-default hover:z-30 hover:scale-[1.26] hover:-translate-y-4 hover:shadow-2xl hover:border-verdalia-olive hover:bg-white hover:ring-2 hover:ring-verdalia-olive/30">
+                    <div className="w-9 h-9 rounded-full bg-verdalia-olive text-white flex items-center justify-center text-xs font-bold mb-4 shadow group-hover:bg-verdalia-dark group-hover:scale-110 transition-all flex-shrink-0">
                       {s.num}
                     </div>
-                    <h4 className="font-serif text-[11px] font-bold text-verdalia-dark uppercase tracking-wider mb-2 leading-tight">
+                    <h4 className="font-serif text-[11px] group-hover:text-[13px] font-bold text-verdalia-dark uppercase tracking-wider mb-2 leading-tight group-hover:leading-snug transition-all">
                       {s.title}
                     </h4>
-                    <p className="text-[10px] text-verdalia-gray leading-relaxed flex-1">
+                    <p className="text-[10px] group-hover:text-[12px] text-verdalia-gray group-hover:text-verdalia-dark leading-relaxed group-hover:leading-normal flex-1 transition-all">
                       {s.desc}
                     </p>
-                    <div className="mt-4 h-0.5 rounded bg-gradient-to-r from-verdalia-olive to-verdalia-gold" />
+                    <div className="mt-4 h-0.5 group-hover:h-1 rounded bg-gradient-to-r from-verdalia-olive to-verdalia-gold transition-all" />
                   </div>
                   {index < steps.length - 1 && (
                     <div className={`step-arrow step-arrow-${index + 1} flex items-center pt-10 flex-shrink-0 px-0.5`}>

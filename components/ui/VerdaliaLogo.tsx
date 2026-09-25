@@ -42,6 +42,16 @@ export const VerdaliaLogo: React.FC<VerdaliaLogoProps> = ({
         className={`${sizeClass} object-contain bg-transparent ${toneClass}`}
         priority={variant === "header"}
       />
+      {variant === "header" && (
+        <div className="flex flex-col justify-center">
+          <span className="font-serif font-extrabold text-[15px] sm:text-[18px] tracking-[0.08em] text-verdalia-dark leading-none uppercase">
+            Verdalia
+          </span>
+          <span className="text-[7.5px] sm:text-[9px] uppercase tracking-[0.22em] text-verdalia-gold font-bold mt-0.5">
+            Company VC
+          </span>
+        </div>
+      )}
       {showTagline && (
         <span className="hidden sm:inline font-sans text-[7.5px] uppercase tracking-[0.18em] text-verdalia-gray">
           Tunisia · Export
