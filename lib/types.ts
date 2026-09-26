@@ -141,6 +141,8 @@ export interface SiteSettings {
       keywords: string[];
     }
   >;
+  google_verification?: string;
+  bing_verification?: string;
 }
 
 export interface MediaFile {

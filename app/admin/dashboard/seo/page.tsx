@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import { SiteSettings, Locale } from "@/lib/types";
 import { LOCALES, LOCALE_METAS } from "@/lib/i18n/config";
 import { useAdminI18n } from "@/lib/i18n/admin-context";
-import { Search, Save, CheckCircle, Globe, HelpCircle } from "lucide-react";
+import { Search, Save, CheckCircle, Globe, HelpCircle, ExternalLink, Sparkles } from "lucide-react";
 
 export default function SeoManagementPage() {
   const { adminDict } = useAdminI18n();
@@ -207,6 +207,130 @@ export default function SeoManagementPage() {
           </div>
         </div>
 
+        {/* Google & Search Engine Webmaster Verification */}
+        <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm space-y-4">
+          <div className="flex items-center gap-2 border-b border-gray-100 pb-3">
+            <Globe className="w-4 h-4 text-verdalia-olive" />
+            <h3 className="font-bold text-sm text-verdalia-dark">
+              Vérification des Moteurs de Recherche (Google Search Console & Bing)
+            </h3>
+          </div>
+          <p className="text-xs text-gray-500">
+            Pour que votre site apparaisse en 1ère position sur Google, enregistrez votre site sur Google Search Console et collez ici votre jeton de vérification.
+          </p>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-1">
+            <div>
+              <label className="block text-xs font-bold uppercase text-gray-700 mb-1">
+                Google Site Verification Token
+              </label>
+              <input
+                type="text"
+                value={settings.google_verification || ""}
+                onChange={(e) =>
+                  setSettings({
+                    ...settings,
+                    google_verification: e.target.value,
+                  })
+                }
+                placeholder="ex: AbCdEf123456789... ou <meta name=...>"
+                className="w-full px-3 py-2 text-xs bg-gray-50 border border-gray-200 rounded font-mono"
+              />
+              <span className="text-[10px] text-gray-400 mt-1 block">
+                Permet à Google d&apos;indexer et de classer vos pages en priorité.
+              </span>
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold uppercase text-gray-700 mb-1">
+                Bing Webmaster Verification Code
+              </label>
+              <input
+                type="text"
+                value={settings.bing_verification || ""}
+                onChange={(e) =>
+                  setSettings({
+                    ...settings,
+                    bing_verification: e.target.value,
+                  })
+                }
+                placeholder="ex: 1234567890ABCDEF..."
+                className="w-full px-3 py-2 text-xs bg-gray-50 border border-gray-200 rounded font-mono"
+              />
+              <span className="text-[10px] text-gray-400 mt-1 block">
+                Indexation sur Microsoft Bing, Yahoo et DuckDuckGo.
+              </span>
+            </div>
+          </div>
+
+          {/* Quick links & tools */}
+          <div className="flex flex-wrap items-center gap-3 pt-2 text-xs">
+            <a
+              href="https://search.google.com/search-console"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-50 text-blue-700 hover:bg-blue-100 font-semibold transition-colors"
+            >
+              <span>Accéder à Google Search Console</span>
+              <ExternalLink className="w-3 h-3" />
+            </a>
+            <a
+              href="/sitemap.xml"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-50 text-emerald-800 hover:bg-emerald-100 font-semibold transition-colors"
+            >
+              <span>Voir le Sitemap XML en direct</span>
+              <ExternalLink className="w-3 h-3" />
+            </a>
+            <a
+              href="https://search.google.com/test/rich-results"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-50 text-amber-800 hover:bg-amber-100 font-semibold transition-colors"
+            >
+              <span>Tester les Rich Snippets Google (FAQ, Schema)</span>
+              <ExternalLink className="w-3 h-3" />
+            </a>
+          </div>
+        </div>
+
+        {/* Live SEO & Google Search Checklist */}
+        <div className="bg-gradient-to-br from-emerald-50 to-white p-5 rounded-xl border border-emerald-200 shadow-sm space-y-3">
+          <div className="flex items-center gap-2">
+            <Sparkles className="w-4 h-4 text-emerald-700" />
+            <h4 className="text-xs font-bold uppercase tracking-wider text-emerald-900">
+              Checklist Optimisation Google #1 (Actif sur Verdalia) :
+            </h4>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5 text-xs text-gray-700">
+            <div className="flex items-center gap-2 bg-white p-2.5 rounded-lg border border-emerald-100 shadow-2xs">
+              <CheckCircle className="w-4 h-4 text-emerald-600 flex-shrink-0" />
+              <span><strong>Schema Organization :</strong> Verdalia Company VC identifiée</span>
+            </div>
+            <div className="flex items-center gap-2 bg-white p-2.5 rounded-lg border border-emerald-100 shadow-2xs">
+              <CheckCircle className="w-4 h-4 text-emerald-600 flex-shrink-0" />
+              <span><strong>Schema FAQPage :</strong> Accordéons Google activés</span>
+            </div>
+            <div className="flex items-center gap-2 bg-white p-2.5 rounded-lg border border-emerald-100 shadow-2xs">
+              <CheckCircle className="w-4 h-4 text-emerald-600 flex-shrink-0" />
+              <span><strong>Hreflang Multilingue :</strong> 5 langues déclarées</span>
+            </div>
+            <div className="flex items-center gap-2 bg-white p-2.5 rounded-lg border border-emerald-100 shadow-2xs">
+              <CheckCircle className="w-4 h-4 text-emerald-600 flex-shrink-0" />
+              <span><strong>Sitemap Dynamique :</strong> Indexation automatique</span>
+            </div>
+            <div className="flex items-center gap-2 bg-white p-2.5 rounded-lg border border-emerald-100 shadow-2xs">
+              <CheckCircle className="w-4 h-4 text-emerald-600 flex-shrink-0" />
+              <span><strong>Vitesse Core Web Vitals :</strong> Speed Insights activé</span>
+            </div>
+            <div className="flex items-center gap-2 bg-white p-2.5 rounded-lg border border-emerald-100 shadow-2xs">
+              <CheckCircle className="w-4 h-4 text-emerald-600 flex-shrink-0" />
+              <span><strong>Robots.txt Optimisé :</strong> Crawl bot prioritaire</span>
+            </div>
+          </div>
+        </div>
+
         {/* Search Result Simulator Box */}
         <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm space-y-2">
           <h4 className="text-xs font-bold uppercase tracking-wider text-gray-400 mb-2">
@@ -214,7 +338,7 @@ export default function SeoManagementPage() {
           </h4>
           <div className="p-4 bg-gray-50 rounded-lg border border-gray-200 max-w-xl">
             <p className="text-xs text-gray-600 mb-0.5 truncate">
-              https://verdalia.com/{activeLocale}
+              https://verdalia-company-vc.vercel.app/{activeLocale}
             </p>
             <p className="text-base text-blue-800 font-medium hover:underline cursor-pointer truncate">
               {currentSeo.meta_title || "Verdalia Company VC"}

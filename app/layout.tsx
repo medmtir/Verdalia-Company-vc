@@ -41,6 +41,7 @@ import {
   buildOrganizationJsonLd,
   buildWebSiteJsonLd,
   buildExporterJsonLd,
+  buildFAQJsonLd,
 } from "@/lib/seo";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -57,6 +58,16 @@ export async function generateMetadata(): Promise<Metadata> {
     languages[loc] = siteUrl;
   }
   languages["x-default"] = siteUrl;
+
+  let siteSettings;
+  try {
+    siteSettings = db.siteSettings.get();
+  } catch {
+    siteSettings = undefined;
+  }
+
+  const googleVerif = (siteSettings as any)?.google_verification || process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION;
+  const bingVerif = (siteSettings as any)?.bing_verification || process.env.NEXT_PUBLIC_BING_VERIFICATION;
 
   return {
     title: {
@@ -83,6 +94,10 @@ export async function generateMetadata(): Promise<Metadata> {
     icons: {
       icon: "/images/verdalia-logo.png",
       apple: "/images/verdalia-logo.png",
+    },
+    verification: {
+      google: googleVerif || undefined,
+      other: bingVerif ? { "msvalidate.01": bingVerif } : {},
     },
     openGraph: {
       title: seo.meta_title,
@@ -151,6 +166,7 @@ export default async function RootLayout({
     buildOrganizationJsonLd(siteUrl),
     buildWebSiteJsonLd(siteUrl),
     buildExporterJsonLd(siteUrl),
+    buildFAQJsonLd(siteUrl, locale),
   ];
 
   return (
@@ -168,6 +184,12 @@ export default async function RootLayout({
         <link rel="apple-touch-icon" href="/images/verdalia-logo.png" />
         <meta name="theme-color" content="#203A1A" />
         <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+        {((siteSettings as any)?.google_verification || process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION) && (
+          <meta
+            name="google-site-verification"
+            content={(siteSettings as any)?.google_verification || process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION}
+          />
+        )}
         {LOCALES.map((loc) => (
           <link
             key={loc}
