@@ -146,7 +146,7 @@ export function buildOrganizationJsonLd(siteUrl: string) {
       addressLocality: "Tunisia",
     },
     areaServed: "Worldwide",
-    knowsLanguage: ["fr", "en", "ar", "es", "it"],
+    knowsLanguage: ["en", "fr", "ar", "es", "it"],
     sameAs: [],
   };
 }
@@ -162,7 +162,7 @@ export function buildExporterJsonLd(siteUrl: string) {
     },
     object: {
       "@type": "Product",
-      name: "Huile d'olive tunisienne / Tunisian olive oil",
+      name: "Tunisian olive oil / Huile d'olive tunisienne",
       category: "Olive Oil",
       countryOfOrigin: {
         "@type": "Country",
@@ -178,7 +178,7 @@ export function buildWebSiteJsonLd(siteUrl: string) {
     "@type": "WebSite",
     name: "Verdalia Company VC",
     url: siteUrl,
-    inLanguage: ["fr", "en", "ar", "es", "it"],
+    inLanguage: ["en", "fr", "ar", "es", "it"],
     potentialAction: {
       "@type": "SearchAction",
       target: `${siteUrl}/products`,

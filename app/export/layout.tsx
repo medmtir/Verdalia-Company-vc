@@ -1,14 +1,15 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Export Huile d'Olive Tunisie — Processus & Logistique Vrac",
+  title: "Tunisia Olive Oil Bulk Export — Process & Global Logistics | Verdalia",
   description:
-    "Processus d'export huile d'olive tunisienne en vrac : flexitank, IBC, fûts, documents douaniers, analyses labo. Verdalia Company VC.",
+    "Tunisian olive oil bulk export process: flexitanks, IBCs, drums, customs documentation, laboratory analysis. Verdalia Company VC.",
   keywords: [
-    "export huile d'olive Tunisie",
-    "logistique huile d'olive",
-    "flexitank huile d'olive",
-    "exportateur huile d'olive Tunisie",
+    "Tunisia olive oil export",
+    "olive oil logistics",
+    "flexitank olive oil",
+    "Tunisian olive oil exporter",
+    "bulk olive oil supply",
   ],
 };
 

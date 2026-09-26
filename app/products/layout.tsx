@@ -1,17 +1,17 @@
 import type { Metadata } from "next";
 import { SEO_BY_LOCALE } from "@/lib/seo";
 
-const fr = SEO_BY_LOCALE.fr;
+const en = SEO_BY_LOCALE.en;
 
 export const metadata: Metadata = {
-  title: "Huile d'olive Tunisie — Grades & Export Vrac | Verdalia",
+  title: "Tunisian Olive Oil Bulk Export — Grades & Specifications | Verdalia",
   description:
-    "Catalogue huile d'olive tunisienne : extra vierge, bio, raffinée, grignons. Export vrac flexitank, IBC, fûts. " +
-    fr.meta_description,
-  keywords: fr.keywords,
+    "Verdalia Tunisian olive oil catalog: Extra Virgin, Organic, Pure, Pomace. Bulk export in flexitanks, IBCs, drums. " +
+    en.meta_description,
+  keywords: en.keywords,
   openGraph: {
-    title: "Huile d'olive Tunisie — Catalogue export Verdalia",
-    description: fr.meta_description,
+    title: "Tunisian Olive Oil Bulk Export — Verdalia Catalog",
+    description: en.meta_description,
   },
 };
 

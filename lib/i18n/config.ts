@@ -1,7 +1,7 @@
 import { Locale } from "@/lib/types";
 
 export const LOCALES: Locale[] = ["en", "fr", "ar", "es", "it"];
-export const DEFAULT_LOCALE: Locale = "fr";
+export const DEFAULT_LOCALE: Locale = "en";
 
 export interface LocaleMeta {
   code: Locale;

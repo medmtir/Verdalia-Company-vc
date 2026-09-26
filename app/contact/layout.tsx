@@ -1,13 +1,14 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Contact Export Huile d'Olive Tunisie | Demande de Devis",
+  title: "Contact Tunisian Olive Oil Exporter | Request a Quote — Verdalia",
   description:
-    "Contactez Verdalia Company VC pour un devis d'huile d'olive tunisienne en vrac. Importateurs et distributeurs bienvenus.",
+    "Contact Verdalia Company VC for bulk Tunisian olive oil export quotes. Importers and global distributors welcome.",
   keywords: [
-    "devis huile d'olive Tunisie",
-    "contact exportateur huile d'olive",
-    "acheter huile d'olive Tunisie",
+    "Tunisian olive oil quote",
+    "olive oil exporter contact",
+    "buy bulk olive oil Tunisia",
+    "Tunisia olive oil suppliers",
   ],
 };
 
