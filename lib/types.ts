@@ -172,6 +172,59 @@ export interface ContentBlockTranslation {
   about_mill_heritage?: string;
 }
 
+export interface PaymentInstallment {
+  id: string;
+  amount: number;
+  date: string;
+  method?: string;
+  reference?: string;
+  notes?: string;
+}
+
+export interface Client {
+  id: string;
+  name: string;
+  tax_id: string;
+  contact_person: string;
+  email: string;
+  phone: string;
+  country: string;
+  address?: string;
+  notes?: string;
+  is_deleted?: boolean;
+  deleted_at?: string;
+  created_at: string;
+  updated_at?: string;
+}
+
+export interface ClientOrder {
+  id: string;
+  order_number: string;
+  client_id: string;
+  client_name: string;
+  client_tax_id?: string;
+  product_id?: string;
+  product_name: string;
+  packaging: string;
+  quantity: number;
+  unit: string;
+  unit_price?: number;
+  currency: string;
+  total_amount: number;
+  paid_amount: number;
+  remaining_amount: number;
+  payment_date?: string;
+  payment_status: "paid" | "partial" | "pending";
+  order_status: "pending" | "confirmed" | "processing" | "shipped" | "delivered" | "cancelled" | "trash";
+  order_date: string;
+  payments: PaymentInstallment[];
+  notes?: string;
+  is_deleted?: boolean;
+  deleted_at?: string;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface DatabaseState {
   admins: AdminUser[];
   products: Product[];
@@ -181,4 +234,6 @@ export interface DatabaseState {
   media_files: MediaFile[];
   site_settings: SiteSettings;
   content_blocks: Record<Locale, ContentBlockTranslation>;
+  clients?: Client[];
+  orders?: ClientOrder[];
 }

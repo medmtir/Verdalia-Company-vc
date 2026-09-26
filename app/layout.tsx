@@ -73,6 +73,12 @@ export async function generateMetadata(): Promise<Metadata> {
       canonical: siteUrl,
       languages,
     },
+    manifest: "/manifest.webmanifest",
+    appleWebApp: {
+      capable: true,
+      statusBarStyle: "black-translucent",
+      title: "Verdalia Admin",
+    },
     icons: {
       icon: "/images/verdalia-logo.png",
       apple: "/images/verdalia-logo.png",
@@ -155,6 +161,11 @@ export default async function RootLayout({
           href="https://fonts.gstatic.com"
           crossOrigin="anonymous"
         />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        <meta name="apple-mobile-web-app-title" content="Verdalia Admin" />
+        <link rel="apple-touch-icon" href="/images/verdalia-logo.png" />
+        <meta name="theme-color" content="#203A1A" />
         <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
         {LOCALES.map((loc) => (
           <link

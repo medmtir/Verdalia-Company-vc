@@ -3,11 +3,14 @@ import path from "path";
 import {
   AdminUser,
   Certification,
+  Client,
+  ClientOrder,
   ContactMessage,
   ContentBlockTranslation,
   DatabaseState,
   Locale,
   MediaFile,
+  PaymentInstallment,
   Product,
   Publication,
   SiteSettings,
@@ -461,6 +464,331 @@ export const db = {
       };
       saveDatabase(state);
       return state.content_blocks[locale];
+    },
+  },
+
+  clients: {
+    getAll(mode: "active" | "trash" | "all" = "active"): Client[] {
+      const state = getDatabase();
+      if (!state.clients) state.clients = [];
+      let list = [...state.clients];
+      if (mode === "active") {
+        list = list.filter((c) => !c.is_deleted);
+      } else if (mode === "trash") {
+        list = list.filter((c) => c.is_deleted === true);
+      }
+      return list.sort(
+        (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      );
+    },
+    getById(id: string): Client | null {
+      const state = getDatabase();
+      if (!state.clients) state.clients = [];
+      return state.clients.find((c) => c.id === id) || null;
+    },
+    create(data: Omit<Client, "id" | "created_at" | "updated_at">): Client {
+      const state = getDatabase();
+      if (!state.clients) state.clients = [];
+      const newClient: Client = {
+        ...data,
+        id: `cli-${Date.now()}`,
+        is_deleted: false,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+      state.clients.unshift(newClient);
+      saveDatabase(state);
+      return newClient;
+    },
+    update(id: string, updates: Partial<Client>): Client | null {
+      const state = getDatabase();
+      if (!state.clients) state.clients = [];
+      const index = state.clients.findIndex((c) => c.id === id);
+      if (index === -1) return null;
+      state.clients[index] = {
+        ...state.clients[index],
+        ...updates,
+        updated_at: new Date().toISOString(),
+      };
+      if (updates.name || updates.tax_id) {
+        if (!state.orders) state.orders = [];
+        state.orders.forEach((o) => {
+          if (o.client_id === id) {
+            if (updates.name) o.client_name = updates.name;
+            if (updates.tax_id) o.client_tax_id = updates.tax_id;
+          }
+        });
+      }
+      saveDatabase(state);
+      return state.clients[index];
+    },
+    trash(id: string): Client | null {
+      const state = getDatabase();
+      if (!state.clients) state.clients = [];
+      const index = state.clients.findIndex((c) => c.id === id);
+      if (index === -1) return null;
+      state.clients[index].is_deleted = true;
+      state.clients[index].deleted_at = new Date().toISOString();
+      saveDatabase(state);
+      return state.clients[index];
+    },
+    restore(id: string): Client | null {
+      const state = getDatabase();
+      if (!state.clients) state.clients = [];
+      const index = state.clients.findIndex((c) => c.id === id);
+      if (index === -1) return null;
+      state.clients[index].is_deleted = false;
+      delete state.clients[index].deleted_at;
+      saveDatabase(state);
+      return state.clients[index];
+    },
+    deletePermanently(id: string): boolean {
+      const state = getDatabase();
+      if (!state.clients) state.clients = [];
+      const initialLen = state.clients.length;
+      state.clients = state.clients.filter((c) => c.id !== id);
+      if (state.clients.length !== initialLen) {
+        saveDatabase(state);
+        return true;
+      }
+      return false;
+    },
+    emptyTrash(): number {
+      const state = getDatabase();
+      if (!state.clients) state.clients = [];
+      const initialLen = state.clients.length;
+      state.clients = state.clients.filter((c) => !c.is_deleted);
+      const removed = initialLen - state.clients.length;
+      if (removed > 0) saveDatabase(state);
+      return removed;
+    },
+    getTrashCount(): number {
+      const state = getDatabase();
+      if (!state.clients) return 0;
+      return state.clients.filter((c) => c.is_deleted).length;
+    },
+  },
+
+  orders: {
+    getAll(clientId?: string, mode: "active" | "trash" | "all" = "active"): ClientOrder[] {
+      const state = getDatabase();
+      if (!state.orders) state.orders = [];
+      let list = [...state.orders];
+      if (clientId) {
+        list = list.filter((o) => o.client_id === clientId);
+      }
+      if (mode === "active") {
+        list = list.filter((o) => !o.is_deleted && o.order_status !== "trash");
+      } else if (mode === "trash") {
+        list = list.filter((o) => o.is_deleted === true || o.order_status === "trash");
+      }
+      return list.sort(
+        (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      );
+    },
+    getById(id: string): ClientOrder | null {
+      const state = getDatabase();
+      if (!state.orders) state.orders = [];
+      return state.orders.find((o) => o.id === id) || null;
+    },
+    create(data: Omit<ClientOrder, "id" | "created_at" | "updated_at" | "remaining_amount" | "payment_status"> & {
+      remaining_amount?: number;
+      payment_status?: "paid" | "partial" | "pending";
+    }): ClientOrder {
+      const state = getDatabase();
+      if (!state.orders) state.orders = [];
+      const total = Number(data.total_amount) || 0;
+      const paid = Number(data.paid_amount) || 0;
+      const remaining = Math.max(0, total - paid);
+      let status: "paid" | "partial" | "pending" = "pending";
+      if (paid >= total && total > 0) status = "paid";
+      else if (paid > 0) status = "partial";
+
+      const orderNumber = data.order_number?.trim() || `CMD-${new Date().getFullYear()}-${String(state.orders.length + 1).padStart(3, "0")}`;
+
+      const newOrder: ClientOrder = {
+        ...data,
+        id: `ord-${Date.now()}`,
+        order_number: orderNumber,
+        total_amount: total,
+        paid_amount: paid,
+        remaining_amount: remaining,
+        payment_status: status,
+        is_deleted: false,
+        payments: Array.isArray(data.payments) ? data.payments : [],
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+      state.orders.unshift(newOrder);
+      saveDatabase(state);
+      return newOrder;
+    },
+    update(id: string, updates: Partial<ClientOrder>): ClientOrder | null {
+      const state = getDatabase();
+      if (!state.orders) state.orders = [];
+      const index = state.orders.findIndex((o) => o.id === id);
+      if (index === -1) return null;
+
+      const current = state.orders[index];
+      const total = updates.total_amount !== undefined ? Number(updates.total_amount) : current.total_amount;
+      const paid = updates.paid_amount !== undefined ? Number(updates.paid_amount) : current.paid_amount;
+      const remaining = Math.max(0, total - paid);
+      let status = current.payment_status;
+      if (paid >= total && total > 0) status = "paid";
+      else if (paid > 0) status = "partial";
+      else status = "pending";
+
+      state.orders[index] = {
+        ...current,
+        ...updates,
+        total_amount: total,
+        paid_amount: paid,
+        remaining_amount: remaining,
+        payment_status: status,
+        updated_at: new Date().toISOString(),
+      };
+      saveDatabase(state);
+      return state.orders[index];
+    },
+    addPayment(id: string, payment: { amount: number; date: string; method?: string; reference?: string; notes?: string }): ClientOrder | null {
+      const state = getDatabase();
+      if (!state.orders) state.orders = [];
+      const index = state.orders.findIndex((o) => o.id === id);
+      if (index === -1) return null;
+
+      const order = state.orders[index];
+      const newPayment: PaymentInstallment = {
+        id: `pay-${Date.now()}`,
+        amount: Number(payment.amount),
+        date: payment.date || new Date().toISOString().split("T")[0],
+        method: payment.method || "virement",
+        reference: payment.reference,
+        notes: payment.notes,
+      };
+
+      const payments = [...(order.payments || []), newPayment];
+      const newPaid = payments.reduce((sum, p) => sum + Number(p.amount || 0), 0);
+      const newRemaining = Math.max(0, order.total_amount - newPaid);
+      let status: "paid" | "partial" | "pending" = "pending";
+      if (newPaid >= order.total_amount && order.total_amount > 0) status = "paid";
+      else if (newPaid > 0) status = "partial";
+
+      state.orders[index] = {
+        ...order,
+        paid_amount: newPaid,
+        remaining_amount: newRemaining,
+        payment_status: status,
+        payment_date: payment.date,
+        payments,
+        updated_at: new Date().toISOString(),
+      };
+      saveDatabase(state);
+      return state.orders[index];
+    },
+    trash(id: string): ClientOrder | null {
+      const state = getDatabase();
+      if (!state.orders) state.orders = [];
+      const index = state.orders.findIndex((o) => o.id === id);
+      if (index === -1) return null;
+      state.orders[index].is_deleted = true;
+      state.orders[index].order_status = "trash";
+      state.orders[index].deleted_at = new Date().toISOString();
+      saveDatabase(state);
+      return state.orders[index];
+    },
+    restore(id: string): ClientOrder | null {
+      const state = getDatabase();
+      if (!state.orders) state.orders = [];
+      const index = state.orders.findIndex((o) => o.id === id);
+      if (index === -1) return null;
+      state.orders[index].is_deleted = false;
+      state.orders[index].order_status = "confirmed";
+      delete state.orders[index].deleted_at;
+      saveDatabase(state);
+      return state.orders[index];
+    },
+    deletePermanently(id: string): boolean {
+      const state = getDatabase();
+      if (!state.orders) state.orders = [];
+      const initialLen = state.orders.length;
+      state.orders = state.orders.filter((o) => o.id !== id);
+      if (state.orders.length !== initialLen) {
+        saveDatabase(state);
+        return true;
+      }
+      return false;
+    },
+    emptyTrash(): number {
+      const state = getDatabase();
+      if (!state.orders) state.orders = [];
+      const initialLen = state.orders.length;
+      state.orders = state.orders.filter((o) => !o.is_deleted && o.order_status !== "trash");
+      const removed = initialLen - state.orders.length;
+      if (removed > 0) saveDatabase(state);
+      return removed;
+    },
+    getTrashCount(): number {
+      const state = getDatabase();
+      if (!state.orders) return 0;
+      return state.orders.filter((o) => o.is_deleted || o.order_status === "trash").length;
+    },
+    getStats() {
+      const state = getDatabase();
+      const clients = (state.clients || []).filter((c) => !c.is_deleted);
+      const orders = (state.orders || []).filter((o) => !o.is_deleted && o.order_status !== "trash");
+
+      // Group totals strictly by currency
+      const byCurrency: Record<string, { totalRevenue: number; totalPaid: number; totalRemaining: number; count: number }> = {
+        EUR: { totalRevenue: 0, totalPaid: 0, totalRemaining: 0, count: 0 },
+        TND: { totalRevenue: 0, totalPaid: 0, totalRemaining: 0, count: 0 },
+        USD: { totalRevenue: 0, totalPaid: 0, totalRemaining: 0, count: 0 },
+      };
+
+      orders.forEach((o) => {
+        const cur = (o.currency || "EUR").toUpperCase();
+        if (!byCurrency[cur]) {
+          byCurrency[cur] = { totalRevenue: 0, totalPaid: 0, totalRemaining: 0, count: 0 };
+        }
+        byCurrency[cur].totalRevenue += Number(o.total_amount) || 0;
+        byCurrency[cur].totalPaid += Number(o.paid_amount) || 0;
+        byCurrency[cur].totalRemaining += Number(o.remaining_amount) || 0;
+        byCurrency[cur].count += 1;
+      });
+
+      const totalRevenue = orders.reduce((sum, o) => sum + (Number(o.total_amount) || 0), 0);
+      const totalPaid = orders.reduce((sum, o) => sum + (Number(o.paid_amount) || 0), 0);
+      const totalRemaining = orders.reduce((sum, o) => sum + (Number(o.remaining_amount) || 0), 0);
+
+      const clientSummary = clients.map((c) => {
+        const clientOrders = orders.filter((o) => o.client_id === c.id);
+        const ordered = clientOrders.reduce((sum, o) => sum + (Number(o.total_amount) || 0), 0);
+        const paid = clientOrders.reduce((sum, o) => sum + (Number(o.paid_amount) || 0), 0);
+        const remaining = clientOrders.reduce((sum, o) => sum + (Number(o.remaining_amount) || 0), 0);
+        const lastOrder = clientOrders[0] || null;
+        const cur = clientOrders[0]?.currency || "EUR";
+        return {
+          ...c,
+          orders_count: clientOrders.length,
+          total_ordered: ordered,
+          total_paid: paid,
+          total_remaining: remaining,
+          currency: cur,
+          last_order_date: lastOrder?.order_date || null,
+          last_payment_date: lastOrder?.payment_date || null,
+        };
+      });
+
+      return {
+        totalRevenue,
+        totalPaid,
+        totalRemaining,
+        totalClients: clients.length,
+        totalOrders: orders.length,
+        byCurrency,
+        clients: clientSummary,
+        trashCountOrders: (state.orders || []).filter((o) => o.is_deleted || o.order_status === "trash").length,
+        trashCountClients: (state.clients || []).filter((c) => c.is_deleted).length,
+      };
     },
   },
 };

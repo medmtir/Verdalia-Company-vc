@@ -25,6 +25,7 @@ export interface AdminDictionary {
   sidebar: {
     overview: string;
     messages: string;
+    clients: string;
     products: string;
     certifications: string;
     publications: string;
@@ -243,6 +244,7 @@ export const ADMIN_DICTIONARIES: Record<Locale, AdminDictionary> = {
     sidebar: {
       overview: "Overview",
       messages: "Messages & Inquiries",
+      clients: "Clients & Orders",
       products: "Products Catalog",
       certifications: "Certifications",
       publications: "Publications & News",
@@ -459,6 +461,7 @@ export const ADMIN_DICTIONARIES: Record<Locale, AdminDictionary> = {
     sidebar: {
       overview: "Vue d'ensemble",
       messages: "Messages & Devis",
+      clients: "Clients & Commandes",
       products: "Catalogue Produits",
       certifications: "Certifications",
       publications: "Actualités & Articles",
@@ -675,6 +678,7 @@ export const ADMIN_DICTIONARIES: Record<Locale, AdminDictionary> = {
     sidebar: {
       overview: "نظرة عامة",
       messages: "الرسائل وعروض الأسعار",
+      clients: "العملاء والطلبيات",
       products: "كتالوج المنتجات",
       certifications: "الشهادات والاعتمادات",
       publications: "الأخبار والمقالات",
@@ -891,6 +895,7 @@ export const ADMIN_DICTIONARIES: Record<Locale, AdminDictionary> = {
     sidebar: {
       overview: "Visión General",
       messages: "Mensajes y Cotizaciones",
+      clients: "Clientes y Pedidos",
       products: "Catálogo de Productos",
       certifications: "Certificaciones",
       publications: "Noticias y Artículos",
@@ -1107,6 +1112,7 @@ export const ADMIN_DICTIONARIES: Record<Locale, AdminDictionary> = {
     sidebar: {
       overview: "Panoramica",
       messages: "Messaggi & Preventivi",
+      clients: "Clienti e Ordini",
       products: "Catalogo Prodotti",
       certifications: "Certificazioni",
       publications: "Notizie & Articoli",
