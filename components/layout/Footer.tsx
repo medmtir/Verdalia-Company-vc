@@ -109,18 +109,32 @@ export const Footer: React.FC = () => {
               {partners.map((p, idx) => (
                 <li
                   key={`${p.name}-${idx}`}
-                  className={idx < partners.length - 1 ? "border-b border-[#26451F] pb-2" : ""}
+                  className={idx < partners.length - 1 ? "border-b border-[#26451F] pb-3" : ""}
                 >
                   <p className="font-semibold text-white">{p.name}</p>
                   <p className="text-[11px] text-verdalia-light">{p.role}</p>
-                  {p.phone && (
-                    <a
-                      href={`tel:${p.phone.replace(/\s+/g, "")}`}
-                      className="text-verdalia-gold hover:underline text-[11px] block mt-0.5"
-                    >
-                      {p.phone}
-                    </a>
-                  )}
+                  <div className="mt-1 space-y-1 text-[11px]">
+                    {p.email && (
+                      <a
+                        href={`mailto:${p.email}`}
+                        className="flex items-center gap-1.5 text-gray-300 hover:text-verdalia-gold hover:underline transition-colors break-words"
+                        title={`Email ${p.name}`}
+                      >
+                        <Mail className="w-3 h-3 text-verdalia-gold flex-shrink-0" />
+                        <span>{p.email}</span>
+                      </a>
+                    )}
+                    {p.phone && (
+                      <a
+                        href={`tel:${p.phone.replace(/\s+/g, "")}`}
+                        className="flex items-center gap-1.5 text-verdalia-gold hover:underline"
+                        title={`Appeler ${p.name}`}
+                      >
+                        <Phone className="w-3 h-3 text-verdalia-gold flex-shrink-0" />
+                        <span>{p.phone}</span>
+                      </a>
+                    )}
+                  </div>
                 </li>
               ))}
             </ul>
