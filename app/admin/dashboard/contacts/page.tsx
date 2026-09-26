@@ -42,6 +42,9 @@ export default function ContactsManagementPage() {
       const data = await res.json();
       if (data.success) {
         setSuccess(true);
+        if (typeof window !== "undefined") {
+          window.dispatchEvent(new Event("site-settings-updated"));
+        }
         setTimeout(() => setSuccess(false), 3000);
       }
     } catch {
@@ -513,6 +516,48 @@ export default function ContactsManagementPage() {
                 }
                 className="w-full px-3 py-2 bg-white border border-gray-200 rounded"
                 placeholder="contact@verdalia.com"
+              />
+            </div>
+
+            {/* WhatsApp Direct */}
+            <div className="p-4 bg-gray-50 rounded-lg border border-gray-200 space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="font-bold text-gray-800">WhatsApp (Icon & Link)</span>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <span className="text-[11px] font-semibold text-gray-500">
+                    {settings.social_links?.whatsapp_enabled !== false ? "Active" : "Inactive"}
+                  </span>
+                  <input
+                    type="checkbox"
+                    checked={settings.social_links?.whatsapp_enabled !== false}
+                    onChange={(e) =>
+                      setSettings({
+                        ...settings,
+                        social_links: {
+                          ...settings.social_links,
+                          whatsapp_enabled: e.target.checked,
+                        },
+                      })
+                    }
+                    className="w-4 h-4 text-verdalia-olive rounded cursor-pointer accent-verdalia-olive"
+                  />
+                </label>
+              </div>
+              <input
+                type="text"
+                value={settings.social_links?.whatsapp || settings.whatsapp || ""}
+                onChange={(e) =>
+                  setSettings({
+                    ...settings,
+                    whatsapp: e.target.value,
+                    social_links: {
+                      ...settings.social_links,
+                      whatsapp: e.target.value,
+                    },
+                  })
+                }
+                className="w-full px-3 py-2 bg-white border border-gray-200 rounded"
+                placeholder="+216 53 228 867"
               />
             </div>
           </div>

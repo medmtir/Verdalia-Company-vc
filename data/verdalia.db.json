@@ -740,7 +740,10 @@
       "facebook": "https://facebook.com/verdalia",
       "facebook_enabled": true,
       "youtube": "https://youtube.com/@verdalia",
-      "youtube_enabled": false
+      "youtube_enabled": false,
+      "whatsapp": "+216 53 228 867",
+      "whatsapp_enabled": true,
+      "email_enabled": true
     },
     "seo": {
       "fr": {

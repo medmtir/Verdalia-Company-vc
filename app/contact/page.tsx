@@ -334,16 +334,19 @@ export default function ContactPage() {
                 </div>
 
                 {/* Social Presence Card */}
-                {(socialLinks?.linkedin_enabled !== false && socialLinks?.linkedin ||
-                  socialLinks?.instagram_enabled !== false && socialLinks?.instagram ||
-                  socialLinks?.facebook_enabled !== false && socialLinks?.facebook ||
-                  socialLinks?.youtube_enabled !== false && socialLinks?.youtube) && (
+                {(
+                  (socialLinks?.linkedin_enabled !== false && Boolean(socialLinks?.linkedin?.trim())) ||
+                  (socialLinks?.instagram_enabled !== false && Boolean(socialLinks?.instagram?.trim())) ||
+                  (socialLinks?.facebook_enabled !== false && Boolean(socialLinks?.facebook?.trim())) ||
+                  (socialLinks?.youtube_enabled !== false && Boolean(socialLinks?.youtube?.trim())) ||
+                  (socialLinks?.whatsapp_enabled !== false && Boolean((socialLinks?.whatsapp || generalPhone)?.trim()))
+                ) && (
                   <div className="mt-6 pt-5 border-t border-verdalia-border">
                     <span className="text-[10px] uppercase font-bold text-verdalia-olive tracking-widest block mb-3">
                       Canaux Officiels & Réseaux Sociaux
                     </span>
-                    <div className="flex items-center gap-3">
-                      {socialLinks?.linkedin_enabled !== false && socialLinks?.linkedin && (
+                    <div className="flex flex-wrap items-center gap-3">
+                      {socialLinks?.linkedin_enabled !== false && Boolean(socialLinks?.linkedin?.trim()) && (
                         <a
                           href={socialLinks.linkedin}
                           target="_blank"
@@ -353,7 +356,7 @@ export default function ContactPage() {
                           <span>LinkedIn</span>
                         </a>
                       )}
-                      {socialLinks?.instagram_enabled !== false && socialLinks?.instagram && (
+                      {socialLinks?.instagram_enabled !== false && Boolean(socialLinks?.instagram?.trim()) && (
                         <a
                           href={socialLinks.instagram}
                           target="_blank"
@@ -363,7 +366,7 @@ export default function ContactPage() {
                           <span>Instagram</span>
                         </a>
                       )}
-                      {socialLinks?.facebook_enabled !== false && socialLinks?.facebook && (
+                      {socialLinks?.facebook_enabled !== false && Boolean(socialLinks?.facebook?.trim()) && (
                         <a
                           href={socialLinks.facebook}
                           target="_blank"
@@ -373,7 +376,7 @@ export default function ContactPage() {
                           <span>Facebook</span>
                         </a>
                       )}
-                      {socialLinks?.youtube_enabled !== false && socialLinks?.youtube && (
+                      {socialLinks?.youtube_enabled !== false && Boolean(socialLinks?.youtube?.trim()) && (
                         <a
                           href={socialLinks.youtube}
                           target="_blank"
@@ -381,6 +384,16 @@ export default function ContactPage() {
                           className="px-3 py-1.5 rounded-lg bg-white border border-verdalia-border hover:bg-red-600 hover:text-white text-verdalia-dark transition-all text-xs font-semibold flex items-center gap-2 shadow-sm"
                         >
                           <span>YouTube</span>
+                        </a>
+                      )}
+                      {socialLinks?.whatsapp_enabled !== false && Boolean((socialLinks?.whatsapp || generalPhone)?.trim()) && (
+                        <a
+                          href={`https://wa.me/${(socialLinks?.whatsapp || generalPhone).replace(/[^0-9]/g, "")}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="px-3 py-1.5 rounded-lg bg-white border border-verdalia-border hover:bg-[#25D366] hover:text-white text-verdalia-dark transition-all text-xs font-semibold flex items-center gap-2 shadow-sm"
+                        >
+                          <span>WhatsApp</span>
                         </a>
                       )}
                     </div>

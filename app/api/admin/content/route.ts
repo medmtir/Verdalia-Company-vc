@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db/db";
 import { getAuthenticatedAdmin } from "@/lib/auth";
 import { Locale } from "@/lib/types";
@@ -35,10 +36,22 @@ export async function PUT(req: NextRequest) {
 
     if (siteSettings) {
       db.siteSettings.update(siteSettings);
+      try {
+        revalidatePath("/", "layout");
+        revalidatePath("/");
+        revalidatePath("/contact");
+        revalidatePath("/export");
+        revalidatePath("/products");
+        revalidatePath("/about");
+      } catch {}
     }
 
     if (contentBlocks && targetLocale) {
       db.contentBlocks.update(targetLocale as Locale, contentBlocks);
+      try {
+        revalidatePath("/", "layout");
+        revalidatePath("/");
+      } catch {}
     }
 
     return NextResponse.json({

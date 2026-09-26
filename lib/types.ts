@@ -129,6 +129,8 @@ export interface SiteSettings {
     facebook_enabled?: boolean;
     youtube?: string;
     youtube_enabled?: boolean;
+    whatsapp?: string;
+    whatsapp_enabled?: boolean;
     email_enabled?: boolean;
   };
   seo: Record<
