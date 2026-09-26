@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { cookies } from "next/headers";
 import { Montserrat, Playfair_Display } from 'next/font/google';
 import "./globals.css";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 import { I18nProvider } from "@/lib/i18n/context";
 import { SiteSettingsProvider } from "@/lib/context/site-settings-context";
 import { db } from "@/lib/db/db";
@@ -185,6 +186,7 @@ export default async function RootLayout({
         <I18nProvider initialLocale={locale}>
           <SiteSettingsProvider initialData={siteSettings}>{children}</SiteSettingsProvider>
         </I18nProvider>
+        <SpeedInsights />
       </body>
     </html>
   );
