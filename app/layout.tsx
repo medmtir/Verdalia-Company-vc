@@ -77,7 +77,7 @@ export async function generateMetadata(): Promise<Metadata> {
     manifest: "/manifest.webmanifest",
     appleWebApp: {
       capable: true,
-      statusBarStyle: "black-translucent",
+      statusBarStyle: "default",
       title: "Verdalia Admin",
     },
     icons: {
@@ -163,7 +163,7 @@ export default async function RootLayout({
           crossOrigin="anonymous"
         />
         <meta name="apple-mobile-web-app-capable" content="yes" />
-        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         <meta name="apple-mobile-web-app-title" content="Verdalia Admin" />
         <link rel="apple-touch-icon" href="/images/verdalia-logo.png" />
         <meta name="theme-color" content="#203A1A" />
