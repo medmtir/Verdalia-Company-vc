@@ -338,7 +338,7 @@ export default function SeoManagementPage() {
           </h4>
           <div className="p-4 bg-gray-50 rounded-lg border border-gray-200 max-w-xl">
             <p className="text-xs text-gray-600 mb-0.5 truncate">
-              https://verdalia-company-vc.vercel.app/{activeLocale}
+              https://www.verdaliacompany.com/{activeLocale}
             </p>
             <p className="text-base text-blue-800 font-medium hover:underline cursor-pointer truncate">
               {currentSeo.meta_title || "Verdalia Company VC"}
