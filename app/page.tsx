@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Header } from "@/components/layout/Header";
@@ -32,6 +32,60 @@ export default function HomePage() {
   const [isPlaying, setIsPlaying] = useState(true);
   const [isMuted, setIsMuted] = useState(true);
   const videoRef = React.useRef<HTMLVideoElement>(null);
+
+  const [packagings, setPackagings] = useState<any[]>([
+    {
+      id: "pack-2",
+      capacity: "1 000 Litres",
+      title: "Conteneur IBC",
+      image_url: "/images/packaging/ibc-container.jpg",
+      translations: {
+        ar: { title: "حاوية IBC", capacity: "1 000 لتر" },
+        en: { title: "IBC Tote Tank", capacity: "1,000 Liters" }
+      }
+    },
+    {
+      id: "pack-3",
+      capacity: "208 Litres",
+      title: "Fûts Acier Scellés",
+      image_url: "/images/packaging/steel-drum.jpg",
+      translations: {
+        ar: { title: "براميل فولاذية", capacity: "208 لتر" },
+        en: { title: "Steel Drums", capacity: "208 Liters" }
+      }
+    },
+    {
+      id: "pack-4",
+      capacity: "10L – 25L",
+      title: "Seaux PEHD Food-grade",
+      image_url: "/images/packaging/pails-buckets.jpg",
+      translations: {
+        ar: { title: "سلات غذائية", capacity: "10ل – 25ل" },
+        en: { title: "Food-grade Pails", capacity: "10L – 25L" }
+      }
+    },
+    {
+      id: "pack-1",
+      capacity: "24 000 Litres",
+      title: "Flexitank 20ft FCL",
+      image_url: "/images/facility/port-containers.jpg",
+      translations: {
+        ar: { title: "فليكسي تانك 20 قدم", capacity: "24 000 لتر" },
+        en: { title: "Flexitank 20ft FCL", capacity: "24,000 Liters" }
+      }
+    }
+  ]);
+
+  useEffect(() => {
+    fetch("/api/packaging")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success && Array.isArray(data.packagings) && data.packagings.length > 0) {
+          setPackagings(data.packagings);
+        }
+      })
+      .catch((err) => console.error("Error loading packagings:", err));
+  }, []);
 
   const toggleVideoPlay = () => {
     if (videoRef.current) {
@@ -613,57 +667,30 @@ export default function HomePage() {
               </div>
 
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                <div className="bg-white/5 border border-white/10 rounded-xl p-3.5 hover:bg-white/10 transition-colors group">
-                  <div className="relative aspect-square rounded-lg overflow-hidden bg-black/40 mb-3">
-                    <Image
-                      src="/images/packaging/ibc-container.jpg"
-                      alt="IBC Container Verdalia"
-                      fill
-                      className="object-contain p-2 group-hover:scale-105 transition-transform"
-                    />
-                  </div>
-                  <div className="text-[11px] font-bold text-verdalia-gold uppercase tracking-wider">1 000 Litres</div>
-                  <div className="text-xs font-bold text-white mt-0.5">Conteneur IBC</div>
-                </div>
+                {packagings.map((pkg) => {
+                  const t = pkg.translations?.[locale] || pkg.translations?.fr || {};
+                  const title = t.title || pkg.title;
+                  const capacity = t.capacity || pkg.capacity;
 
-                <div className="bg-white/5 border border-white/10 rounded-xl p-3.5 hover:bg-white/10 transition-colors group">
-                  <div className="relative aspect-square rounded-lg overflow-hidden bg-black/40 mb-3">
-                    <Image
-                      src="/images/packaging/steel-drum.jpg"
-                      alt="Steel Drum Verdalia"
-                      fill
-                      className="object-contain p-2 group-hover:scale-105 transition-transform"
-                    />
-                  </div>
-                  <div className="text-[11px] font-bold text-verdalia-gold uppercase tracking-wider">208 Litres</div>
-                  <div className="text-xs font-bold text-white mt-0.5">Fûts Acier Scellés</div>
-                </div>
-
-                <div className="bg-white/5 border border-white/10 rounded-xl p-3.5 hover:bg-white/10 transition-colors group">
-                  <div className="relative aspect-square rounded-lg overflow-hidden bg-black/40 mb-3">
-                    <Image
-                      src="/images/packaging/pails-buckets.jpg"
-                      alt="Pails Verdalia"
-                      fill
-                      className="object-contain p-2 group-hover:scale-105 transition-transform"
-                    />
-                  </div>
-                  <div className="text-[11px] font-bold text-verdalia-gold uppercase tracking-wider">10L – 25L</div>
-                  <div className="text-xs font-bold text-white mt-0.5">Seaux PEHD Food-grade</div>
-                </div>
-
-                <div className="bg-white/5 border border-white/10 rounded-xl p-3.5 hover:bg-white/10 transition-colors group">
-                  <div className="relative aspect-square rounded-lg overflow-hidden bg-black/40 mb-3">
-                    <Image
-                      src="/images/facility/port-containers.jpg"
-                      alt="Flexitank Container Verdalia"
-                      fill
-                      className="object-cover group-hover:scale-105 transition-transform"
-                    />
-                  </div>
-                  <div className="text-[11px] font-bold text-verdalia-gold uppercase tracking-wider">24 000 Litres</div>
-                  <div className="text-xs font-bold text-white mt-0.5">Flexitank 20ft FCL</div>
-                </div>
+                  return (
+                    <div key={pkg.id || title} className="bg-white/5 border border-white/10 rounded-xl p-3.5 hover:bg-white/10 transition-colors group">
+                      <div className="relative aspect-square rounded-lg overflow-hidden bg-black/40 mb-3">
+                        <Image
+                          src={pkg.image_url || "/images/packaging/ibc-container.jpg"}
+                          alt={title}
+                          fill
+                          className="object-contain p-2 group-hover:scale-105 transition-transform"
+                        />
+                      </div>
+                      <div className="text-[11px] font-bold text-verdalia-gold uppercase tracking-wider line-clamp-1">
+                        {capacity}
+                      </div>
+                      <div className="text-xs font-bold text-white mt-0.5 line-clamp-1">
+                        {title}
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           </div>

@@ -14,6 +14,7 @@ import {
   Product,
   Publication,
   SiteSettings,
+  PackagingFormat,
 } from "@/lib/types";
 import { getInitialDatabaseState } from "@/lib/db/seed-data";
 import bundledDatabaseData from "@/data/verdalia.db.json";
@@ -29,6 +30,181 @@ function ensureDirectoryExists(dirPath: string) {
   } catch {}
 }
 
+export const DEFAULT_PACKAGINGS: PackagingFormat[] = [
+  {
+    id: "pack-1",
+    capacity: "24 000 Litres",
+    title: "Flexitank 20ft FCL",
+    image_url: "/images/facility/port-containers.jpg",
+    badge: "Vrac Industriel",
+    sort_order: 1,
+    is_active: true,
+    translations: {
+      fr: {
+        title: "Flexitank 20ft FCL",
+        capacity: "24 000 Litres",
+        badge: "Vrac Industriel",
+        description: "Citernes souples alimentaires à usage unique certifiées COA, idéales pour les raffineries et embouteilleurs industriels mondiaux."
+      },
+      en: {
+        title: "Flexitank 20ft FCL",
+        capacity: "24,000 Liters",
+        badge: "Industrial Bulk",
+        description: "Food-grade single-use bladder tanks ideal for high-volume industrial importers and refiners."
+      },
+      ar: {
+        title: "فليكسي تانك 20 قدم FCL",
+        capacity: "24 000 لتر",
+        badge: "كميات صناعية كبرى",
+        description: "خزانات فليكسي تانك صحية أحادية الاستخدام، مثالية للكميات الصناعية الكبرى والمستوردين بالصهاريج."
+      },
+      es: {
+        title: "Flexitank 20ft FCL",
+        capacity: "24.000 Litros",
+        badge: "Granel Industrial",
+        description: "Cisternas flexibles alimentarias de un solo uso, óptimas para volúmenes industriales a granel."
+      },
+      it: {
+        title: "Flexitank 20ft FCL",
+        capacity: "24.000 Litri",
+        badge: "Sfuso Industriale",
+        description: "Cisterne flessibili per uso alimentare a perdere, ideali per volumi industriali sfusi."
+      }
+    },
+    created_at: "2026-09-28T15:00:00.000Z",
+    updated_at: "2026-09-28T15:00:00.000Z"
+  },
+  {
+    id: "pack-2",
+    capacity: "1 000 Litres",
+    title: "Conteneur IBC",
+    image_url: "/images/packaging/ibc-container.jpg",
+    badge: "Semi-Vrac / Distribution",
+    sort_order: 2,
+    is_active: true,
+    translations: {
+      fr: {
+        title: "Conteneur IBC",
+        capacity: "1 000 Litres",
+        badge: "Semi-Vrac / Distribution",
+        description: "Cuves IBC alimentaires haute densité avec armature de protection en acier galvanisé, vanne scellée et palette intégrée."
+      },
+      en: {
+        title: "IBC Tote Tank",
+        capacity: "1,000 Liters",
+        badge: "Semi-Bulk / Distribution",
+        description: "Rigid intermediate bulk containers with protective steel cage, sealed discharge valve, and pallet base."
+      },
+      ar: {
+        title: "حاوية IBC",
+        capacity: "1 000 لتر",
+        badge: "توزيع وكميات متوسطة",
+        description: "حاويات IBC مع قفص فولاذي واقٍ، وصمام محكم الغلق ملائمة للكميات المتوسطة وللموزعين الإقليميين."
+      },
+      es: {
+        title: "Contenedor IBC",
+        capacity: "1.000 Litros",
+        badge: "Semi-Granel",
+        description: "Contenedores IBC de grado alimentario con jaula de acero. Prácticos para volúmenes intermedios."
+      },
+      it: {
+        title: "Cisterna IBC",
+        capacity: "1.000 Litri",
+        badge: "Semi-Sfuso",
+        description: "Cisterne IBC alimentari con gabbia in acciaio. Pratiche per volumi intermedi e distributori."
+      }
+    },
+    created_at: "2026-09-28T15:00:00.000Z",
+    updated_at: "2026-09-28T15:00:00.000Z"
+  },
+  {
+    id: "pack-3",
+    capacity: "208 Litres",
+    title: "Fûts Acier Scellés",
+    image_url: "/images/packaging/steel-drum.jpg",
+    badge: "Standard Maritime",
+    sort_order: 3,
+    is_active: true,
+    translations: {
+      fr: {
+        title: "Fûts Acier Scellés",
+        capacity: "208 Litres",
+        badge: "Standard Maritime",
+        description: "Fûts métalliques avec vernis intérieur alimentaire certifié, étanches sous atmosphère contrôlée, palettisables par 4."
+      },
+      en: {
+        title: "Steel Drums",
+        capacity: "208 Liters",
+        badge: "Maritime Standard",
+        description: "Hermetically sealed food-grade lacquered steel drums suited for flexible palletized maritime cargo."
+      },
+      ar: {
+        title: "براميل فولاذية محكمة الغلق",
+        capacity: "208 لتر",
+        badge: "شحن بحري قياسي",
+        description: "براميل فولاذية صحية محكمة الغلق وقابلة للتكديس، ممتازة للنقل البحري والبري."
+      },
+      es: {
+        title: "Bidones de acero sellados",
+        capacity: "208 Litros",
+        badge: "Estándar Marítimo",
+        description: "Bidones alimentarios sellados y apilables, adaptados para transporte marítimo y terrestre."
+      },
+      it: {
+        title: "Fusti in acciaio sigillati",
+        capacity: "208 Litri",
+        badge: "Standard Marittimo",
+        description: "Fusti alimentari sigillati e impilabili, adatti per trasporto marittimo e stradale."
+      }
+    },
+    created_at: "2026-09-28T15:00:00.000Z",
+    updated_at: "2026-09-28T15:00:00.000Z"
+  },
+  {
+    id: "pack-4",
+    capacity: "10L – 25L",
+    title: "Seaux PEHD Food-grade",
+    image_url: "/images/packaging/pails-buckets.jpg",
+    badge: "Restauration / CHR",
+    sort_order: 4,
+    is_active: true,
+    translations: {
+      fr: {
+        title: "Seaux PEHD Food-grade",
+        capacity: "10L – 25L",
+        badge: "Restauration / CHR",
+        description: "Emballages rigides en PEHD alimentaire avec poignées ergonomiques et bouchons inviolables, parfaits pour la restauration."
+      },
+      en: {
+        title: "Food-grade HDPE Pails",
+        capacity: "10L – 25L",
+        badge: "Foodservice / HORECA",
+        description: "Durable food-grade HDPE pails and jugs with tamper-evident caps, designed for HORECA and foodservice."
+      },
+      ar: {
+        title: "سلات وبيدونات غذائية PEHD",
+        capacity: "10L – 25L",
+        badge: "مطاعم وفنادق",
+        description: "أوعية وسلات غذائية قوية بمقابض مريحة وأغطية آمنة، ملائمة لقطاع الفنادق والمطاعم."
+      },
+      es: {
+        title: "Cubos PEHD de grado alimentario",
+        capacity: "10L – 25L",
+        badge: "Hostelería / Restauración",
+        description: "Envases plásticos alimentarios reforzados con asas ergonómicas para hostelería y gastronomía."
+      },
+      it: {
+        title: "Secchielli alimentari PEHD",
+        capacity: "10L – 25L",
+        badge: "Ristorazione / HORECA",
+        description: "Secchielli alimentari rinforzati per ristorazione professionale e catering."
+      }
+    },
+    created_at: "2026-09-28T15:00:00.000Z",
+    updated_at: "2026-09-28T15:00:00.000Z"
+  }
+];
+
 let cachedState: DatabaseState | null = null;
 let lastMtime: number = 0;
 
@@ -40,11 +216,17 @@ export function getDatabase(): DatabaseState {
         const raw = fs.readFileSync(DB_FILE, "utf-8");
         const parsed = JSON.parse(raw);
         if (parsed && Array.isArray(parsed.messages)) {
+          if (!parsed.packagings || parsed.packagings.length === 0) {
+            parsed.packagings = DEFAULT_PACKAGINGS;
+          }
           cachedState = parsed;
           lastMtime = stats.mtimeMs;
           return cachedState!;
         }
       } else {
+        if (!cachedState.packagings || cachedState.packagings.length === 0) {
+          cachedState.packagings = DEFAULT_PACKAGINGS;
+        }
         return cachedState;
       }
     }
@@ -53,10 +235,16 @@ export function getDatabase(): DatabaseState {
   }
 
   if (cachedState) {
+    if (!cachedState.packagings || cachedState.packagings.length === 0) {
+      cachedState.packagings = DEFAULT_PACKAGINGS;
+    }
     return cachedState;
   }
 
   cachedState = JSON.parse(JSON.stringify(bundledDatabaseData)) as DatabaseState;
+  if (!cachedState.packagings || cachedState.packagings.length === 0) {
+    cachedState.packagings = DEFAULT_PACKAGINGS;
+  }
   try {
     ensureDirectoryExists(DATA_DIR);
     fs.writeFileSync(DB_FILE, JSON.stringify(cachedState, null, 2), "utf-8");
@@ -789,6 +977,65 @@ export const db = {
         trashCountOrders: (state.orders || []).filter((o) => o.is_deleted || o.order_status === "trash").length,
         trashCountClients: (state.clients || []).filter((c) => c.is_deleted).length,
       };
+    },
+  },
+  packagings: {
+    getAll(onlyActive = false): PackagingFormat[] {
+      const state = getDatabase();
+      let list = state.packagings ? [...state.packagings] : [];
+      if (list.length === 0) {
+        list = [...DEFAULT_PACKAGINGS];
+      }
+      if (onlyActive) {
+        list = list.filter((p) => p.is_active);
+      }
+      return list.sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0));
+    },
+    getById(id: string): PackagingFormat | null {
+      const state = getDatabase();
+      const list = state.packagings && state.packagings.length > 0 ? state.packagings : DEFAULT_PACKAGINGS;
+      return list.find((p) => p.id === id) || null;
+    },
+    create(data: Omit<PackagingFormat, "id" | "created_at" | "updated_at">): PackagingFormat {
+      const state = getDatabase();
+      if (!state.packagings || state.packagings.length === 0) {
+        state.packagings = [...DEFAULT_PACKAGINGS];
+      }
+      const newPkg: PackagingFormat = {
+        ...data,
+        id: `pack-${Date.now()}`,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+      state.packagings.push(newPkg);
+      saveDatabase(state);
+      return newPkg;
+    },
+    update(id: string, data: Partial<PackagingFormat>): PackagingFormat | null {
+      const state = getDatabase();
+      if (!state.packagings || state.packagings.length === 0) {
+        state.packagings = [...DEFAULT_PACKAGINGS];
+      }
+      const index = state.packagings.findIndex((p) => p.id === id);
+      if (index === -1) return null;
+      state.packagings[index] = {
+        ...state.packagings[index],
+        ...data,
+        updated_at: new Date().toISOString(),
+      };
+      saveDatabase(state);
+      return state.packagings[index];
+    },
+    delete(id: string): boolean {
+      const state = getDatabase();
+      if (!state.packagings) return false;
+      const initialLength = state.packagings.length;
+      state.packagings = state.packagings.filter((p) => p.id !== id);
+      if (state.packagings.length !== initialLength) {
+        saveDatabase(state);
+        return true;
+      }
+      return false;
     },
   },
 };

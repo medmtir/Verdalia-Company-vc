@@ -79,6 +79,27 @@ export interface Publication {
   updated_at: string;
 }
 
+export interface PackagingFormatTranslation {
+  title: string;
+  capacity: string;
+  badge?: string;
+  description?: string;
+}
+
+export interface PackagingFormat {
+  id: string;
+  capacity: string;
+  title: string;
+  image_url: string;
+  badge: string;
+  description?: string;
+  sort_order: number;
+  is_active: boolean;
+  translations?: Partial<Record<Locale, PackagingFormatTranslation>>;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface ContactMessage {
   id: string;
   full_name: string;
@@ -238,4 +259,5 @@ export interface DatabaseState {
   content_blocks: Record<Locale, ContentBlockTranslation>;
   clients?: Client[];
   orders?: ClientOrder[];
+  packagings?: PackagingFormat[];
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Header } from "@/components/layout/Header";
@@ -127,11 +127,12 @@ export default function ExportPage() {
     },
   ];
 
-  const packagings = [
+  const defaultPackagings = [
     {
+      id: "pack-1",
       title: "Flexitank",
       capacity: "21 000 – 24 000 L / 20ft FCL",
-      image: "/images/facility/port-containers.jpg",
+      image_url: "/images/facility/port-containers.jpg",
       badge: "Vrac Industriel",
       desc:
         locale === "fr"
@@ -146,9 +147,10 @@ export default function ExportPage() {
       icon: Ship,
     },
     {
+      id: "pack-2",
       title: locale === "fr" ? "Conteneur IBC" : locale === "ar" ? "حاوية IBC سعة 1000 لتر" : locale === "es" ? "Contenedor IBC" : locale === "it" ? "Cisterna IBC" : "IBC Tote Tank",
       capacity: "1 000 L (800 - 1 000 kg)",
-      image: "/images/packaging/ibc-container.jpg",
+      image_url: "/images/packaging/ibc-container.jpg",
       badge: "Semi-Vrac / Distribution",
       desc:
         locale === "fr"
@@ -163,9 +165,10 @@ export default function ExportPage() {
       icon: Package,
     },
     {
+      id: "pack-3",
       title: locale === "fr" ? "Fûts Acier Scellés" : locale === "ar" ? "براميل فولاذية" : locale === "es" ? "Bidones de acero" : locale === "it" ? "Fusti in acciaio" : "Steel Drums",
       capacity: "208 L (approx. 190 kg)",
-      image: "/images/packaging/steel-drum.jpg",
+      image_url: "/images/packaging/steel-drum.jpg",
       badge: "Standard Maritime",
       desc:
         locale === "fr"
@@ -180,9 +183,10 @@ export default function ExportPage() {
       icon: Layers,
     },
     {
+      id: "pack-4",
       title: locale === "fr" ? "Seaux & Bidons Alimentaires" : locale === "ar" ? "سلات وبيدونات غذائية" : locale === "es" ? "Cubos y Bidones" : locale === "it" ? "Secchielli e Taniche" : "Pails & Jerrycans",
       capacity: "10 L – 25 L",
-      image: "/images/packaging/pails-buckets.jpg",
+      image_url: "/images/packaging/pails-buckets.jpg",
       badge: "Restauration / CHR",
       desc:
         locale === "fr"
@@ -197,6 +201,19 @@ export default function ExportPage() {
       icon: Package,
     },
   ];
+
+  const [packagings, setPackagings] = useState<any[]>(defaultPackagings);
+
+  useEffect(() => {
+    fetch("/api/packaging")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success && Array.isArray(data.packagings) && data.packagings.length > 0) {
+          setPackagings(data.packagings);
+        }
+      })
+      .catch((err) => console.error("Error loading packagings:", err));
+  }, []);
 
   return (
     <div className="min-h-screen flex flex-col bg-verdalia-offwhite text-verdalia-dark" dir={dir}>
@@ -390,25 +407,34 @@ export default function ExportPage() {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {packagings.map((pkg) => {
-              const Icon = pkg.icon;
+            {packagings.map((pkg: any) => {
+              const t = pkg.translations?.[locale] || pkg.translations?.fr || {};
+              const title = t.title || pkg.title;
+              const capacity = t.capacity || pkg.capacity;
+              const badge = t.badge || pkg.badge;
+              const desc = t.description || pkg.desc || "";
+              const image = pkg.image_url || pkg.image || "/images/packaging/ibc-container.jpg";
+              const Icon = pkg.icon || (badge?.toLowerCase().includes("vrac") ? Ship : Package);
+
               return (
                 <div
-                  key={pkg.title}
+                  key={pkg.id || title}
                   className="group bg-white rounded-xl border border-verdalia-border shadow-card hover:shadow-luxury transition-all duration-300 overflow-hidden flex flex-col justify-between"
                 >
                   <div>
                     {/* Visual Preview */}
                     <div className="relative aspect-[4/3] bg-verdalia-beige/40 overflow-hidden border-b border-verdalia-border">
                       <Image
-                        src={pkg.image}
-                        alt={pkg.title}
+                        src={image}
+                        alt={title}
                         fill
                         className="object-contain p-2 group-hover:scale-105 transition-transform duration-500"
                       />
-                      <div className="absolute top-2.5 left-2.5 bg-verdalia-dark/90 backdrop-blur-sm text-white text-[9px] font-bold tracking-widest uppercase px-2 py-0.5 rounded">
-                        {pkg.badge}
-                      </div>
+                      {badge && (
+                        <div className="absolute top-2.5 left-2.5 bg-verdalia-dark/90 backdrop-blur-sm text-white text-[9px] font-bold tracking-widest uppercase px-2 py-0.5 rounded">
+                          {badge}
+                        </div>
+                      )}
                     </div>
 
                     <div className="p-5">
@@ -417,16 +443,16 @@ export default function ExportPage() {
                           <Icon className="w-4 h-4" />
                         </div>
                         <h3 className="font-serif text-base font-bold text-verdalia-dark leading-tight">
-                          {pkg.title}
+                          {title}
                         </h3>
                       </div>
                       
                       <div className="inline-block bg-verdalia-olive/10 text-verdalia-olive text-[11px] font-bold px-2 py-0.5 rounded mb-3">
-                        {pkg.capacity}
+                        {capacity}
                       </div>
 
                       <p className="text-xs text-verdalia-gray leading-relaxed">
-                        {pkg.desc}
+                        {desc}
                       </p>
                     </div>
                   </div>

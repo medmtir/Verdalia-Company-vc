@@ -34,6 +34,7 @@ import {
   ChevronDown,
   Receipt,
   Smartphone,
+  Layers,
 } from "lucide-react";
 import { PwaInstallModal } from "@/components/admin/PwaInstallModal";
 
@@ -227,6 +228,11 @@ function AdminDashboardInner({
       href: "/admin/dashboard/export",
       label: adminDict.sidebar.export,
       icon: Ship,
+    },
+    {
+      href: "/admin/dashboard/packaging",
+      label: "Conditionnements",
+      icon: Layers,
     },
     {
       href: "/admin/dashboard/media",
