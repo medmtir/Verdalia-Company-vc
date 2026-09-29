@@ -4,6 +4,10 @@ import fs from "fs";
 import path from "path";
 import { db } from "@/lib/db/db";
 
+// Supabase credentials from environment
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
 // ===== SECURITY: File type validation =====
 const ALLOWED_EXTENSIONS = new Set([
   ".jpg", ".jpeg", ".png", ".webp", ".gif", ".pdf", ".doc", ".docx",
@@ -37,7 +41,7 @@ function isPathSafe(filePath: string, baseDir: string): boolean {
 
 // ===== SECURITY: Rate limiting =====
 const uploadAttempts = new Map<string, { count: number; resetAt: number }>();
-const UPLOAD_LIMIT = 20; // max uploads per window
+const UPLOAD_LIMIT = 50; // max uploads per window
 const UPLOAD_WINDOW = 60 * 1000; // 1 minute
 
 function isRateLimited(ip: string): boolean {
@@ -60,7 +64,10 @@ export async function POST(req: NextRequest) {
   // Rate limit
   const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
   if (isRateLimited(ip)) {
-    return NextResponse.json({ error: "Too many uploads. Please wait." }, { status: 429 });
+    return NextResponse.json(
+      { error: "Trop de requêtes. Veuillez patienter un instant." },
+      { status: 429 }
+    );
   }
 
   try {
@@ -69,14 +76,14 @@ export async function POST(req: NextRequest) {
 
     if (!file || file.size === 0) {
       return NextResponse.json(
-        { error: "No file provided" },
+        { error: "Aucun fichier fourni" },
         { status: 400 }
       );
     }
 
-    if (file.size > 15 * 1024 * 1024) {
+    if (file.size > 20 * 1024 * 1024) {
       return NextResponse.json(
-        { error: "File exceeds 15MB limit" },
+        { error: "Le fichier dépasse la limite autorisée (20 Mo)" },
         { status: 400 }
       );
     }
@@ -86,7 +93,11 @@ export async function POST(req: NextRequest) {
     // SECURITY: Whitelist extension check
     if (!ALLOWED_EXTENSIONS.has(ext)) {
       return NextResponse.json(
-        { error: `File type '${ext}' is not allowed. Accepted: ${Array.from(ALLOWED_EXTENSIONS).join(", ")}` },
+        {
+          error: `Format '${ext}' non autorisé. Formats acceptés : ${Array.from(
+            ALLOWED_EXTENSIONS
+          ).join(", ")}`,
+        },
         { status: 400 }
       );
     }
@@ -97,50 +108,99 @@ export async function POST(req: NextRequest) {
     // SECURITY: Validate magic bytes match declared extension
     if (!validateMagicBytes(buffer, ext)) {
       return NextResponse.json(
-        { error: "File content does not match its extension. Possible file spoofing detected." },
+        {
+          error:
+            "Le contenu du fichier ne correspond pas à son extension (détection anti-spoofing).",
+        },
         { status: 400 }
       );
     }
 
-    const uploadsDir = path.join(process.cwd(), "public", "uploads");
-    if (!fs.existsSync(uploadsDir)) {
-      fs.mkdirSync(uploadsDir, { recursive: true });
-    }
-
-    // SECURITY: Sanitize filename — strip path components and special chars
     const cleanName = path
       .basename(file.name, ext)
       .replace(/[^a-zA-Z0-9_-]/g, "_")
       .substring(0, 30);
     const uniqueFilename = `${Date.now()}-${cleanName}${ext}`;
-    const destination = path.join(uploadsDir, uniqueFilename);
 
-    // SECURITY: Verify resolved path stays within uploads directory
-    if (!isPathSafe(destination, uploadsDir)) {
-      return NextResponse.json(
-        { error: "Invalid file path detected." },
-        { status: 400 }
-      );
+    let uploadedUrl: string | null = null;
+
+    // TIER 1: Supabase Storage (Persistent cloud storage on Vercel)
+    if (SUPABASE_URL && SUPABASE_SERVICE_KEY) {
+      try {
+        const uploadRes = await fetch(
+          `${SUPABASE_URL}/storage/v1/object/verdalia-uploads/${uniqueFilename}`,
+          {
+            method: "POST",
+            headers: {
+              apikey: SUPABASE_SERVICE_KEY,
+              Authorization: `Bearer ${SUPABASE_SERVICE_KEY}`,
+              "Content-Type": file.type || "application/octet-stream",
+              "x-upsert": "true",
+            },
+            body: buffer,
+          }
+        );
+
+        if (uploadRes.ok) {
+          uploadedUrl = `${SUPABASE_URL}/storage/v1/object/public/verdalia-uploads/${uniqueFilename}`;
+        } else {
+          console.error("Supabase Storage error:", await uploadRes.text());
+        }
+      } catch (sErr) {
+        console.error("Supabase upload exception:", sErr);
+      }
     }
 
-    fs.writeFileSync(destination, buffer);
+    // TIER 2: Local Filesystem (for local development when filesystem is writable)
+    if (!uploadedUrl) {
+      try {
+        const uploadsDir = path.join(process.cwd(), "public", "uploads");
+        if (!fs.existsSync(uploadsDir)) {
+          fs.mkdirSync(uploadsDir, { recursive: true });
+        }
+        const destination = path.join(uploadsDir, uniqueFilename);
+        if (isPathSafe(destination, uploadsDir)) {
+          fs.writeFileSync(destination, buffer);
+          uploadedUrl = `/uploads/${uniqueFilename}`;
+        }
+      } catch (fsErr) {
+        console.warn(
+          "Local filesystem write bypassed (read-only environment on Vercel):",
+          fsErr
+        );
+      }
+    }
 
+    // TIER 3: Base64 Data URL (Fail-safe, works 100% without any external storage)
+    if (!uploadedUrl) {
+      const mime =
+        file.type ||
+        (ext === ".png"
+          ? "image/png"
+          : ext === ".webp"
+          ? "image/webp"
+          : "image/jpeg");
+      uploadedUrl = `data:${mime};base64,${buffer.toString("base64")}`;
+    }
+
+    // Save record to DB media list
     db.media.create({
       name: file.name,
-      url: `/uploads/${uniqueFilename}`,
+      url: uploadedUrl,
       size: `${(file.size / 1024).toFixed(1)} KB`,
-      type: file.type.startsWith('image/') ? 'Image' : 'Document',
+      type: file.type.startsWith("image/") ? "Image" : "Document",
     });
 
     return NextResponse.json({
       success: true,
-      url: `/uploads/${uniqueFilename}`,
+      url: uploadedUrl,
       filename: file.name,
       size: file.size,
     });
-  } catch (error) {
+  } catch (error: any) {
+    console.error("Upload handler error:", error);
     return NextResponse.json(
-      { error: "Failed to upload file" },
+      { error: error?.message || "Échec de l'upload du fichier" },
       { status: 500 }
     );
   }
@@ -149,7 +209,7 @@ export async function POST(req: NextRequest) {
 export async function GET() {
   const admin = await getAuthenticatedAdmin();
   if (!admin) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
   const files = db.media.getAll();
   return NextResponse.json({ files });
@@ -158,26 +218,45 @@ export async function GET() {
 export async function DELETE(req: NextRequest) {
   const admin = await getAuthenticatedAdmin();
   if (!admin) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   const { searchParams } = new URL(req.url);
-  const id = searchParams.get('id');
-  const url = searchParams.get('url');
+  const id = searchParams.get("id");
+  const url = searchParams.get("url");
 
   if (!id) {
-    return NextResponse.json({ error: 'Media ID is required' }, { status: 400 });
+    return NextResponse.json({ error: "Media ID is required" }, { status: 400 });
   }
 
   // Delete from DB
   const success = db.media.delete(id);
-  
-  // SECURITY: Verify file path before deletion — prevent path traversal
-  if (url && url.startsWith('/uploads/')) {
-    const uploadsDir = path.join(process.cwd(), 'public', 'uploads');
-    const filePath = path.join(process.cwd(), 'public', url);
-    
-    // Only delete if resolved path is within uploads directory
+
+  // If Supabase Storage file
+  if (url && url.includes("/storage/v1/object/public/verdalia-uploads/")) {
+    const filename = url.split("/verdalia-uploads/").pop();
+    if (filename && SUPABASE_URL && SUPABASE_SERVICE_KEY) {
+      try {
+        await fetch(
+          `${SUPABASE_URL}/storage/v1/object/verdalia-uploads/${filename}`,
+          {
+            method: "DELETE",
+            headers: {
+              apikey: SUPABASE_SERVICE_KEY,
+              Authorization: `Bearer ${SUPABASE_SERVICE_KEY}`,
+            },
+          }
+        );
+      } catch (err) {
+        console.error("Error deleting from Supabase storage:", err);
+      }
+    }
+  }
+
+  // If local file
+  if (url && url.startsWith("/uploads/")) {
+    const uploadsDir = path.join(process.cwd(), "public", "uploads");
+    const filePath = path.join(process.cwd(), "public", url);
     if (isPathSafe(filePath, uploadsDir)) {
       try {
         if (fs.existsSync(filePath)) {

@@ -51,9 +51,11 @@ export default function MediaManagerPage() {
         const listRes = await fetch("/api/admin/upload");
         const listData = await listRes.json();
         if (listData.files) setMediaList(listData.files);
+      } else {
+        alert(json.error || "Échec du téléchargement du fichier.");
       }
-    } catch {
-      alert("Échec du téléchargement du fichier.");
+    } catch (err: any) {
+      alert(err?.message || "Échec du téléchargement du fichier.");
     } finally {
       setUploading(false);
     }
@@ -75,7 +77,8 @@ export default function MediaManagerPage() {
     }
   };
 
-  const isImage = (url: string) => /\.(jpg|jpeg|png|gif|svg|webp)$/i.test(url);
+  const isImage = (url: string) =>
+    /\.(jpg|jpeg|png|gif|svg|webp)$/i.test(url) || url.startsWith("data:image/") || url.includes("/storage/v1/object/");
 
   return (
     <div className="space-y-6">
@@ -132,6 +135,7 @@ export default function MediaManagerPage() {
                         alt={item.name}
                         fill
                         className="object-contain"
+                        unoptimized={Boolean(item.url?.startsWith("data:"))}
                       />
                     </div>
                     <div className="absolute inset-0 bg-black/0 group-hover:bg-black/25 transition-colors flex items-center justify-center">
@@ -196,6 +200,7 @@ export default function MediaManagerPage() {
                 alt={lightboxName}
                 fill
                 className="object-contain"
+                unoptimized={Boolean(lightboxUrl?.startsWith("data:"))}
               />
             </div>
             <p className="text-center text-xs text-white/80 mt-3 font-medium tracking-wide">

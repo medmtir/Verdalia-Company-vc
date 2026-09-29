@@ -680,6 +680,7 @@ export default function HomePage() {
                           alt={title}
                           fill
                           className="object-contain p-2 group-hover:scale-105 transition-transform"
+                          unoptimized={Boolean(pkg.image_url?.startsWith("data:"))}
                         />
                       </div>
                       <div className="text-[11px] font-bold text-verdalia-gold uppercase tracking-wider line-clamp-1">

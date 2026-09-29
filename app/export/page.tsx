@@ -429,6 +429,7 @@ export default function ExportPage() {
                         alt={title}
                         fill
                         className="object-contain p-2 group-hover:scale-105 transition-transform duration-500"
+                        unoptimized={Boolean(image?.startsWith("data:"))}
                       />
                       {badge && (
                         <div className="absolute top-2.5 left-2.5 bg-verdalia-dark/90 backdrop-blur-sm text-white text-[9px] font-bold tracking-widest uppercase px-2 py-0.5 rounded">

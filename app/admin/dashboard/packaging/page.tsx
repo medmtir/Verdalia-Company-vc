@@ -165,10 +165,10 @@ export default function PackagingManagerPage() {
         setFormData((prev) => ({ ...prev, image_url: json.url }));
         showNotification("Image téléchargée avec succès !");
       } else {
-        alert("Erreur lors de l'upload de l'image.");
+        alert(json.error || "Erreur lors de l'upload de l'image.");
       }
-    } catch {
-      alert("Erreur lors de l'envoi de l'image.");
+    } catch (err: any) {
+      alert(err?.message || "Erreur lors de l'envoi de l'image.");
     } finally {
       setUploading(false);
     }
@@ -410,6 +410,7 @@ export default function PackagingManagerPage() {
                       alt={pkg.title}
                       fill
                       className="object-contain p-1.5"
+                      unoptimized={Boolean(pkg.image_url?.startsWith("data:"))}
                     />
                   </div>
 
@@ -499,7 +500,7 @@ export default function PackagingManagerPage() {
 
       {/* Edit / Create Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-sm animate-fadeIn">
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-sm animate-fadeIn">
           <div className="relative w-full max-w-2xl bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden flex flex-col max-h-[92vh]">
             {/* Modal Header */}
             <div className="bg-gradient-to-r from-[#172B13] to-[#203A1A] text-white p-5 sm:p-6 flex items-center justify-between">
@@ -539,6 +540,7 @@ export default function PackagingManagerPage() {
                         alt="Aperçu"
                         fill
                         className="object-contain p-2"
+                        unoptimized={Boolean(formData.image_url?.startsWith("data:"))}
                       />
                     ) : (
                       <ImageIcon className="w-8 h-8 text-gray-400" />
@@ -782,7 +784,7 @@ export default function PackagingManagerPage() {
 
       {/* Delete Confirmation Modal */}
       {deleteConfirmId && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn">
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn">
           <div className="bg-white rounded-2xl p-6 max-w-sm w-full space-y-4 shadow-2xl border border-gray-100 text-center">
             <div className="w-12 h-12 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center mx-auto">
               <Trash2 className="w-6 h-6" />
