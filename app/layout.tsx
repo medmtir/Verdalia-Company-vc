@@ -50,8 +50,11 @@ export async function generateMetadata(): Promise<Metadata> {
   const locale =
     cookieLocale && isValidLocale(cookieLocale) ? cookieLocale : DEFAULT_LOCALE;
   const seo = SEO_BY_LOCALE[locale];
-  const siteUrl =
+  const rawSiteUrl =
     process.env.NEXT_PUBLIC_SITE_URL || "https://www.verdaliacompany.com";
+  const siteUrl = rawSiteUrl.includes("localhost")
+    ? "https://www.verdaliacompany.com"
+    : rawSiteUrl;
 
   const languages: Record<string, string> = {};
   for (const loc of LOCALES) {
@@ -151,8 +154,11 @@ export default async function RootLayout({
   const locale =
     cookieLocale && isValidLocale(cookieLocale) ? cookieLocale : DEFAULT_LOCALE;
   const meta = LOCALE_METAS[locale];
-  const siteUrl =
+  const rawSiteUrl =
     process.env.NEXT_PUBLIC_SITE_URL || "https://www.verdaliacompany.com";
+  const siteUrl = rawSiteUrl.includes("localhost")
+    ? "https://www.verdaliacompany.com"
+    : rawSiteUrl;
 
   // Fetch site settings server-side — available instantly on first render
   let siteSettings;

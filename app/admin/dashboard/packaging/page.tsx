@@ -183,6 +183,13 @@ export default function PackagingManagerPage() {
     }
 
     setSaving(true);
+    const payload = {
+      ...formData,
+      title: formData.title.trim(),
+      capacity: formData.capacity.trim(),
+      image_url: (formData.image_url || "/images/packaging/ibc-container.jpg").trim(),
+    };
+
     try {
       if (editingItem) {
         // Update
@@ -191,12 +198,12 @@ export default function PackagingManagerPage() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             id: editingItem.id,
-            ...formData,
+            ...payload,
           }),
         });
         const data = await res.json();
         if (data.success) {
-          showNotification(`Conditionnement "${formData.title}" mis à jour !`);
+          showNotification(`Conditionnement "${payload.title}" mis à jour !`);
           setIsModalOpen(false);
           fetchPackagings();
         } else {
@@ -207,11 +214,11 @@ export default function PackagingManagerPage() {
         const res = await fetch("/api/admin/packaging", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(formData),
+          body: JSON.stringify(payload),
         });
         const data = await res.json();
         if (data.success) {
-          showNotification(`Nouveau conditionnement "${formData.title}" créé avec succès !`);
+          showNotification(`Nouveau conditionnement "${payload.title}" créé avec succès !`);
           setIsModalOpen(false);
           fetchPackagings();
         } else {
@@ -406,11 +413,11 @@ export default function PackagingManagerPage() {
                   {/* Photo Thumbnail */}
                   <div className="relative w-20 h-20 rounded-xl overflow-hidden bg-gray-100 border border-gray-200 flex-shrink-0 shadow-2xs group">
                     <Image
-                      src={pkg.image_url || "/images/packaging/ibc-container.jpg"}
+                      src={(pkg.image_url || "/images/packaging/ibc-container.jpg").trim()}
                       alt={pkg.title}
                       fill
                       className="object-contain p-1.5"
-                      unoptimized={Boolean(pkg.image_url?.startsWith("data:"))}
+                      unoptimized={Boolean((pkg.image_url || "").trim().startsWith("http") || (pkg.image_url || "").trim().startsWith("data:"))}
                     />
                   </div>
 
@@ -536,11 +543,11 @@ export default function PackagingManagerPage() {
                   <div className="relative w-28 h-28 rounded-xl overflow-hidden bg-white border-2 border-dashed border-gray-300 flex items-center justify-center flex-shrink-0 shadow-inner">
                     {formData.image_url ? (
                       <Image
-                        src={formData.image_url}
+                        src={(formData.image_url || "").trim()}
                         alt="Aperçu"
                         fill
                         className="object-contain p-2"
-                        unoptimized={Boolean(formData.image_url?.startsWith("data:"))}
+                        unoptimized={Boolean((formData.image_url || "").trim().startsWith("http") || (formData.image_url || "").trim().startsWith("data:"))}
                       />
                     ) : (
                       <ImageIcon className="w-8 h-8 text-gray-400" />

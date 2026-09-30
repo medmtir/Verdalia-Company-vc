@@ -23,6 +23,8 @@ import {
   VolumeX,
   Maximize,
   RotateCcw,
+  ChevronDown,
+  HelpCircle,
 } from "lucide-react";
 
 export default function HomePage() {
@@ -110,6 +112,121 @@ export default function HomePage() {
     setSelectedProduct(productName);
     setQuoteModalOpen(true);
   };
+
+  const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(0);
+
+  const faqItems = [
+    {
+      q:
+        locale === "fr"
+          ? "Qui est Verdalia Company VC ?"
+          : locale === "ar"
+          ? "من هي شركة فيرداليا (Verdalia Company VC)؟"
+          : locale === "es"
+          ? "¿Quién es Verdalia Company VC?"
+          : locale === "it"
+          ? "Chi è Verdalia Company VC?"
+          : "Who is Verdalia Company VC?",
+      a:
+        locale === "fr"
+          ? "Verdalia Company VC (www.verdaliacompany.com) est un producteur et exportateur tunisien leader d'huile d'olive en vrac et conditionnée. Nous fournissons de l'huile d'olive extra vierge, biologique certifiée, raffinée et de grignons pour les importateurs internationaux, raffineries et industriels agroalimentaires dans plus de 45 pays."
+          : locale === "ar"
+          ? "شركة فيرداليا (Verdalia Company VC) هي شركة رائدة في إنتاج وتصدير زيت الزيتون التونسي بالجملة والشحن البحري الدولي. نوفر زيت الزيتون البكر الممتاز، العضوي والبيولوجي المعتمد، المكرر وزيت تفل الزيتون لكبرى مصانع التعبئة والمستوردين في أكثر من 45 دولة."
+          : locale === "es"
+          ? "Verdalia Company VC (www.verdaliacompany.com) es un productor y exportador tunecino líder de aceite de oliva a granel: virgen extra, ecológico, refinado y orujo para importadores e industrias en más de 45 países."
+          : locale === "it"
+          ? "Verdalia Company VC (www.verdaliacompany.com) è un produttore ed esportatore tunisino leader di olio d'oliva sfuso: extra vergine, biologico, raffinato e sansa per importatori industriali in oltre 45 paesi."
+          : "Verdalia Company VC (www.verdaliacompany.com) is a premier Tunisian olive oil producer and bulk exporter, supplying certified high-grade extra virgin, organic, refined, and pomace olive oil worldwide to industrial bottlers and food distributors across 45+ international markets.",
+    },
+    {
+      q:
+        locale === "fr"
+          ? "Quels sont les conditionnements en vrac proposés pour l'exportation ?"
+          : locale === "ar"
+          ? "ما هي خيارات التعبئة المتوفرة لتصدير زيت الزيتون؟"
+          : locale === "es"
+          ? "¿Qué opciones de envasado a granel ofrece Verdalia?"
+          : locale === "it"
+          ? "Quali imballaggi sfusi sono disponibili per l'esportazione?"
+          : "What bulk packaging options does Verdalia offer for export?",
+      a:
+        locale === "fr"
+          ? "Nous proposons des solutions logistiques adaptées aux volumes industriels : Flexitanks 20ft de 21 000 à 24 000 Litres (citernes souples alimentaires certifiées COA), conteneurs IBC de 1 000 Litres sur palette avec armature en acier galvanisé, et fûts métalliques scellés de 208 Litres palettisables par 4."
+          : locale === "ar"
+          ? "نوفر حاويات فليكسي تانك (Flexitank) بسعة 21,000 إلى 24,000 لتر للشحن السائب في حاويات 20 قدم، حاويات IBC سعة 1,000 لتر مع هيكل حماية فولاذي، وبراميل فولاذية غذائية سعة 208 لتر محكمة الغلق وقابلة للتكديس."
+          : locale === "es"
+          ? "Ofrecemos Flexitanks de 21.000 a 24.000 litros en contenedores de 20 pies, contenedores IBC de 1.000 litros con jaula protectora de acero y bidones de acero de 208 litros."
+          : locale === "it"
+          ? "Offriamo Flexitank da 21.000 a 24.000 litri in container da 20 piedi, cisterne IBC da 1.000 litri con gabbia in acciaio e fusti in acciaio da 208 litri."
+          : "We provide global sea freight in 21,000L–24,000L single-use food-grade Flexitanks (20ft FCL), 1,000L rigid IBC totes with galvanized steel cages, and 208L hermetically sealed lacquered steel drums.",
+    },
+    {
+      q:
+        locale === "fr"
+          ? "Quelles certifications détiennent les huiles d'olive Verdalia ?"
+          : locale === "ar"
+          ? "ما هي شهادات الجودة والتحاليل المخبرية المعتمدة؟"
+          : locale === "es"
+          ? "¿Qué certificaciones de calidad tienen los aceites Verdalia?"
+          : locale === "it"
+          ? "Quali certificazioni possiedono gli oli d'oliva Verdalia?"
+          : "What certifications do Verdalia olive oils hold?",
+      a:
+        locale === "fr"
+          ? "Toutes nos huiles sont 100% pures et conformes aux critères physico-chimiques et organoleptiques du Conseil Oléicole International (COI / IOC). Nous détenons les certifications ISO 22000, ISO 9001, HACCP, Bio Tunisie / USDA Organic / UE Bio, Halal et Kosher, avec bulletin d'analyse complet par lot."
+          : locale === "ar"
+          ? "تخضع جميع شحناتنا لمواصفات المجلس الدولي للزيتون (IOC)، مع شهادات الجودة العالمية ISO 22000 وISO 9001 وHACCP، وشهادات الزراعة البيولوجية والعضوية (USDA Organic / EU Organic)، وشهادات الحلال والكوشر، مصحوبة بتقارير تحاليل كيميائية وحسية مفصلة."
+          : locale === "es"
+          ? "Nuestros aceites cumplen estrictamente las normas del Consejo Oleícola Internacional (COI) con certificaciones ISO 22000, HACCP, USDA Organic, Ecológico UE, Halal y Kosher."
+          : locale === "it"
+          ? "I nostri oli rispettano rigorosamente gli standard del Consiglio Oleicolo Internazionale (COI), certificati ISO 22000, HACCP, Biologico UE / USDA, Halal e Kosher."
+          : "Our olive oils strictly comply with IOC (International Olive Council) chemical and sensory standards, certified with ISO 22000, ISO 9001, HACCP, USDA Organic, EU Bio, Halal, and Kosher, backed by full laboratory COA batch analysis.",
+    },
+    {
+      q:
+        locale === "fr"
+          ? "Quels sont les ports de départ et délais d'expédition depuis la Tunisie ?"
+          : locale === "ar"
+          ? "ما هي موانئ الشحن في تونس ومدة التوصيل الدولي؟"
+          : locale === "es"
+          ? "¿Cuáles son los puertos de salida y plazos de entrega?"
+          : locale === "it"
+          ? "Quali sono i porti di partenza e i tempi di transito marittimo?"
+          : "What are the departure ports and shipment transit times from Tunisia?",
+      a:
+        locale === "fr"
+          ? "Nos cargaisons sont expédiées depuis les principaux ports maritimes tunisiens : Port de Radès, Port de Sousse et Port de Sfax. Grâce à notre positionnement stratégique en Méditerranée, les délais maritimes sont rapides : 2 à 4 jours vers l'Europe du Sud, 7 à 12 jours vers l'Europe du Nord et 14 à 20 jours vers les Amériques et l'Asie."
+          : locale === "ar"
+          ? "يتم شحن بضائعنا مباشرة من موانئ تونس الرئيسية: ميناء رادس، ميناء سوسة وميناء صفاقس. بفضل الموقع الجغرافي الاستراتيجي، تستغرق الشحنات البحرية من 2 إلى 4 أيام نحو موانئ جنوب أوروبا، ومن 7 إلى 12 يوماً نحو شمال أوروبا، ومن 14 إلى 20 يوماً نحو الأمريكتين وآسيا."
+          : locale === "es"
+          ? "Embarcamos desde los puertos de Radès, Sousse y Sfax con tránsitos marítimos de 2 a 4 días hacia el sur de Europa y conexiones regulares a todo el mundo."
+          : locale === "it"
+          ? "Spediamo dai porti di Radès, Sousse e Sfax con tempi di transito rapido verso i porti italiani (2-3 giorni) e collegamenti marittimi globali."
+          : "Shipments depart from Tunisia's main commercial ports: Port of Radès, Port of Sousse, and Port of Sfax. Maritime transit times average 2-4 days to Southern European ports, 7-12 days to Northern Europe, and 14-20 days to the Americas and Asia.",
+    },
+    {
+      q:
+        locale === "fr"
+          ? "Comment demander une cotation ou commander un échantillon ?"
+          : locale === "ar"
+          ? "كيف يمكن للمستوردين طلب عرض أسعار أو عينات تجارية؟"
+          : locale === "es"
+          ? "¿Cómo solicitar una cotización o muestras?"
+          : locale === "it"
+          ? "Come richiedere una quotazione o campioni commerciali?"
+          : "How can buyers request a formal quote or sample?",
+      a:
+        locale === "fr"
+          ? "Cliquez sur « Demander une Cotation » sur www.verdaliacompany.com ou contactez directement notre équipe export par email à contact@verdalia.com ou par téléphone/WhatsApp. Notre département commercial vous répond sous 24 heures ouvrées avec une offre CIF/FOB sur mesure."
+          : locale === "ar"
+          ? "يمكنكم الضغط على زر «طلب تسعيرة» على موقعنا الرسمي www.verdaliacompany.com أو مراسلة فريق التصدير عبر contact@verdalia.com أو عبر الواتساب. يقدم فريقنا التجاري عرض أسعار رسمي (FOB/CIF) خلال 24 ساعة."
+          : locale === "es"
+          ? "Haga clic en «Solicitar Cotización» en nuestro sitio web o contáctenos por email a contact@verdalia.com para recibir una oferta formal FOB o CIF."
+          : locale === "it"
+          ? "Clicchi su «Richiedi Quotazione» o ci contatti via email a contact@verdalia.com per ricevere un'offerta commerciale personalizzata FOB o CIF entro 24 ore."
+          : "Click 'Request a Quote' on www.verdaliacompany.com or contact our export sales desk at contact@verdalia.com or via WhatsApp. Our commercial team issues binding FOB/CIF price proposals and sends lab-certified samples within 24 business hours.",
+    },
+  ];
 
   const certsList = [
     { name: "BRC Food", code: "BRC", file: "brc.svg", desc: "Global Standard" },
@@ -671,16 +788,17 @@ export default function HomePage() {
                   const t = pkg.translations?.[locale] || pkg.translations?.fr || {};
                   const title = t.title || pkg.title;
                   const capacity = t.capacity || pkg.capacity;
+                  const cleanImageUrl = (pkg.image_url || "/images/packaging/ibc-container.jpg").trim();
 
                   return (
                     <div key={pkg.id || title} className="bg-white/5 border border-white/10 rounded-xl p-3.5 hover:bg-white/10 transition-colors group">
                       <div className="relative aspect-square rounded-lg overflow-hidden bg-black/40 mb-3">
                         <Image
-                          src={pkg.image_url || "/images/packaging/ibc-container.jpg"}
+                          src={cleanImageUrl}
                           alt={title}
                           fill
                           className="object-contain p-2 group-hover:scale-105 transition-transform"
-                          unoptimized={Boolean(pkg.image_url?.startsWith("data:"))}
+                          unoptimized={cleanImageUrl.startsWith("http") || cleanImageUrl.startsWith("data:")}
                         />
                       </div>
                       <div className="text-[11px] font-bold text-verdalia-gold uppercase tracking-wider line-clamp-1">
@@ -741,6 +859,85 @@ export default function HomePage() {
                   <p className="text-[10px] text-verdalia-gray mt-1">{c.desc}</p>
                 </div>
               ))}
+            </div>
+          </div>
+        </section>
+
+        {/* ====================================================
+            8. SEO FAQ ACCORDION SECTION (Structured for Google Rich Snippets)
+            ==================================================== */}
+        <section className="py-20 bg-white border-t border-verdalia-border" id="faq">
+          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center mb-12">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-verdalia-light/60 text-verdalia-olive text-xs font-bold uppercase tracking-wider mb-3">
+                <HelpCircle className="w-3.5 h-3.5" />
+                {locale === "fr"
+                  ? "Questions Fréquentes"
+                  : locale === "ar"
+                  ? "الأسئلة الشائعة"
+                  : locale === "es"
+                  ? "Preguntas Frecuentes"
+                  : locale === "it"
+                  ? "Domande Frequenti"
+                  : "Frequently Asked Questions"}
+              </span>
+              <h2 className="font-serif text-3xl sm:text-4xl font-bold text-verdalia-dark mt-2">
+                {locale === "fr"
+                  ? "Tout Savoir sur Verdalia Company & l'Export d'Huile d'Olive"
+                  : locale === "ar"
+                  ? "كل ما تحتاج معرفته حول شركة فيرداليا وتصدير زيت الزيتون"
+                  : locale === "es"
+                  ? "Todo sobre Verdalia Company y la Exportación de Aceite"
+                  : locale === "it"
+                  ? "Tutto su Verdalia Company e l'Esportazione di Olio d'Oliva"
+                  : "Everything About Verdalia Company & Olive Oil Export"}
+              </h2>
+              <p className="text-sm sm:text-base text-verdalia-gray mt-3 max-w-2xl mx-auto">
+                {locale === "fr"
+                  ? "Réponses directes et transparentes pour les importateurs, négociants et industriels internationaux."
+                  : locale === "ar"
+                  ? "إجابات واضحة وموثوقة للمستوردين، التجار الدوليين، والمصانع الغذائية."
+                  : locale === "es"
+                  ? "Respuestas claras para importadores, comerciantes e industrias internacionales."
+                  : locale === "it"
+                  ? "Risposte chiare per importatori, distributori e acquirenti industriali."
+                  : "Direct answers for international importers, traders, and commercial food processors."}
+              </p>
+            </div>
+
+            <div className="space-y-4">
+              {faqItems.map((item, idx) => {
+                const isOpen = openFaqIndex === idx;
+                return (
+                  <div
+                    key={idx}
+                    className="border border-verdalia-border rounded-xl overflow-hidden bg-verdalia-offwhite/50 transition-all duration-200 hover:border-verdalia-olive/40"
+                  >
+                    <button
+                      type="button"
+                      onClick={() => setOpenFaqIndex(isOpen ? null : idx)}
+                      aria-expanded={isOpen}
+                      className="w-full text-start p-5 sm:p-6 flex items-center justify-between gap-4 font-serif text-base sm:text-lg font-bold text-verdalia-dark hover:text-verdalia-olive transition-colors"
+                    >
+                      <span className="flex-1">{item.q}</span>
+                      <div
+                        className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 transition-transform duration-200 ${
+                          isOpen
+                            ? "bg-verdalia-olive text-white rotate-180"
+                            : "bg-verdalia-light/60 text-verdalia-dark"
+                        }`}
+                      >
+                        <ChevronDown className="w-4 h-4" />
+                      </div>
+                    </button>
+                    {isOpen && (
+                      <div className="px-5 sm:px-6 pb-6 pt-1 text-sm sm:text-base text-verdalia-gray leading-relaxed border-t border-verdalia-border/40">
+                        {item.a}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           </div>
         </section>

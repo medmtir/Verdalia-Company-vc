@@ -1,10 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db/db";
 import { PackagingFormat } from "@/lib/types";
+import { getAuthenticatedAdmin } from "@/lib/auth";
 
 export async function GET() {
   try {
-    const packagings = db.packagings.getAll();
+    const raw = db.packagings.getAll();
+    const packagings = raw.map((p) => ({
+      ...p,
+      image_url: (p.image_url || "").trim(),
+    }));
     return NextResponse.json({ success: true, packagings });
   } catch (error) {
     console.error("Error fetching admin packagings:", error);
@@ -16,6 +21,11 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
+  const admin = await getAuthenticatedAdmin();
+  if (!admin) {
+    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
+  }
+
   try {
     const body = await req.json();
     const { capacity, title, image_url, badge, description, sort_order, is_active, translations } = body;
@@ -27,11 +37,13 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    const cleanImg = (image_url || "/images/packaging/ibc-container.jpg").trim();
+
     const newPkg = db.packagings.create({
-      capacity,
-      title,
-      image_url: image_url || "/images/packaging/ibc-container.jpg",
-      badge: badge || "Export",
+      capacity: (capacity || "").trim(),
+      title: (title || "").trim(),
+      image_url: cleanImg,
+      badge: badge ? badge.trim() : "Export",
       description: description || "",
       sort_order: typeof sort_order === "number" ? sort_order : 10,
       is_active: is_active ?? true,
@@ -49,6 +61,11 @@ export async function POST(req: NextRequest) {
 }
 
 export async function PUT(req: NextRequest) {
+  const admin = await getAuthenticatedAdmin();
+  if (!admin) {
+    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
+  }
+
   try {
     const body = await req.json();
     const { id, ...data } = body;
@@ -58,6 +75,16 @@ export async function PUT(req: NextRequest) {
         { success: false, error: "ID du conditionnement manquant." },
         { status: 400 }
       );
+    }
+
+    if (typeof data.image_url === "string") {
+      data.image_url = data.image_url.trim();
+    }
+    if (typeof data.title === "string") {
+      data.title = data.title.trim();
+    }
+    if (typeof data.capacity === "string") {
+      data.capacity = data.capacity.trim();
     }
 
     const updated = db.packagings.update(id, data);
@@ -79,6 +106,11 @@ export async function PUT(req: NextRequest) {
 }
 
 export async function DELETE(req: NextRequest) {
+  const admin = await getAuthenticatedAdmin();
+  if (!admin) {
+    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
+  }
+
   try {
     const { searchParams } = new URL(req.url);
     const id = searchParams.get("id");

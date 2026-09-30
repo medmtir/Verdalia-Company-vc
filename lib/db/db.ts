@@ -986,6 +986,10 @@ export const db = {
       if (list.length === 0) {
         list = [...DEFAULT_PACKAGINGS];
       }
+      list = list.map((p) => ({
+        ...p,
+        image_url: (p.image_url || "").trim(),
+      }));
       if (onlyActive) {
         list = list.filter((p) => p.is_active);
       }
@@ -994,7 +998,12 @@ export const db = {
     getById(id: string): PackagingFormat | null {
       const state = getDatabase();
       const list = state.packagings && state.packagings.length > 0 ? state.packagings : DEFAULT_PACKAGINGS;
-      return list.find((p) => p.id === id) || null;
+      const found = list.find((p) => p.id === id);
+      if (!found) return null;
+      return {
+        ...found,
+        image_url: (found.image_url || "").trim(),
+      };
     },
     create(data: Omit<PackagingFormat, "id" | "created_at" | "updated_at">): PackagingFormat {
       const state = getDatabase();
@@ -1003,6 +1012,7 @@ export const db = {
       }
       const newPkg: PackagingFormat = {
         ...data,
+        image_url: (data.image_url || "").trim(),
         id: `pack-${Date.now()}`,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
@@ -1018,9 +1028,13 @@ export const db = {
       }
       const index = state.packagings.findIndex((p) => p.id === id);
       if (index === -1) return null;
+      const sanitizedData = { ...data };
+      if (typeof sanitizedData.image_url === "string") {
+        sanitizedData.image_url = sanitizedData.image_url.trim();
+      }
       state.packagings[index] = {
         ...state.packagings[index],
-        ...data,
+        ...sanitizedData,
         updated_at: new Date().toISOString(),
       };
       saveDatabase(state);

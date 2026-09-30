@@ -413,7 +413,7 @@ export default function ExportPage() {
               const capacity = t.capacity || pkg.capacity;
               const badge = t.badge || pkg.badge;
               const desc = t.description || pkg.desc || "";
-              const image = pkg.image_url || pkg.image || "/images/packaging/ibc-container.jpg";
+              const cleanImageUrl = (pkg.image_url || pkg.image || "/images/packaging/ibc-container.jpg").trim();
               const Icon = pkg.icon || (badge?.toLowerCase().includes("vrac") ? Ship : Package);
 
               return (
@@ -425,11 +425,11 @@ export default function ExportPage() {
                     {/* Visual Preview */}
                     <div className="relative aspect-[4/3] bg-verdalia-beige/40 overflow-hidden border-b border-verdalia-border">
                       <Image
-                        src={image}
+                        src={cleanImageUrl}
                         alt={title}
                         fill
                         className="object-contain p-2 group-hover:scale-105 transition-transform duration-500"
-                        unoptimized={Boolean(image?.startsWith("data:"))}
+                        unoptimized={cleanImageUrl.startsWith("http") || cleanImageUrl.startsWith("data:")}
                       />
                       {badge && (
                         <div className="absolute top-2.5 left-2.5 bg-verdalia-dark/90 backdrop-blur-sm text-white text-[9px] font-bold tracking-widest uppercase px-2 py-0.5 rounded">
