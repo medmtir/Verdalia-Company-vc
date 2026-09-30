@@ -95,9 +95,13 @@ export default function PublicationsManagementPage() {
         body: data,
       });
       const json = await res.json();
-      if (json.url) setImageUrl(json.url);
-    } catch {
-      alert("Failed to upload image.");
+      if (json.url) {
+        setImageUrl(json.url.trim());
+      } else {
+        alert(json.error || "Failed to upload image.");
+      }
+    } catch (err: any) {
+      alert(err?.message || "Failed to upload image.");
     } finally {
       setUploading(false);
     }
@@ -107,10 +111,11 @@ export default function PublicationsManagementPage() {
     e.preventDefault();
     setSaving(true);
     try {
+      const cleanImg = (imageUrl || "/images/facility/storage-tanks.jpg").trim();
       const payload = {
         id: editingId,
-        slug,
-        image_url: imageUrl,
+        slug: slug.trim().toLowerCase().replace(/\s+/g, "-"),
+        image_url: cleanImg,
         status,
         cta_label: ctaLabel || null,
         cta_url: ctaUrl || null,
@@ -193,12 +198,15 @@ export default function PublicationsManagementPage() {
                   <tr key={p.id} className="hover:bg-gray-50/80">
                     <td className="px-6 py-4 flex items-center gap-3">
                       <div className="relative w-12 h-12 rounded bg-gray-100 overflow-hidden flex-shrink-0">
-                        <Image
-                          src={p.image_url}
-                          alt="Cover"
-                          fill
-                          className="object-cover"
-                        />
+                        {p.image_url ? (
+                          <Image
+                            src={p.image_url.trim()}
+                            alt="Cover"
+                            fill
+                            className="object-cover"
+                            unoptimized={p.image_url.trim().startsWith("http") || p.image_url.trim().startsWith("data:")}
+                          />
+                        ) : null}
                       </div>
                       <div>
                         <p className="font-bold text-gray-900">
@@ -311,23 +319,35 @@ export default function PublicationsManagementPage() {
                 {/* Image */}
                 <div>
                   <label className="block text-xs font-bold uppercase text-gray-700 mb-1">
-                    Article Image URL
+                    Article Image URL or Upload
                   </label>
                   <div className="flex items-center gap-3">
+                    <div className="relative w-14 h-14 rounded-lg overflow-hidden bg-gray-100 border border-gray-200 flex-shrink-0">
+                      {imageUrl && (
+                        <Image
+                          src={imageUrl.trim()}
+                          alt="Preview"
+                          fill
+                          className="object-cover"
+                          unoptimized={imageUrl.trim().startsWith("http") || imageUrl.trim().startsWith("data:")}
+                        />
+                      )}
+                    </div>
                     <input
                       type="text"
                       value={imageUrl}
                       onChange={(e) => setImageUrl(e.target.value)}
-                      className="flex-1 px-3 py-2 bg-gray-50 border border-gray-200 rounded"
+                      placeholder="https://... or upload"
+                      className="flex-1 px-3 py-2 bg-gray-50 border border-gray-200 rounded text-xs"
                     />
                     <label className="px-3.5 py-2 bg-verdalia-beige rounded text-verdalia-dark font-semibold cursor-pointer inline-flex items-center gap-1.5 flex-shrink-0">
                       <Upload className="w-3.5 h-3.5" />
-                      <span>{uploading ? "Uploading..." : "Upload"}</span>
+                      <span>{uploading ? "Uploading..." : "Upload Photo"}</span>
                       <input
                         type="file"
                         onChange={handleImageUpload}
                         className="hidden"
-                        accept="image/*"
+                        accept="image/*,.heic,.heif,.avif,.webp,.png,.jpg,.jpeg"
                       />
                     </label>
                   </div>

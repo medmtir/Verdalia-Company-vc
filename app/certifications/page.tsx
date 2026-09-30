@@ -104,12 +104,18 @@ export default function CertificationsPage() {
                     <div>
                       <div className="flex items-center justify-between mb-6">
                         <div className="w-20 h-20 relative">
-                          <Image
-                            src={cert.badge_url}
-                            alt={t.name}
-                            fill
-                            className="object-contain"
-                          />
+                          {(() => {
+                            const cleanBadge = (cert.badge_url || "/images/certs/brc.svg").trim();
+                            return (
+                              <Image
+                                src={cleanBadge}
+                                alt={t.name}
+                                fill
+                                className="object-contain"
+                                unoptimized={cleanBadge.startsWith("http") || cleanBadge.startsWith("data:")}
+                              />
+                            );
+                          })()}
                         </div>
                         <span className="px-3 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase bg-verdalia-olive/10 text-verdalia-olive">
                           {cert.code}

@@ -69,7 +69,10 @@ export async function generateMetadata(): Promise<Metadata> {
     siteSettings = undefined;
   }
 
-  const googleVerif = (siteSettings as any)?.google_verification || process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION;
+  const googleVerif =
+    (siteSettings as any)?.google_verification ||
+    process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION ||
+    "66PUGqHK7apir88cIT_gWIuqC78wKbIE0JSixESS8WU";
   const bingVerif = (siteSettings as any)?.bing_verification || process.env.NEXT_PUBLIC_BING_VERIFICATION;
 
   return {

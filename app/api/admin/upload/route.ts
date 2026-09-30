@@ -10,13 +10,13 @@ const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 // ===== SECURITY: File type validation =====
 const ALLOWED_EXTENSIONS = new Set([
-  ".jpg", ".jpeg", ".png", ".webp", ".gif", ".pdf", ".doc", ".docx",
+  ".jpg", ".jpeg", ".png", ".webp", ".gif", ".svg", ".heic", ".heif", ".avif", ".pdf", ".doc", ".docx",
 ]);
 
 // Magic bytes signatures for allowed file types
 const MAGIC_BYTES: Record<string, number[][]> = {
-  ".jpg":  [[0xFF, 0xD8, 0xFF]],
-  ".jpeg": [[0xFF, 0xD8, 0xFF]],
+  ".jpg":  [[0xFF, 0xD8]],
+  ".jpeg": [[0xFF, 0xD8]],
   ".png":  [[0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A]],
   ".gif":  [[0x47, 0x49, 0x46, 0x38]],
   ".webp": [[0x52, 0x49, 0x46, 0x46]], // RIFF header
@@ -26,8 +26,17 @@ const MAGIC_BYTES: Record<string, number[][]> = {
 };
 
 function validateMagicBytes(buffer: Buffer, ext: string): boolean {
+  if (ext === ".svg") {
+    const text = buffer.toString("utf8", 0, Math.min(buffer.length, 1000)).trim().toLowerCase();
+    return text.includes("<svg") || text.includes("<?xml");
+  }
+  if (ext === ".heic" || ext === ".heif" || ext === ".avif") {
+    if (buffer.length < 12) return false;
+    const box = buffer.toString("ascii", 4, 12);
+    return box.includes("ftyp") || box.includes("mif1") || box.includes("heic") || box.includes("avif");
+  }
   const signatures = MAGIC_BYTES[ext];
-  if (!signatures) return false;
+  if (!signatures) return true;
   return signatures.some((sig) =>
     sig.every((byte, i) => i < buffer.length && buffer[i] === byte)
   );
@@ -179,9 +188,15 @@ export async function POST(req: NextRequest) {
           ? "image/png"
           : ext === ".webp"
           ? "image/webp"
+          : ext === ".svg"
+          ? "image/svg+xml"
+          : ext === ".avif"
+          ? "image/avif"
           : "image/jpeg");
       uploadedUrl = `data:${mime};base64,${buffer.toString("base64")}`;
     }
+
+    uploadedUrl = uploadedUrl.trim();
 
     // Save record to DB media list
     db.media.create({

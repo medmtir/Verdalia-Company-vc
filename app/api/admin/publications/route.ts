@@ -37,7 +37,7 @@ export async function POST(req: NextRequest) {
 
     const created = db.publications.create({
       slug: slug.trim().toLowerCase().replace(/\s+/g, "-"),
-      image_url: image_url || "/images/placeholder-oil.jpg",
+      image_url: (image_url || "/images/placeholder-oil.jpg").trim(),
       status: status || "draft",
       published_at: published_at || new Date().toISOString(),
       cta_label: cta_label || null,
@@ -70,6 +70,10 @@ export async function PUT(req: NextRequest) {
         { error: "Publication ID is required" },
         { status: 400 }
       );
+    }
+
+    if (updates.image_url) {
+      updates.image_url = updates.image_url.trim();
     }
 
     const updated = db.publications.update(id, updates);

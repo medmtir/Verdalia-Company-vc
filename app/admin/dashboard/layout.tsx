@@ -235,11 +235,6 @@ function AdminDashboardInner({
       icon: Layers,
     },
     {
-      href: "/admin/dashboard/media",
-      label: adminDict.sidebar.media,
-      icon: ImageIcon,
-    },
-    {
       href: "/admin/dashboard/contacts",
       label: adminDict.sidebar.contacts,
       icon: Users,

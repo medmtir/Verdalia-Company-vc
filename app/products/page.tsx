@@ -146,12 +146,18 @@ export default function ProductsPage() {
                         isEven ? "lg:order-1" : "lg:order-2"
                       }`}
                     >
-                      <Image
-                        src={prod.image_url}
-                        alt={t.name}
-                        fill
-                        className="object-cover"
-                      />
+                      {(() => {
+                        const cleanImg = (prod.image_url || "/images/facility/storage-tanks.jpg").trim();
+                        return (
+                          <Image
+                            src={cleanImg}
+                            alt={t.name}
+                            fill
+                            className="object-cover"
+                            unoptimized={cleanImg.startsWith("http") || cleanImg.startsWith("data:")}
+                          />
+                        );
+                      })()}
                       <div className="absolute top-4 left-4 bg-verdalia-dark text-verdalia-gold text-[10px] font-bold tracking-widest uppercase px-3 py-1.5 rounded">
                         100% Tunisian Origin
                       </div>

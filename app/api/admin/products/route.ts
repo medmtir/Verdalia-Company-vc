@@ -47,7 +47,7 @@ export async function POST(req: NextRequest) {
 
     const created = db.products.create({
       slug: slug.trim().toLowerCase().replace(/\s+/g, "-"),
-      image_url: image_url || "/images/placeholder-oil.jpg",
+      image_url: (image_url || "/images/placeholder-oil.jpg").trim(),
       is_active: is_active ?? true,
       sort_order: sort_order ?? 99,
       specs: specs || {
@@ -85,6 +85,10 @@ export async function PUT(req: NextRequest) {
         { error: "Product ID is required" },
         { status: 400 }
       );
+    }
+
+    if (updates.image_url) {
+      updates.image_url = updates.image_url.trim();
     }
 
     const updated = db.products.update(id, updates);

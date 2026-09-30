@@ -38,8 +38,8 @@ export async function POST(req: NextRequest) {
 
     const created = db.certifications.create({
       code: code.trim().toUpperCase(),
-      badge_url: badge_url || "/images/certs/brc.svg",
-      document_url: document_url || null,
+      badge_url: (badge_url || "/images/certs/brc.svg").trim(),
+      document_url: document_url ? document_url.trim() : null,
       cert_number: cert_number || null,
       issue_date: issue_date || null,
       expiry_date: expiry_date || null,
@@ -72,6 +72,13 @@ export async function PUT(req: NextRequest) {
         { error: "Certification ID is required" },
         { status: 400 }
       );
+    }
+
+    if (updates.badge_url) {
+      updates.badge_url = updates.badge_url.trim();
+    }
+    if (updates.document_url) {
+      updates.document_url = updates.document_url.trim();
     }
 
     const updated = db.certifications.update(id, updates);

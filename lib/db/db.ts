@@ -308,20 +308,36 @@ export const db = {
       if (activeOnly) {
         list = list.filter((p) => p.is_active);
       }
-      return list.sort((a, b) => a.sort_order - b.sort_order);
+      return list
+        .map((p) => ({
+          ...p,
+          image_url: (p.image_url || "/images/facility/storage-tanks.jpg").trim(),
+        }))
+        .sort((a, b) => a.sort_order - b.sort_order);
     },
     getBySlug(slug: string): Product | null {
       const state = getDatabase();
-      return state.products.find((p) => p.slug === slug) || null;
+      const p = state.products.find((prod) => prod.slug === slug);
+      if (!p) return null;
+      return {
+        ...p,
+        image_url: (p.image_url || "/images/facility/storage-tanks.jpg").trim(),
+      };
     },
     getById(id: string): Product | null {
       const state = getDatabase();
-      return state.products.find((p) => p.id === id) || null;
+      const p = state.products.find((prod) => prod.id === id);
+      if (!p) return null;
+      return {
+        ...p,
+        image_url: (p.image_url || "/images/facility/storage-tanks.jpg").trim(),
+      };
     },
     create(product: Omit<Product, "id" | "created_at" | "updated_at">): Product {
       const state = getDatabase();
       const newProduct: Product = {
         ...product,
+        image_url: (product.image_url || "/images/facility/storage-tanks.jpg").trim(),
         id: `prod-${Date.now()}`,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
@@ -334,9 +350,13 @@ export const db = {
       const state = getDatabase();
       const index = state.products.findIndex((p) => p.id === id);
       if (index === -1) return null;
+      const sanitizedUpdates = { ...updates };
+      if (sanitizedUpdates.image_url) {
+        sanitizedUpdates.image_url = sanitizedUpdates.image_url.trim();
+      }
       state.products[index] = {
         ...state.products[index],
-        ...updates,
+        ...sanitizedUpdates,
         updated_at: new Date().toISOString(),
       };
       saveDatabase(state);
@@ -361,11 +381,23 @@ export const db = {
       if (activeOnly) {
         list = list.filter((c) => c.is_active);
       }
-      return list.sort((a, b) => a.sort_order - b.sort_order);
+      return list
+        .map((c) => ({
+          ...c,
+          badge_url: (c.badge_url || "/images/certs/brc.svg").trim(),
+          document_url: c.document_url ? c.document_url.trim() : null,
+        }))
+        .sort((a, b) => a.sort_order - b.sort_order);
     },
     getById(id: string): Certification | null {
       const state = getDatabase();
-      return state.certifications.find((c) => c.id === id) || null;
+      const c = state.certifications.find((cert) => cert.id === id);
+      if (!c) return null;
+      return {
+        ...c,
+        badge_url: (c.badge_url || "/images/certs/brc.svg").trim(),
+        document_url: c.document_url ? c.document_url.trim() : null,
+      };
     },
     create(
       cert: Omit<Certification, "id" | "created_at" | "updated_at">
@@ -373,6 +405,8 @@ export const db = {
       const state = getDatabase();
       const newCert: Certification = {
         ...cert,
+        badge_url: (cert.badge_url || "/images/certs/brc.svg").trim(),
+        document_url: cert.document_url ? cert.document_url.trim() : null,
         id: `cert-${Date.now()}`,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
@@ -385,9 +419,12 @@ export const db = {
       const state = getDatabase();
       const index = state.certifications.findIndex((c) => c.id === id);
       if (index === -1) return null;
+      const sanitized = { ...updates };
+      if (sanitized.badge_url) sanitized.badge_url = sanitized.badge_url.trim();
+      if (sanitized.document_url) sanitized.document_url = sanitized.document_url.trim();
       state.certifications[index] = {
         ...state.certifications[index],
-        ...updates,
+        ...sanitized,
         updated_at: new Date().toISOString(),
       };
       saveDatabase(state);
@@ -412,15 +449,30 @@ export const db = {
       if (publishedOnly) {
         list = list.filter((p) => p.status === "published");
       }
-      return list.sort((a, b) => a.sort_order - b.sort_order);
+      return list
+        .map((p) => ({
+          ...p,
+          image_url: (p.image_url || "/images/facility/storage-tanks.jpg").trim(),
+        }))
+        .sort((a, b) => a.sort_order - b.sort_order);
     },
     getBySlug(slug: string): Publication | null {
       const state = getDatabase();
-      return state.publications.find((p) => p.slug === slug) || null;
+      const pub = state.publications.find((p) => p.slug === slug);
+      if (!pub) return null;
+      return {
+        ...pub,
+        image_url: (pub.image_url || "/images/facility/storage-tanks.jpg").trim(),
+      };
     },
     getById(id: string): Publication | null {
       const state = getDatabase();
-      return state.publications.find((p) => p.id === id) || null;
+      const pub = state.publications.find((p) => p.id === id);
+      if (!pub) return null;
+      return {
+        ...pub,
+        image_url: (pub.image_url || "/images/facility/storage-tanks.jpg").trim(),
+      };
     },
     create(
       pub: Omit<Publication, "id" | "created_at" | "updated_at">
@@ -428,6 +480,7 @@ export const db = {
       const state = getDatabase();
       const newPub: Publication = {
         ...pub,
+        image_url: (pub.image_url || "/images/facility/storage-tanks.jpg").trim(),
         id: `pub-${Date.now()}`,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
@@ -440,9 +493,11 @@ export const db = {
       const state = getDatabase();
       const index = state.publications.findIndex((p) => p.id === id);
       if (index === -1) return null;
+      const sanitized = { ...updates };
+      if (sanitized.image_url) sanitized.image_url = sanitized.image_url.trim();
       state.publications[index] = {
         ...state.publications[index],
-        ...updates,
+        ...sanitized,
         updated_at: new Date().toISOString(),
       };
       saveDatabase(state);

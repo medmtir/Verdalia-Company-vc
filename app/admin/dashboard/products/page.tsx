@@ -155,10 +155,12 @@ export default function ProductsManagementPage() {
       });
       const json = await res.json();
       if (json.url) {
-        setImageUrl(json.url);
+        setImageUrl(json.url.trim());
+      } else {
+        alert(json.error || "Failed to upload image.");
       }
-    } catch (err) {
-      alert("Failed to upload image.");
+    } catch (err: any) {
+      alert(err?.message || "Failed to upload image.");
     } finally {
       setUploading(false);
     }
@@ -169,10 +171,11 @@ export default function ProductsManagementPage() {
     setSaving(true);
 
     try {
+      const cleanImg = (imageUrl || "/images/placeholder-oil.jpg").trim();
       const payload = {
         id: editingId,
-        slug,
-        image_url: imageUrl,
+        slug: slug.trim(),
+        image_url: cleanImg,
         is_active: isActive,
         sort_order: Number(sortOrder),
         specs,
@@ -258,12 +261,15 @@ export default function ProductsManagementPage() {
                   <tr key={p.id} className="hover:bg-gray-50/80">
                     <td className="px-6 py-4 flex items-center gap-3">
                       <div className="relative w-12 h-12 rounded-lg overflow-hidden bg-gray-100 border border-gray-200 flex-shrink-0">
-                        <Image
-                          src={p.image_url}
-                          alt={p.translations.en?.name || p.slug}
-                          fill
-                          className="object-cover"
-                        />
+                        {p.image_url ? (
+                          <Image
+                            src={p.image_url.trim()}
+                            alt={p.translations.en?.name || p.slug}
+                            fill
+                            className="object-cover"
+                            unoptimized={p.image_url.trim().startsWith("http") || p.image_url.trim().startsWith("data:")}
+                          />
+                        ) : null}
                       </div>
                       <div>
                         <p className="font-bold text-gray-900">
@@ -391,10 +397,11 @@ export default function ProductsManagementPage() {
                     <div className="relative w-14 h-14 rounded-lg overflow-hidden bg-gray-100 border border-gray-200 flex-shrink-0">
                       {imageUrl && (
                         <Image
-                          src={imageUrl}
+                          src={imageUrl.trim()}
                           alt="Preview"
                           fill
                           className="object-cover"
+                          unoptimized={imageUrl.trim().startsWith("http") || imageUrl.trim().startsWith("data:")}
                         />
                       )}
                     </div>
@@ -403,7 +410,7 @@ export default function ProductsManagementPage() {
                       value={imageUrl}
                       onChange={(e) => setImageUrl(e.target.value)}
                       placeholder="https://... or upload below"
-                      className="flex-1 px-3 py-2 bg-gray-50 border border-gray-200 rounded"
+                      className="flex-1 px-3 py-2 bg-gray-50 border border-gray-200 rounded text-xs"
                     />
                     <label className="px-4 py-2 bg-verdalia-beige hover:bg-verdalia-border rounded text-verdalia-dark font-semibold cursor-pointer inline-flex items-center gap-1.5 flex-shrink-0">
                       <Upload className="w-3.5 h-3.5" />
@@ -412,7 +419,7 @@ export default function ProductsManagementPage() {
                         type="file"
                         onChange={handleFileUpload}
                         className="hidden"
-                        accept="image/*"
+                        accept="image/*,.heic,.heif,.avif,.webp,.png,.jpg,.jpeg"
                       />
                     </label>
                   </div>

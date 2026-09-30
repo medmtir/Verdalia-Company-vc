@@ -123,9 +123,13 @@ export default function CertificationsManagementPage() {
         body: data,
       });
       const json = await res.json();
-      if (json.url) setBadgeUrl(json.url);
-    } catch {
-      alert("Failed to upload badge.");
+      if (json.url) {
+        setBadgeUrl(json.url.trim());
+      } else {
+        alert(json.error || "Failed to upload badge.");
+      }
+    } catch (err: any) {
+      alert(err?.message || "Failed to upload badge.");
     } finally {
       setUploadingBadge(false);
     }
@@ -143,9 +147,13 @@ export default function CertificationsManagementPage() {
         body: data,
       });
       const json = await res.json();
-      if (json.url) setDocumentUrl(json.url);
-    } catch {
-      alert("Failed to upload document.");
+      if (json.url) {
+        setDocumentUrl(json.url.trim());
+      } else {
+        alert(json.error || "Failed to upload document.");
+      }
+    } catch (err: any) {
+      alert(err?.message || "Failed to upload document.");
     } finally {
       setUploadingDoc(false);
     }
@@ -155,11 +163,13 @@ export default function CertificationsManagementPage() {
     e.preventDefault();
     setSaving(true);
     try {
+      const cleanBadge = (badgeUrl || "/images/certs/brc.svg").trim();
+      const cleanDoc = documentUrl ? documentUrl.trim() : null;
       const payload = {
         id: editingId,
-        code,
-        badge_url: badgeUrl,
-        document_url: documentUrl,
+        code: code.trim().toUpperCase(),
+        badge_url: cleanBadge,
+        document_url: cleanDoc,
         cert_number: certNumber || null,
         issue_date: issueDate || null,
         expiry_date: expiryDate || null,
@@ -245,12 +255,15 @@ export default function CertificationsManagementPage() {
                   <tr key={c.id} className="hover:bg-gray-50/80">
                     <td className="px-6 py-4 flex items-center gap-3">
                       <div className="relative w-10 h-10 rounded-lg p-1 bg-gray-50 border border-gray-200 flex-shrink-0">
-                        <Image
-                          src={c.badge_url}
-                          alt={c.code}
-                          fill
-                          className="object-contain"
-                        />
+                        {c.badge_url ? (
+                          <Image
+                            src={c.badge_url.trim()}
+                            alt={c.code}
+                            fill
+                            className="object-contain"
+                            unoptimized={c.badge_url.trim().startsWith("http") || c.badge_url.trim().startsWith("data:")}
+                          />
+                        ) : null}
                       </div>
                       <span className="font-bold text-gray-900">{c.code}</span>
                     </td>
@@ -384,14 +397,15 @@ export default function CertificationsManagementPage() {
                     <label className="block text-xs font-bold uppercase text-gray-700 mb-1">
                       Badge Logo SVG/PNG
                     </label>
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-2">
                       <div className="relative w-12 h-12 rounded bg-gray-50 border border-gray-200 p-1 flex-shrink-0">
                         {badgeUrl && (
                           <Image
-                            src={badgeUrl}
+                            src={badgeUrl.trim()}
                             alt="Badge"
                             fill
                             className="object-contain"
+                            unoptimized={badgeUrl.trim().startsWith("http") || badgeUrl.trim().startsWith("data:")}
                           />
                         )}
                       </div>
@@ -399,8 +413,19 @@ export default function CertificationsManagementPage() {
                         type="text"
                         value={badgeUrl}
                         onChange={(e) => setBadgeUrl(e.target.value)}
-                        className="flex-1 px-3 py-2 bg-gray-50 border border-gray-200 rounded"
+                        placeholder="https://... or upload"
+                        className="flex-1 px-3 py-2 bg-gray-50 border border-gray-200 rounded text-xs"
                       />
+                      <label className="px-3.5 py-2 bg-verdalia-beige rounded text-verdalia-dark font-semibold cursor-pointer inline-flex items-center gap-1.5 flex-shrink-0">
+                        <Upload className="w-3.5 h-3.5" />
+                        <span>{uploadingBadge ? "Uploading..." : "Upload"}</span>
+                        <input
+                          type="file"
+                          onChange={handleBadgeUpload}
+                          className="hidden"
+                          accept="image/*,.svg,.heic,.heif,.avif,.webp,.png,.jpg,.jpeg"
+                        />
+                      </label>
                     </div>
                   </div>
 

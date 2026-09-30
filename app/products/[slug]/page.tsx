@@ -96,13 +96,19 @@ export default function ProductDetailPage() {
             {/* Product Image */}
             <div className="lg:col-span-6 sticky top-28">
               <div className="relative aspect-square rounded-xl overflow-hidden shadow-luxury border border-verdalia-border bg-verdalia-beige/30">
-                <Image
-                  src={product.image_url}
-                  alt={t.name}
-                  fill
-                  priority
-                  className="object-cover"
-                />
+                {(() => {
+                  const cleanImg = (product.image_url || "/images/facility/storage-tanks.jpg").trim();
+                  return (
+                    <Image
+                      src={cleanImg}
+                      alt={t.name}
+                      fill
+                      priority
+                      className="object-cover"
+                      unoptimized={cleanImg.startsWith("http") || cleanImg.startsWith("data:")}
+                    />
+                  );
+                })()}
                 <div className="absolute top-4 left-4 bg-verdalia-dark/90 text-verdalia-gold text-[10px] font-bold tracking-widest uppercase px-3 py-1.5 rounded">
                   Certified Export Quality
                 </div>
