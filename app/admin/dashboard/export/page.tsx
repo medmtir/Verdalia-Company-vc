@@ -136,6 +136,20 @@ export default function ExportContentCMS() {
 
       <form onSubmit={handleSave} className="space-y-6">
         <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm space-y-5">
+          <div className="mb-2">
+            <div className="flex items-center justify-between mb-1">
+              <label className="text-xs font-bold uppercase text-gray-700">
+                Banner Background Image URL (Lien)
+              </label>
+            </div>
+            <input
+              type="text"
+              value={current.export_banner_image_url || ""}
+              onChange={(e) => updateField("export_banner_image_url", e.target.value)}
+              placeholder="/images/facility/port-containers.jpg"
+              className="w-full px-3 py-2 text-xs bg-white border border-gray-200 rounded font-mono text-gray-600"
+            />
+          </div>
           <div>
             <div className="flex items-center justify-between mb-1">
               <label className="text-xs font-bold uppercase text-gray-700">
@@ -172,6 +186,21 @@ export default function ExportContentCMS() {
               onChange={(e) => updateField("export_text", e.target.value)}
               placeholder="Verdalia Company VC supports international companies looking to source Tunisian olive oil..."
               className="w-full px-3 py-2 text-xs bg-gray-50 border border-gray-200 rounded resize-none"
+            />
+          </div>
+          
+          <div className="mt-4">
+            <div className="flex items-center justify-between mb-1">
+              <label className="text-xs font-bold uppercase text-gray-700">
+                Packaging Showcase Image URL (Lien)
+              </label>
+            </div>
+            <input
+              type="text"
+              value={current.export_showcase_image_url || ""}
+              onChange={(e) => updateField("export_showcase_image_url", e.target.value)}
+              placeholder="/images/packaging/full-packaging-range.jpg"
+              className="w-full px-3 py-2 text-xs bg-white border border-gray-200 rounded font-mono text-gray-600"
             />
           </div>
         </div>

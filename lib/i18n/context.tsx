@@ -130,6 +130,12 @@ export const I18nProvider: React.FC<{
       merged.exportSection.packagingCardDesc = dynamicContent.export_text;
       merged.exportPage.bannerSubtitle = dynamicContent.export_text;
     }
+    if (dynamicContent.export_banner_image_url) {
+      merged.exportPage.banner_image_url = dynamicContent.export_banner_image_url;
+    }
+    if (dynamicContent.export_showcase_image_url) {
+      merged.exportPage.showcase_image_url = dynamicContent.export_showcase_image_url;
+    }
 
     if (dynamicContent.about_who_we_are) {
       merged.aboutPage.whoWeAreP1 = dynamicContent.about_who_we_are;
@@ -142,6 +148,19 @@ export const I18nProvider: React.FC<{
     }
     if (dynamicContent.about_mill_heritage) {
       merged.aboutPage.whoWeAreP2 = dynamicContent.about_mill_heritage;
+    }
+
+    if (dynamicContent.hero_image_url) {
+      merged.hero.image_url = dynamicContent.hero_image_url;
+    }
+    if (dynamicContent.about_image_url_1) {
+      merged.aboutSection.image_url_1 = dynamicContent.about_image_url_1;
+    }
+    if (dynamicContent.about_image_url_2) {
+      merged.aboutSection.image_url_2 = dynamicContent.about_image_url_2;
+    }
+    if (dynamicContent.export_image_url) {
+      merged.exportSection.image_url = dynamicContent.export_image_url;
     }
 
     return merged;

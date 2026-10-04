@@ -193,6 +193,8 @@ export interface ContentBlockTranslation {
   export_subtitle: string;
   export_text: string;
   export_image_url?: string;
+  export_banner_image_url?: string;
+  export_showcase_image_url?: string;
   about_who_we_are?: string;
   about_mission?: string;
   about_vision?: string;

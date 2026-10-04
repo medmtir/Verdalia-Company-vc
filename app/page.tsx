@@ -337,10 +337,11 @@ export default function HomePage() {
         <section className="relative min-h-[88vh] flex items-end md:items-center overflow-hidden bg-[#203A1A]">
           <div className="absolute inset-0 z-0">
             <Image
-              src="/images/facility/storage-tanks.jpg"
+              src={dict.hero.image_url || "/images/facility/storage-tanks.jpg"}
               alt="Unités de stockage Verdalia — huile d'olive en vrac Tunisie"
               fill
               priority
+              unoptimized={Boolean(dict.hero.image_url && (dict.hero.image_url.startsWith("http") || dict.hero.image_url.startsWith("data:")))}
               className="object-cover object-center opacity-45"
             />
             <div className="absolute inset-0 bg-gradient-to-r from-[#172B13]/85 via-[#203A1A]/55 to-transparent" />
@@ -445,18 +446,20 @@ export default function HomePage() {
               <div className="lg:col-span-6 relative pb-12 lg:pb-0">
                 <div className="relative z-10 w-4/5 rounded-lg overflow-hidden shadow-luxury border-4 border-white aspect-[4/3]">
                   <Image
-                    src="/images/facility/storage-tanks.jpg"
+                    src={dict.aboutSection.image_url_1 || "/images/facility/storage-tanks.jpg"}
                     alt="Citernes de stockage Verdalia"
                     fill
+                    unoptimized={Boolean(dict.aboutSection.image_url_1 && (dict.aboutSection.image_url_1.startsWith("http") || dict.aboutSection.image_url_1.startsWith("data:")))}
                     className="object-cover"
                   />
                 </div>
 
                 <div className="absolute -bottom-8 -right-2 sm:right-4 z-20 w-3/5 rounded-lg overflow-hidden shadow-2xl border-4 border-white aspect-[4/3]">
                   <Image
-                    src="/images/facility/tanker-truck.jpg"
+                    src={dict.aboutSection.image_url_2 || "/images/facility/tanker-truck.jpg"}
                     alt="Flotte de transport citerne Verdalia"
                     fill
+                    unoptimized={Boolean(dict.aboutSection.image_url_2 && (dict.aboutSection.image_url_2.startsWith("http") || dict.aboutSection.image_url_2.startsWith("data:")))}
                     className="object-cover"
                   />
                 </div>
@@ -946,9 +949,10 @@ export default function HomePage() {
         <section className="relative py-20 text-white text-center overflow-hidden bg-[#203A1A]">
           <div className="absolute inset-0 z-0 opacity-25">
             <Image
-              src="/images/facility/storage-tanks.jpg"
+              src={dict.exportSection.image_url || "/images/facility/storage-tanks.jpg"}
               alt=""
               fill
+              unoptimized={Boolean(dict.exportSection.image_url && (dict.exportSection.image_url.startsWith("http") || dict.exportSection.image_url.startsWith("data:")))}
               className="object-cover"
             />
           </div>

@@ -17,6 +17,7 @@ export interface Dictionary {
     subtitle: string;
     discoverBtn: string;
     quoteBtn: string;
+    image_url?: string;
   };
   trustStrip: {
     originTitle: string;
@@ -38,6 +39,8 @@ export interface Dictionary {
     point3Title: string;
     point3Desc: string;
     learnMoreBtn: string;
+    image_url_1?: string;
+    image_url_2?: string;
   };
   productsSection: {
     badge: string;
@@ -79,6 +82,7 @@ export interface Dictionary {
     stat2Label: string;
     stat3Number: string;
     stat3Label: string;
+    image_url?: string;
     packagingCardTitle: string;
     packagingCardDesc: string;
     stepsTitle: string;
@@ -189,6 +193,8 @@ export interface Dictionary {
     bannerTitle: string;
     bannerTitleAccent: string;
     bannerSubtitle: string;
+    banner_image_url?: string;
+    showcase_image_url?: string;
     servicesBadge: string;
     servicesTitle: string;
     servicesSubtitle: string;

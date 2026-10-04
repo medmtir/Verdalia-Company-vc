@@ -205,6 +205,22 @@ export default function HomepageContentCMS() {
             ></textarea>
           </div>
 
+          {/* New Image Fields */}
+          <div className="text-xs">
+            <div className="flex items-center justify-between mb-1">
+              <label className="block text-xs font-bold uppercase text-gray-700">
+                Hero Background Image URL (Lien /upload/...)
+              </label>
+            </div>
+            <input
+              type="text"
+              value={current.hero_image_url || ""}
+              onChange={(e) => updateField("hero_image_url", e.target.value)}
+              placeholder="/images/facility/storage-tanks.jpg"
+              className="w-full px-3 py-2 bg-white border border-gray-200 rounded font-mono text-gray-600"
+            />
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
             <div>
               <div className="flex items-center justify-between mb-1">
@@ -324,6 +340,37 @@ export default function HomepageContentCMS() {
               className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded resize-none"
             ></textarea>
           </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+            <div>
+              <div className="flex items-center justify-between mb-1">
+                <label className="block text-xs font-bold uppercase text-gray-700">
+                  Image Principale (Lien)
+                </label>
+              </div>
+              <input
+                type="text"
+                value={current.about_image_url_1 || ""}
+                onChange={(e) => updateField("about_image_url_1", e.target.value)}
+                placeholder="/images/facility/storage-tanks.jpg"
+                className="w-full px-3 py-2 bg-white border border-gray-200 rounded font-mono text-gray-600"
+              />
+            </div>
+            <div>
+              <div className="flex items-center justify-between mb-1">
+                <label className="block text-xs font-bold uppercase text-gray-700">
+                  Image Secondaire (Lien)
+                </label>
+              </div>
+              <input
+                type="text"
+                value={current.about_image_url_2 || ""}
+                onChange={(e) => updateField("about_image_url_2", e.target.value)}
+                placeholder="/images/facility/tanker-truck.jpg"
+                className="w-full px-3 py-2 bg-white border border-gray-200 rounded font-mono text-gray-600"
+              />
+            </div>
+          </div>
         </div>
 
         {/* Why Choose Us & Export Box */}
@@ -396,6 +443,20 @@ export default function HomepageContentCMS() {
               onChange={(e) => updateField("export_text", e.target.value)}
               className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded resize-none"
             ></textarea>
+          </div>
+          <div className="text-xs">
+            <div className="flex items-center justify-between mb-1">
+              <label className="block text-xs font-bold uppercase text-gray-700">
+                Image Section CTA (Lien)
+              </label>
+            </div>
+            <input
+              type="text"
+              value={current.export_image_url || ""}
+              onChange={(e) => updateField("export_image_url", e.target.value)}
+              placeholder="/images/facility/storage-tanks.jpg"
+              className="w-full px-3 py-2 bg-white border border-gray-200 rounded font-mono text-gray-600"
+            />
           </div>
         </div>
 

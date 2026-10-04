@@ -224,10 +224,11 @@ export default function ExportPage() {
         <section className="relative py-20 bg-[#203A1A] text-white overflow-hidden mb-16">
           <div className="absolute inset-0 z-0 opacity-30">
             <Image
-              src="/images/facility/port-containers.jpg"
+              src={dict.exportPage.banner_image_url || "/images/facility/port-containers.jpg"}
               alt="Terminal maritime et logistique export Verdalia"
               fill
               priority
+              unoptimized={Boolean(dict.exportPage.banner_image_url && (dict.exportPage.banner_image_url.startsWith("http") || dict.exportPage.banner_image_url.startsWith("data:")))}
               className="object-cover"
             />
           </div>
@@ -475,9 +476,10 @@ export default function ExportPage() {
           <div className="mt-10 bg-white rounded-xl border border-verdalia-border shadow-card p-6 md:p-8 flex flex-col md:flex-row items-center gap-6">
             <div className="relative w-full md:w-1/3 aspect-[16/10] rounded-lg overflow-hidden bg-verdalia-beige/30 flex-shrink-0 border border-verdalia-border">
               <Image
-                src="/images/packaging/full-packaging-range.jpg"
+                src={dict.exportPage.showcase_image_url || "/images/packaging/full-packaging-range.jpg"}
                 alt="Gamme complète emballages Verdalia"
                 fill
+                unoptimized={Boolean(dict.exportPage.showcase_image_url && (dict.exportPage.showcase_image_url.startsWith("http") || dict.exportPage.showcase_image_url.startsWith("data:")))}
                 className="object-cover"
               />
             </div>
