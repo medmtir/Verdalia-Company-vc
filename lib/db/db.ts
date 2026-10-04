@@ -207,33 +207,48 @@ export const DEFAULT_PACKAGINGS: PackagingFormat[] = [
 
 let cachedState: DatabaseState | null = null;
 let lastMtime: number = 0;
+let lastSupabaseSync: number = 0;
+const CACHE_TTL_MS = 3000;
 
 export function getDatabase(): DatabaseState {
-  // If we already have it in memory, return it
-  if (cachedState) {
+  const now = Date.now();
+  
+  // 1. Try to download from Supabase on cold start OR if cache expired (Vercel serverless persistence)
+  if (process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    if (!cachedState || now - lastSupabaseSync > CACHE_TTL_MS) {
+      try {
+        const url = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/authenticated/verdalia-uploads/verdalia.db.json`;
+        const curlCmd = `curl -s -H "Authorization: Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}" -H "apikey: ${process.env.SUPABASE_SERVICE_ROLE_KEY}" "${url}"`;
+        const result = require("child_process").execSync(curlCmd, { encoding: "utf-8" });
+        if (result && result.trim().startsWith("{")) {
+          const parsed = JSON.parse(result);
+          if (parsed && Array.isArray(parsed.messages)) {
+            cachedState = parsed as DatabaseState;
+            lastSupabaseSync = now;
+            if (!Array.isArray(cachedState.packagings) || cachedState.packagings.length === 0) {
+              cachedState.packagings = DEFAULT_PACKAGINGS;
+            }
+            return cachedState!;
+          }
+        }
+      } catch (err) {
+        console.log("No valid DB found in Supabase Storage or fetch failed, falling back to local file.");
+      }
+    } else {
+      // Return cached state if still valid
+      if (!Array.isArray(cachedState.packagings) || cachedState.packagings.length === 0) {
+        cachedState.packagings = DEFAULT_PACKAGINGS;
+      }
+      return cachedState!;
+    }
+  }
+
+  // If local dev, check if we have memory cache
+  if (cachedState && (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY)) {
     if (!Array.isArray(cachedState.packagings) || cachedState.packagings.length === 0) {
       cachedState.packagings = DEFAULT_PACKAGINGS;
     }
     return cachedState!;
-  }
-
-  // 1. Try to download from Supabase FIRST on cold start (Vercel serverless)
-  if (process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY) {
-    try {
-      const url = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/authenticated/verdalia-uploads/verdalia.db.json`;
-      const curlCmd = `curl -s -H "Authorization: Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}" -H "apikey: ${process.env.SUPABASE_SERVICE_ROLE_KEY}" "${url}"`;
-      const result = require("child_process").execSync(curlCmd, { encoding: "utf-8" });
-      if (result && result.trim().startsWith("{")) {
-        const parsed = JSON.parse(result);
-        if (parsed && Array.isArray(parsed.messages)) {
-          cachedState = parsed as DatabaseState;
-          console.log("Loaded Database from Supabase Storage successfully.");
-          return cachedState!;
-        }
-      }
-    } catch (err) {
-      console.log("No valid DB found in Supabase Storage, falling back to local file.");
-    }
   }
 
   // 2. Fallback to local disk (will just read git file on Vercel, or read/write on local dev)
@@ -292,6 +307,8 @@ export function saveDatabase(state: DatabaseState): void {
       // Use curl to upload synchronously
       const curlCmd = `curl -s -X POST -H "Authorization: Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}" -H "apikey: ${process.env.SUPABASE_SERVICE_ROLE_KEY}" -H "Content-Type: application/json" -H "x-upsert: true" --data-binary @"${tempFile}" "${url}"`;
       require("child_process").execSync(curlCmd, { encoding: "utf-8" });
+      
+      lastSupabaseSync = Date.now();
       
       // Cleanup temp file
       try { fs.unlinkSync(tempFile); } catch (e) {}
