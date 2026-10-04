@@ -214,7 +214,7 @@ export function getDatabase(): DatabaseState {
     if (!Array.isArray(cachedState.packagings) || cachedState.packagings.length === 0) {
       cachedState.packagings = DEFAULT_PACKAGINGS;
     }
-    return cachedState;
+    return cachedState!;
   }
 
   // 1. Try to download from Supabase FIRST on cold start (Vercel serverless)
@@ -226,9 +226,9 @@ export function getDatabase(): DatabaseState {
       if (result && result.trim().startsWith("{")) {
         const parsed = JSON.parse(result);
         if (parsed && Array.isArray(parsed.messages)) {
-          cachedState = parsed;
+          cachedState = parsed as DatabaseState;
           console.log("Loaded Database from Supabase Storage successfully.");
-          return cachedState;
+          return cachedState!;
         }
       }
     } catch (err) {
@@ -242,13 +242,13 @@ export function getDatabase(): DatabaseState {
       const raw = fs.readFileSync(DB_FILE, "utf-8");
       const parsed = JSON.parse(raw);
       if (parsed && Array.isArray(parsed.messages)) {
-        cachedState = parsed;
+        cachedState = parsed as DatabaseState;
         const stats = fs.statSync(DB_FILE);
         lastMtime = stats.mtimeMs;
         if (!Array.isArray(cachedState.packagings) || cachedState.packagings.length === 0) {
           cachedState.packagings = DEFAULT_PACKAGINGS;
         }
-        return cachedState;
+        return cachedState!;
       }
     }
   } catch (err) {
@@ -262,7 +262,7 @@ export function getDatabase(): DatabaseState {
     cachedState.packagings = DEFAULT_PACKAGINGS;
   }
   
-  return cachedState;
+  return cachedState!;
 }
 
 export function saveDatabase(state: DatabaseState): void {
