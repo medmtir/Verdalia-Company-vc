@@ -6,6 +6,7 @@ import { LOCALES } from "@/lib/i18n/config";
 import { useAdminI18n } from "@/lib/i18n/admin-context";
 import { Save, CheckCircle, Loader2 } from "lucide-react";
 import { AutoTranslateButton } from "@/components/ui/AutoTranslateButton";
+import { ImageUploader } from "@/components/ui/ImageUploader";
 
 export default function ExportContentCMS() {
   const { adminDict } = useAdminI18n();
@@ -136,18 +137,11 @@ export default function ExportContentCMS() {
 
       <form onSubmit={handleSave} className="space-y-6">
         <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm space-y-5">
-          <div className="mb-2">
-            <div className="flex items-center justify-between mb-1">
-              <label className="text-xs font-bold uppercase text-gray-700">
-                Banner Background Image URL (Lien)
-              </label>
-            </div>
-            <input
-              type="text"
+          <div className="mb-4">
+            <ImageUploader 
+              label="Banner Background Image URL"
               value={current.export_banner_image_url || ""}
-              onChange={(e) => updateField("export_banner_image_url", e.target.value)}
-              placeholder="/images/facility/port-containers.jpg"
-              className="w-full px-3 py-2 text-xs bg-white border border-gray-200 rounded font-mono text-gray-600"
+              onChange={(url) => updateField("export_banner_image_url", url)}
             />
           </div>
           <div>
@@ -190,17 +184,10 @@ export default function ExportContentCMS() {
           </div>
           
           <div className="mt-4">
-            <div className="flex items-center justify-between mb-1">
-              <label className="text-xs font-bold uppercase text-gray-700">
-                Packaging Showcase Image URL (Lien)
-              </label>
-            </div>
-            <input
-              type="text"
+            <ImageUploader 
+              label="Packaging Showcase Image URL"
               value={current.export_showcase_image_url || ""}
-              onChange={(e) => updateField("export_showcase_image_url", e.target.value)}
-              placeholder="/images/packaging/full-packaging-range.jpg"
-              className="w-full px-3 py-2 text-xs bg-white border border-gray-200 rounded font-mono text-gray-600"
+              onChange={(url) => updateField("export_showcase_image_url", url)}
             />
           </div>
         </div>

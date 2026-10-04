@@ -30,6 +30,8 @@ export default function ProductsPage() {
   const [quoteModalOpen, setQuoteModalOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState("");
 
+  const [packagings, setPackagings] = useState<any[]>([]);
+
   useEffect(() => {
     fetch("/api/admin/products?activeOnly=true")
       .then((res) => res.json())
@@ -40,6 +42,15 @@ export default function ProductsPage() {
       })
       .catch((err) => console.error("Error loading products:", err))
       .finally(() => setLoading(false));
+
+    fetch("/api/packaging")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success && Array.isArray(data.packagings)) {
+          setPackagings(data.packagings);
+        }
+      })
+      .catch((err) => console.error("Error loading packagings:", err));
   }, []);
 
   const handleRequestQuote = (prodName: string) => {
@@ -268,110 +279,44 @@ export default function ProductsPage() {
               </p>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              <div className="bg-white rounded-xl border border-verdalia-border shadow-card p-5 flex flex-col justify-between">
-                <div>
-                  <div className="relative aspect-square rounded-lg bg-verdalia-beige/30 overflow-hidden mb-4 border border-verdalia-border">
-                    <Image
-                      src="/images/packaging/ibc-container.jpg"
-                      alt="IBC Container Verdalia"
-                      fill
-                      className="object-contain p-2 hover:scale-105 transition-transform"
-                    />
-                  </div>
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-verdalia-olive bg-verdalia-olive/10 px-2 py-0.5 rounded">
-                    1 000 Litres
-                  </span>
-                  <h3 className="font-serif text-base font-bold text-verdalia-dark mt-2">
-                    {locale === "fr" ? "Cuve IBC avec armature" : locale === "ar" ? "خزان IBC مع قفص فولاذي" : "IBC Tote Tank"}
-                  </h3>
-                  <p className="text-xs text-verdalia-gray mt-1 leading-relaxed">
-                    {locale === "fr"
-                      ? "Idéal pour distributeurs et transformateurs intermédiaires. Vanne scellée et palette intégrée."
-                      : locale === "ar"
-                      ? "مناسب للمصانع والموزعين الإقليميين، مزود بصمام تفريغ وقاعدة باليت متينة."
-                      : "Designed for intermediate processors and distributors with protective cage and bottom valve."}
-                  </p>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {packagings.length > 0 ? (
+                packagings.map((pkg: any) => {
+                  const t = pkg.translations?.[locale] || pkg.translations?.fr || {};
+                  const title = t.title || pkg.title;
+                  const capacity = t.capacity || pkg.capacity;
+                  const desc = t.description || pkg.description || pkg.desc || "";
+                  
+                  return (
+                    <div key={pkg.id} className="bg-white rounded-xl border border-verdalia-border shadow-card p-5 flex flex-col justify-between">
+                      <div>
+                        <div className="relative aspect-square rounded-lg bg-verdalia-beige/30 overflow-hidden mb-4 border border-verdalia-border">
+                          <Image
+                            src={(pkg.image_url || "/images/packaging/ibc-container.jpg").trim()}
+                            alt={title}
+                            fill
+                            className="object-contain p-2 hover:scale-105 transition-transform"
+                            unoptimized={Boolean((pkg.image_url || "").trim().startsWith("http") || (pkg.image_url || "").trim().startsWith("data:"))}
+                          />
+                        </div>
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-verdalia-olive bg-verdalia-olive/10 px-2 py-0.5 rounded">
+                          {capacity}
+                        </span>
+                        <h3 className="font-serif text-base font-bold text-verdalia-dark mt-2">
+                          {title}
+                        </h3>
+                        <p className="text-xs text-verdalia-gray mt-1 leading-relaxed">
+                          {desc}
+                        </p>
+                      </div>
+                    </div>
+                  );
+                })
+              ) : (
+                <div className="col-span-full py-12 text-center text-sm text-gray-500">
+                  Loading packaging...
                 </div>
-              </div>
-
-              <div className="bg-white rounded-xl border border-verdalia-border shadow-card p-5 flex flex-col justify-between">
-                <div>
-                  <div className="relative aspect-square rounded-lg bg-verdalia-beige/30 overflow-hidden mb-4 border border-verdalia-border">
-                    <Image
-                      src="/images/packaging/steel-drum.jpg"
-                      alt="Steel Drum Verdalia"
-                      fill
-                      className="object-contain p-2 hover:scale-105 transition-transform"
-                    />
-                  </div>
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-verdalia-olive bg-verdalia-olive/10 px-2 py-0.5 rounded">
-                    208 Litres (~190 kg)
-                  </span>
-                  <h3 className="font-serif text-base font-bold text-verdalia-dark mt-2">
-                    {locale === "fr" ? "Fût Acier Alimentaire" : locale === "ar" ? "برميل فولاذي غذائي" : "Food-grade Steel Drum"}
-                  </h3>
-                  <p className="text-xs text-verdalia-gray mt-1 leading-relaxed">
-                    {locale === "fr"
-                      ? "Vernis intérieur alimentaire de haute pureté, hermétique sous atmosphère protectrice d'azote."
-                      : locale === "ar"
-                      ? "مطلي داخلياً بمادة غذائية عازلة ومحكم الإغلاق تحت النيتروجين لحفظ الطعم والنقاء."
-                      : "Epoxy-lined food-grade drums, hermetically sealed under nitrogen for optimal preservation."}
-                  </p>
-                </div>
-              </div>
-
-              <div className="bg-white rounded-xl border border-verdalia-border shadow-card p-5 flex flex-col justify-between">
-                <div>
-                  <div className="relative aspect-square rounded-lg bg-verdalia-beige/30 overflow-hidden mb-4 border border-verdalia-border">
-                    <Image
-                      src="/images/packaging/pails-buckets.jpg"
-                      alt="Seaux et bidons Verdalia"
-                      fill
-                      className="object-contain p-2 hover:scale-105 transition-transform"
-                    />
-                  </div>
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-verdalia-olive bg-verdalia-olive/10 px-2 py-0.5 rounded">
-                    10L & 20L
-                  </span>
-                  <h3 className="font-serif text-base font-bold text-verdalia-dark mt-2">
-                    {locale === "fr" ? "Seaux & Bidons PEHD" : locale === "ar" ? "سلات وأوعية PEHD" : "Food-grade HDPE Pails"}
-                  </h3>
-                  <p className="text-xs text-verdalia-gray mt-1 leading-relaxed">
-                    {locale === "fr"
-                      ? "Poignée ergonomique, bec verseur et bouchon scellé inviolable pour la restauration et les cuisines centrales."
-                      : locale === "ar"
-                      ? "مزودة بمقابض وأغطية أمان غير قابلة للتلاعب، مثالية للمطاعم ومطابخ الفنادق."
-                      : "Rigid pails with tamper-evident seal and ergonomic carry handle for commercial kitchens."}
-                  </p>
-                </div>
-              </div>
-
-              <div className="bg-white rounded-xl border border-verdalia-border shadow-card p-5 flex flex-col justify-between">
-                <div>
-                  <div className="relative aspect-square rounded-lg bg-verdalia-beige/30 overflow-hidden mb-4 border border-verdalia-border">
-                    <Image
-                      src="/images/packaging/bag-in-box.jpg"
-                      alt="Bag in box Verdalia"
-                      fill
-                      className="object-contain p-2 hover:scale-105 transition-transform"
-                    />
-                  </div>
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-verdalia-olive bg-verdalia-olive/10 px-2 py-0.5 rounded">
-                    3L & 5L
-                  </span>
-                  <h3 className="font-serif text-base font-bold text-verdalia-dark mt-2">
-                    {locale === "fr" ? "Bag-in-Box Hermétique" : locale === "ar" ? "أكياس كرتونية مفرغة من الهواء" : "Bag-in-Box Cartons"}
-                  </h3>
-                  <p className="text-xs text-verdalia-gray mt-1 leading-relaxed">
-                    {locale === "fr"
-                      ? "Poche sous vide avec robinet anti-retour : zéro contact avec l'air même après ouverture continue."
-                      : locale === "ar"
-                      ? "صمام ذكي مانع لمرور الهواء يضمن حماية تامة للزيت من الأكسدة حتى بعد الفتح."
-                      : "Vacuum-sealed inner bag prevents oxidation after multiple dispensing uses."}
-                  </p>
-                </div>
-              </div>
+              )}
             </div>
           </section>
         </div>

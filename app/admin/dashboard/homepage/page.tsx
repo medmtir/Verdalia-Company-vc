@@ -6,6 +6,7 @@ import { LOCALES } from "@/lib/i18n/config";
 import { useAdminI18n } from "@/lib/i18n/admin-context";
 import { Home, Save, CheckCircle, Loader2 } from "lucide-react";
 import { AutoTranslateButton } from "@/components/ui/AutoTranslateButton";
+import { ImageUploader } from "@/components/ui/ImageUploader";
 
 export default function HomepageContentCMS() {
   const { adminDict } = useAdminI18n();
@@ -207,17 +208,10 @@ export default function HomepageContentCMS() {
 
           {/* New Image Fields */}
           <div className="text-xs">
-            <div className="flex items-center justify-between mb-1">
-              <label className="block text-xs font-bold uppercase text-gray-700">
-                Hero Background Image URL (Lien /upload/...)
-              </label>
-            </div>
-            <input
-              type="text"
+            <ImageUploader 
+              label="Hero Background Image"
               value={current.hero_image_url || ""}
-              onChange={(e) => updateField("hero_image_url", e.target.value)}
-              placeholder="/images/facility/storage-tanks.jpg"
-              className="w-full px-3 py-2 bg-white border border-gray-200 rounded font-mono text-gray-600"
+              onChange={(url) => updateField("hero_image_url", url)}
             />
           </div>
 
@@ -343,31 +337,17 @@ export default function HomepageContentCMS() {
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
             <div>
-              <div className="flex items-center justify-between mb-1">
-                <label className="block text-xs font-bold uppercase text-gray-700">
-                  Image Principale (Lien)
-                </label>
-              </div>
-              <input
-                type="text"
+              <ImageUploader 
+                label="Image Principale"
                 value={current.about_image_url_1 || ""}
-                onChange={(e) => updateField("about_image_url_1", e.target.value)}
-                placeholder="/images/facility/storage-tanks.jpg"
-                className="w-full px-3 py-2 bg-white border border-gray-200 rounded font-mono text-gray-600"
+                onChange={(url) => updateField("about_image_url_1", url)}
               />
             </div>
             <div>
-              <div className="flex items-center justify-between mb-1">
-                <label className="block text-xs font-bold uppercase text-gray-700">
-                  Image Secondaire (Lien)
-                </label>
-              </div>
-              <input
-                type="text"
+              <ImageUploader 
+                label="Image Secondaire"
                 value={current.about_image_url_2 || ""}
-                onChange={(e) => updateField("about_image_url_2", e.target.value)}
-                placeholder="/images/facility/tanker-truck.jpg"
-                className="w-full px-3 py-2 bg-white border border-gray-200 rounded font-mono text-gray-600"
+                onChange={(url) => updateField("about_image_url_2", url)}
               />
             </div>
           </div>
@@ -445,17 +425,10 @@ export default function HomepageContentCMS() {
             ></textarea>
           </div>
           <div className="text-xs">
-            <div className="flex items-center justify-between mb-1">
-              <label className="block text-xs font-bold uppercase text-gray-700">
-                Image Section CTA (Lien)
-              </label>
-            </div>
-            <input
-              type="text"
+            <ImageUploader 
+              label="Image Section CTA"
               value={current.export_image_url || ""}
-              onChange={(e) => updateField("export_image_url", e.target.value)}
-              placeholder="/images/facility/storage-tanks.jpg"
-              className="w-full px-3 py-2 bg-white border border-gray-200 rounded font-mono text-gray-600"
+              onChange={(url) => updateField("export_image_url", url)}
             />
           </div>
         </div>
