@@ -218,8 +218,9 @@ export function getDatabase(): DatabaseState {
     if (!cachedState || now - lastSupabaseSync > CACHE_TTL_MS) {
       try {
         const url = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/authenticated/verdalia-uploads/verdalia.db.json`;
-        const curlCmd = `curl -s -H "Authorization: Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}" -H "apikey: ${process.env.SUPABASE_SERVICE_ROLE_KEY}" "${url}"`;
-        const result = require("child_process").execSync(curlCmd, { encoding: "utf-8" });
+        const scriptPath = require("path").join(process.cwd(), "supabase-sync.js");
+        const cmd = `node "${scriptPath}" download "${url}" "${process.env.SUPABASE_SERVICE_ROLE_KEY}"`;
+        const result = require("child_process").execSync(cmd, { encoding: "utf-8" });
         if (result && result.trim().startsWith("{")) {
           const parsed = JSON.parse(result);
           if (parsed && Array.isArray(parsed.messages)) {
@@ -300,13 +301,14 @@ export function saveDatabase(state: DatabaseState): void {
   if (process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY) {
     try {
       const url = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/verdalia-uploads/verdalia.db.json`;
-      // Write a temporary file for curl to upload
+      // Write a temporary file to upload
       const tempFile = path.join(require("os").tmpdir(), `verdalia-tmp-${Date.now()}.json`);
       fs.writeFileSync(tempFile, JSON.stringify(state), "utf-8");
       
-      // Use curl to upload synchronously
-      const curlCmd = `curl -s -X POST -H "Authorization: Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}" -H "apikey: ${process.env.SUPABASE_SERVICE_ROLE_KEY}" -H "Content-Type: application/json" -H "x-upsert: true" --data-binary @"${tempFile}" "${url}"`;
-      require("child_process").execSync(curlCmd, { encoding: "utf-8" });
+      // Use sync script to upload
+      const scriptPath = path.join(process.cwd(), "supabase-sync.js");
+      const cmd = `node "${scriptPath}" upload "${url}" "${process.env.SUPABASE_SERVICE_ROLE_KEY}" "${tempFile}"`;
+      require("child_process").execSync(cmd, { encoding: "utf-8" });
       
       lastSupabaseSync = Date.now();
       
