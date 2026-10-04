@@ -209,21 +209,42 @@ let cachedState: DatabaseState | null = null;
 let lastMtime: number = 0;
 
 export function getDatabase(): DatabaseState {
+  // If we already have it in memory, return it
+  if (cachedState) {
+    if (!Array.isArray(cachedState.packagings) || cachedState.packagings.length === 0) {
+      cachedState.packagings = DEFAULT_PACKAGINGS;
+    }
+    return cachedState;
+  }
+
+  // 1. Try to download from Supabase FIRST on cold start (Vercel serverless)
+  if (process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    try {
+      const url = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/authenticated/verdalia-uploads/verdalia.db.json`;
+      const curlCmd = `curl -s -H "Authorization: Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}" -H "apikey: ${process.env.SUPABASE_SERVICE_ROLE_KEY}" "${url}"`;
+      const result = require("child_process").execSync(curlCmd, { encoding: "utf-8" });
+      if (result && result.trim().startsWith("{")) {
+        const parsed = JSON.parse(result);
+        if (parsed && Array.isArray(parsed.messages)) {
+          cachedState = parsed;
+          console.log("Loaded Database from Supabase Storage successfully.");
+          return cachedState;
+        }
+      }
+    } catch (err) {
+      console.log("No valid DB found in Supabase Storage, falling back to local file.");
+    }
+  }
+
+  // 2. Fallback to local disk (will just read git file on Vercel, or read/write on local dev)
   try {
     if (fs.existsSync(DB_FILE)) {
-      const stats = fs.statSync(DB_FILE);
-      if (!cachedState || stats.mtimeMs !== lastMtime) {
-        const raw = fs.readFileSync(DB_FILE, "utf-8");
-        const parsed = JSON.parse(raw);
-        if (parsed && Array.isArray(parsed.messages)) {
-          if (!Array.isArray(parsed.packagings) || parsed.packagings.length === 0) {
-            parsed.packagings = DEFAULT_PACKAGINGS;
-          }
-          cachedState = parsed;
-          lastMtime = stats.mtimeMs;
-          return cachedState!;
-        }
-      } else {
+      const raw = fs.readFileSync(DB_FILE, "utf-8");
+      const parsed = JSON.parse(raw);
+      if (parsed && Array.isArray(parsed.messages)) {
+        cachedState = parsed;
+        const stats = fs.statSync(DB_FILE);
+        lastMtime = stats.mtimeMs;
         if (!Array.isArray(cachedState.packagings) || cachedState.packagings.length === 0) {
           cachedState.packagings = DEFAULT_PACKAGINGS;
         }
@@ -234,47 +255,14 @@ export function getDatabase(): DatabaseState {
     console.error("Error reading database from disk:", err);
   }
 
-  if (cachedState) {
-    if (!Array.isArray(cachedState.packagings) || cachedState.packagings.length === 0) {
-      cachedState.packagings = DEFAULT_PACKAGINGS;
-    }
-    return cachedState;
-  }
-
+  // 3. Ultimate fallback to bundled data
   cachedState = JSON.parse(JSON.stringify(bundledDatabaseData)) as DatabaseState;
   
-  // Vercel Serverless persistence workaround: Download from Supabase Storage synchronously
-  if (process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY) {
-    try {
-      const url = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/verdalia-uploads/verdalia.db.json`;
-      const curlCmd = `curl -s -H "Authorization: Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}" -H "apikey: ${process.env.SUPABASE_SERVICE_ROLE_KEY}" "${url}"`;
-      const result = require("child_process").execSync(curlCmd, { encoding: "utf-8" });
-      if (result && result.trim().startsWith("{")) {
-        const parsed = JSON.parse(result);
-        if (parsed && Array.isArray(parsed.messages)) {
-          cachedState = parsed;
-          console.log("Loaded Database from Supabase Storage successfully.");
-        }
-      }
-    } catch (err) {
-      console.log("No valid DB found in Supabase Storage, using bundled data.");
-    }
-  }
-
-  if (!cachedState) {
-    cachedState = JSON.parse(JSON.stringify(bundledDatabaseData)) as DatabaseState;
-  }
   if (!Array.isArray(cachedState.packagings) || cachedState.packagings.length === 0) {
     cachedState.packagings = DEFAULT_PACKAGINGS;
   }
-  try {
-    ensureDirectoryExists(DATA_DIR);
-    fs.writeFileSync(DB_FILE, JSON.stringify(cachedState, null, 2), "utf-8");
-    const stats = fs.statSync(DB_FILE);
-    lastMtime = stats.mtimeMs;
-  } catch {}
-
-  return cachedState!;
+  
+  return cachedState;
 }
 
 export function saveDatabase(state: DatabaseState): void {
@@ -293,19 +281,23 @@ export function saveDatabase(state: DatabaseState): void {
     console.error("Error writing database to disk:", err);
   }
 
-  // Vercel Serverless persistence workaround: Upload to Supabase Storage asynchronously
+  // Vercel Serverless persistence workaround: Upload to Supabase Storage synchronously
   if (process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY) {
-    const url = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/verdalia-uploads/verdalia.db.json`;
-    fetch(url, {
-      method: "POST",
-      headers: {
-        apikey: process.env.SUPABASE_SERVICE_ROLE_KEY,
-        Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`,
-        "Content-Type": "application/json",
-        "x-upsert": "true",
-      },
-      body: JSON.stringify(state),
-    }).catch((err) => console.error("Error uploading DB to Supabase:", err));
+    try {
+      const url = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/verdalia-uploads/verdalia.db.json`;
+      // Write a temporary file for curl to upload
+      const tempFile = path.join(process.cwd(), ".tmp-db.json");
+      fs.writeFileSync(tempFile, JSON.stringify(state), "utf-8");
+      
+      // Use curl to upload synchronously
+      const curlCmd = `curl -s -X POST -H "Authorization: Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}" -H "apikey: ${process.env.SUPABASE_SERVICE_ROLE_KEY}" -H "Content-Type: application/json" -H "x-upsert: true" --data-binary @"${tempFile}" "${url}"`;
+      require("child_process").execSync(curlCmd, { encoding: "utf-8" });
+      
+      // Cleanup temp file
+      try { fs.unlinkSync(tempFile); } catch (e) {}
+    } catch (err) {
+      console.error("Error uploading DB to Supabase:", err);
+    }
   }
 }
 

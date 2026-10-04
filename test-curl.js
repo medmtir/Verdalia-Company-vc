@@ -1,0 +1,1 @@
+require('dotenv').config({path: '.env'}); const cp = require('child_process'); const url = process.env.NEXT_PUBLIC_SUPABASE_URL + '/storage/v1/object/authenticated/verdalia-uploads/verdalia.db.json'; const curlCmd = \curl -s -H \"Authorization: Bearer \\" -H \"apikey: \\" \"\\"\; console.log(cp.execSync(curlCmd, { encoding: 'utf-8' }).substring(0, 500));
