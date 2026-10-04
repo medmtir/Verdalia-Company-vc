@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db/db";
 import { getAuthenticatedAdmin } from "@/lib/auth";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+export const fetchCache = "force-no-store";
+
 export async function GET(req: NextRequest) {
   const admin = await getAuthenticatedAdmin();
   if (!admin) {
@@ -14,7 +18,16 @@ export async function GET(req: NextRequest) {
   const clients = db.clients.getAll(mode);
   const trashCount = db.clients.getTrashCount();
 
-  return NextResponse.json({ success: true, clients, trashCount });
+  return NextResponse.json(
+    { success: true, clients, trashCount },
+    {
+      headers: {
+        "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0",
+        "Pragma": "no-cache",
+        "Expires": "0",
+      },
+    }
+  );
 }
 
 export async function POST(req: NextRequest) {

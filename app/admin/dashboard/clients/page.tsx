@@ -127,11 +127,12 @@ export default function ClientsAndOrdersPage() {
   // Load all clients, orders, products, and stats
   const fetchData = async () => {
     try {
+      const ts = Date.now();
       const [ordersRes, clientsRes, trashedOrdersRes, trashedClientsRes] = await Promise.all([
-        fetch("/api/admin/orders?mode=active"),
-        fetch("/api/admin/clients?mode=active"),
-        fetch("/api/admin/orders?mode=trash"),
-        fetch("/api/admin/clients?mode=trash"),
+        fetch(`/api/admin/orders?mode=active&_t=${ts}`, { cache: "no-store", headers: { "Cache-Control": "no-cache" } }),
+        fetch(`/api/admin/clients?mode=active&_t=${ts}`, { cache: "no-store", headers: { "Cache-Control": "no-cache" } }),
+        fetch(`/api/admin/orders?mode=trash&_t=${ts}`, { cache: "no-store", headers: { "Cache-Control": "no-cache" } }),
+        fetch(`/api/admin/clients?mode=trash&_t=${ts}`, { cache: "no-store", headers: { "Cache-Control": "no-cache" } }),
       ]);
 
       const ordersData = await ordersRes.json();
@@ -328,9 +329,12 @@ export default function ClientsAndOrdersPage() {
         });
         const data = await res.json();
         if (data.success) {
+          if (data.order) {
+            setOrders((prev) => prev.map((o) => (o.id === data.order.id ? data.order : o)));
+          }
           showNotification("Commande mise à jour avec succès !");
           setOrderModalOpen(false);
-          fetchData();
+          await fetchData();
         } else {
           alert(data.error || "Erreur de mise à jour");
         }
@@ -342,9 +346,12 @@ export default function ClientsAndOrdersPage() {
         });
         const data = await res.json();
         if (data.success) {
+          if (data.order) {
+            setOrders((prev) => [data.order, ...prev.filter((o) => o.id !== data.order.id)]);
+          }
           showNotification("Nouvelle commande créée avec succès !");
           setOrderModalOpen(false);
-          fetchData();
+          await fetchData();
         } else {
           alert(data.error || "Erreur de création");
         }
@@ -358,13 +365,14 @@ export default function ClientsAndOrdersPage() {
 
   // Open Payment installment modal
   const openPaymentModal = (order: ClientOrder) => {
-    setSelectedOrderForPayment(order);
+    const freshOrder = orders.find((o) => o.id === order.id) || order;
+    setSelectedOrderForPayment(freshOrder);
     setPaymentForm({
-      amount: String(order.remaining_amount > 0 ? order.remaining_amount : ""),
+      amount: String(freshOrder.remaining_amount > 0 ? freshOrder.remaining_amount : ""),
       date: new Date().toISOString().split("T")[0],
       method: "virement",
       reference: "",
-      notes: `Versement pour commande ${order.order_number}`,
+      notes: `Versement pour commande ${freshOrder.order_number}`,
     });
     setPaymentModalOpen(true);
   };
@@ -391,9 +399,14 @@ export default function ClientsAndOrdersPage() {
       });
       const data = await res.json();
       if (data.success) {
+        if (data.order) {
+          setOrders((prev) =>
+            prev.map((o) => (o.id === data.order.id ? data.order : o))
+          );
+        }
         showNotification(`Paiement de ${amt.toLocaleString()} ${selectedOrderForPayment.currency} enregistré !`);
         setPaymentModalOpen(false);
-        fetchData();
+        await fetchData();
       } else {
         alert(data.error || "Erreur lors de l'enregistrement du paiement.");
       }
@@ -431,6 +444,13 @@ export default function ClientsAndOrdersPage() {
 
   // Restore order from trash
   const handleRestoreOrder = async (id: string) => {
+    const targetOrder = trashedOrders.find((o) => o.id === id);
+    if (targetOrder) {
+      setTrashedOrders((prev) => prev.filter((o) => o.id !== id));
+      setOrders((prev) => [{ ...targetOrder, deleted_at: undefined }, ...prev]);
+    }
+    showNotification("Commande restaurée avec succès !");
+
     try {
       const res = await fetch("/api/admin/orders", {
         method: "PUT",
@@ -439,16 +459,23 @@ export default function ClientsAndOrdersPage() {
       });
       const data = await res.json();
       if (data.success) {
-        showNotification("Commande restaurée avec succès !");
         fetchData();
       }
     } catch {
       alert("Erreur lors de la restauration.");
+      fetchData();
     }
   };
 
   // Restore client from trash
   const handleRestoreClient = async (id: string) => {
+    const targetClient = trashedClients.find((c) => c.id === id);
+    if (targetClient) {
+      setTrashedClients((prev) => prev.filter((c) => c.id !== id));
+      setClients((prev) => [{ ...targetClient, deleted_at: undefined }, ...prev]);
+    }
+    showNotification("Client restauré avec succès !");
+
     try {
       const res = await fetch("/api/admin/clients", {
         method: "PUT",
@@ -457,11 +484,11 @@ export default function ClientsAndOrdersPage() {
       });
       const data = await res.json();
       if (data.success) {
-        showNotification("Client restauré avec succès !");
         fetchData();
       }
     } catch {
       alert("Erreur lors de la restauration.");
+      fetchData();
     }
   };
 
@@ -493,52 +520,82 @@ export default function ClientsAndOrdersPage() {
   const executeConfirmAction = async () => {
     try {
       if (confirmModal.actionType === "trash_order" && confirmModal.id) {
-        const res = await fetch(`/api/admin/orders?id=${confirmModal.id}`, { method: "DELETE" });
+        const orderId = confirmModal.id;
+        const target = orders.find((o) => o.id === orderId);
+        setOrders((prev) => prev.filter((o) => o.id !== orderId));
+        if (target) {
+          setTrashedOrders((prev) => [{ ...target, deleted_at: new Date().toISOString() }, ...prev]);
+        }
+        showNotification("Commande déplacée vers la corbeille.");
+        setConfirmModal((prev) => ({ ...prev, isOpen: false }));
+
+        const res = await fetch(`/api/admin/orders?id=${orderId}`, { method: "DELETE" });
         const data = await res.json();
         if (data.success) {
-          showNotification("Commande déplacée vers la corbeille.");
           fetchData();
         }
       } else if (confirmModal.actionType === "trash_client" && confirmModal.id) {
-        const res = await fetch(`/api/admin/clients?id=${confirmModal.id}`, { method: "DELETE" });
+        const clientId = confirmModal.id;
+        const target = clients.find((c) => c.id === clientId);
+        setClients((prev) => prev.filter((c) => c.id !== clientId));
+        if (target) {
+          setTrashedClients((prev) => [{ ...target, deleted_at: new Date().toISOString() }, ...prev]);
+        }
+        showNotification("Client déplacé vers la corbeille.");
+        setConfirmModal((prev) => ({ ...prev, isOpen: false }));
+
+        const res = await fetch(`/api/admin/clients?id=${clientId}`, { method: "DELETE" });
         const data = await res.json();
         if (data.success) {
-          showNotification("Client déplacé vers la corbeille.");
           fetchData();
         }
       } else if (confirmModal.actionType === "permanent_order" && confirmModal.id) {
-        const res = await fetch(`/api/admin/orders?id=${confirmModal.id}&permanent=true`, { method: "DELETE" });
+        const orderId = confirmModal.id;
+        setTrashedOrders((prev) => prev.filter((o) => o.id !== orderId));
+        showNotification("Commande supprimée définitivement.");
+        setConfirmModal((prev) => ({ ...prev, isOpen: false }));
+
+        const res = await fetch(`/api/admin/orders?id=${orderId}&permanent=true`, { method: "DELETE" });
         const data = await res.json();
         if (data.success) {
-          showNotification("Commande supprimée définitivement.");
           fetchData();
         }
       } else if (confirmModal.actionType === "permanent_client" && confirmModal.id) {
-        const res = await fetch(`/api/admin/clients?id=${confirmModal.id}&permanent=true`, { method: "DELETE" });
+        const clientId = confirmModal.id;
+        setTrashedClients((prev) => prev.filter((c) => c.id !== clientId));
+        showNotification("Client supprimé définitivement.");
+        setConfirmModal((prev) => ({ ...prev, isOpen: false }));
+
+        const res = await fetch(`/api/admin/clients?id=${clientId}&permanent=true`, { method: "DELETE" });
         const data = await res.json();
         if (data.success) {
-          showNotification("Client supprimé définitivement.");
           fetchData();
         }
       } else if (confirmModal.actionType === "empty_trash_orders") {
+        setTrashedOrders([]);
+        showNotification("Corbeille des commandes vidée.");
+        setConfirmModal((prev) => ({ ...prev, isOpen: false }));
+
         const res = await fetch("/api/admin/orders?empty_trash=true", { method: "DELETE" });
         const data = await res.json();
         if (data.success) {
-          showNotification("Corbeille des commandes vidée.");
           fetchData();
         }
       } else if (confirmModal.actionType === "empty_trash_clients") {
+        setTrashedClients([]);
+        showNotification("Corbeille des clients vidée.");
+        setConfirmModal((prev) => ({ ...prev, isOpen: false }));
+
         const res = await fetch("/api/admin/clients?empty_trash=true", { method: "DELETE" });
         const data = await res.json();
         if (data.success) {
-          showNotification("Corbeille des clients vidée.");
           fetchData();
         }
       }
     } catch {
       alert("Une erreur est survenue.");
     } finally {
-      setConfirmModal({ ...confirmModal, isOpen: false });
+      setConfirmModal((prev) => ({ ...prev, isOpen: false }));
     }
   };
 

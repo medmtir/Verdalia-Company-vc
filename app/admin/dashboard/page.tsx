@@ -33,11 +33,11 @@ export default function DashboardOverviewPage() {
 
   useEffect(() => {
     Promise.all([
-      fetch("/api/admin/messages").then((r) => r.json()),
-      fetch("/api/admin/products").then((r) => r.json()),
-      fetch("/api/admin/certifications").then((r) => r.json()),
-      fetch("/api/admin/publications").then((r) => r.json()),
-      fetch("/api/admin/orders").then((r) => r.json()),
+      fetch(`/api/admin/messages?_t=${Date.now()}`, { cache: "no-store" }).then((r) => r.json()),
+      fetch(`/api/admin/products?_t=${Date.now()}`, { cache: "no-store" }).then((r) => r.json()),
+      fetch(`/api/admin/certifications?_t=${Date.now()}`, { cache: "no-store" }).then((r) => r.json()),
+      fetch(`/api/admin/publications?_t=${Date.now()}`, { cache: "no-store" }).then((r) => r.json()),
+      fetch(`/api/admin/orders?_t=${Date.now()}`, { cache: "no-store" }).then((r) => r.json()),
     ])
       .then(([msgData, prodData, certData, pubData, ordersData]) => {
         if (msgData?.messages) setMessages(msgData.messages);

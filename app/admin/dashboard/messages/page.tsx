@@ -68,9 +68,13 @@ export default function MessagesManagementPage() {
     setMounted(true);
   }, []);
 
-  const fetchMessages = () => {
-    setLoading(true);
-    fetch("/api/admin/messages")
+  const fetchMessages = (silent: boolean | unknown = false) => {
+    const isSilent = silent === true;
+    if (!isSilent) setLoading(true);
+    fetch(`/api/admin/messages?_t=${Date.now()}`, {
+      cache: "no-store",
+      headers: { "Cache-Control": "no-cache" },
+    })
       .then((res) => res.json())
       .then((data) => {
         if (data.messages) {
@@ -78,11 +82,16 @@ export default function MessagesManagementPage() {
         }
       })
       .catch((err) => console.error("Error loading messages:", err))
-      .finally(() => setLoading(false));
+      .finally(() => {
+        if (!isSilent) setLoading(false);
+      });
   };
 
   useEffect(() => {
     fetchMessages();
+    // Background polling every 4 seconds to sync newly arrived or restored inquiries instantly
+    const interval = setInterval(() => fetchMessages(true), 4000);
+    return () => clearInterval(interval);
   }, []);
 
   const handleSelectMessage = (msg: ContactMessage) => {
@@ -122,7 +131,7 @@ export default function MessagesManagementPage() {
           );
         }
         showFeedback(`Statut mis à jour : ${status}`);
-        fetchMessages();
+        fetchMessages(true);
       }
     } catch (err) {
       console.error("Error updating message status:", err);
@@ -133,6 +142,23 @@ export default function MessagesManagementPage() {
 
   // Restore message from trash
   const handleRestore = async (id: string) => {
+    // Instant optimistic update in React state
+    setMessages((prev) =>
+      prev.map((m) =>
+        m.id === id ? { ...m, status: "unread", deleted_at: undefined } : m
+      )
+    );
+    if (selectedMessage?.id === id) {
+      setSelectedMessage((prev) =>
+        prev ? { ...prev, status: "unread", deleted_at: undefined } : null
+      );
+    }
+    // Switch to "all" tab so user immediately sees the restored message
+    if (statusFilter === "trash") {
+      setStatusFilter("all");
+    }
+    showFeedback("Demande restaurée avec succès vers la boîte de réception !", "success");
+
     try {
       const res = await fetch("/api/admin/messages", {
         method: "PUT",
@@ -141,18 +167,8 @@ export default function MessagesManagementPage() {
       });
       const data = await res.json();
       if (data.success) {
-        // Refresh messages list from server
-        fetchMessages();
-        // Switch to "all" tab so user immediately sees the restored message
-        if (statusFilter === "trash") {
-          setStatusFilter("all");
-        }
-        if (selectedMessage?.id === id) {
-          setSelectedMessage((prev) =>
-            prev ? { ...prev, status: "unread", deleted_at: undefined } : null
-          );
-        }
-        showFeedback("Demande restaurée avec succès vers la boîte de réception !", "success");
+        // Background refresh from server with cache-busting
+        fetchMessages(true);
       }
     } catch (err) {
       console.error("Error restoring message:", err);
@@ -198,41 +214,53 @@ export default function MessagesManagementPage() {
     setActionLoading(true);
     try {
       if (confirmModal.actionType === "empty_trash") {
+        setMessages((prev) => prev.filter((m) => m.status !== "trash"));
+        if (selectedMessage?.status === "trash") {
+          setSelectedMessage(null);
+        }
+        showFeedback("Corbeille vidée avec succès.", "info");
+
         const res = await fetch("/api/admin/messages?action=empty_trash", {
           method: "DELETE",
         });
         const data = await res.json();
         if (data.success) {
-          fetchMessages();
-          if (selectedMessage?.status === "trash") {
-            setSelectedMessage(null);
-          }
-          showFeedback("Corbeille vidée avec succès.", "info");
+          fetchMessages(true);
         }
       } else if (confirmModal.actionType === "permanent" && confirmModal.messageId) {
+        const targetId = confirmModal.messageId;
+        setMessages((prev) => prev.filter((m) => m.id !== targetId));
+        if (selectedMessage?.id === targetId) {
+          setSelectedMessage(null);
+        }
+        showFeedback("Demande définitivement supprimée.", "info");
+
         const res = await fetch(
-          `/api/admin/messages?id=${confirmModal.messageId}&permanent=true`,
+          `/api/admin/messages?id=${targetId}&permanent=true`,
           { method: "DELETE" }
         );
         const data = await res.json();
         if (data.success) {
-          fetchMessages();
-          if (selectedMessage?.id === confirmModal.messageId) {
-            setSelectedMessage(null);
-          }
-          showFeedback("Demande définitivement supprimée.", "info");
+          fetchMessages(true);
         }
       } else if (confirmModal.actionType === "trash" && confirmModal.messageId) {
-        const res = await fetch(`/api/admin/messages?id=${confirmModal.messageId}`, {
+        const targetId = confirmModal.messageId;
+        setMessages((prev) =>
+          prev.map((m) =>
+            m.id === targetId ? { ...m, status: "trash", deleted_at: new Date().toISOString() } : m
+          )
+        );
+        if (selectedMessage?.id === targetId) {
+          setSelectedMessage(null);
+        }
+        showFeedback("Demande déplacée vers la corbeille.", "info");
+
+        const res = await fetch(`/api/admin/messages?id=${targetId}`, {
           method: "DELETE",
         });
         const data = await res.json();
         if (data.success) {
-          fetchMessages();
-          if (selectedMessage?.id === confirmModal.messageId) {
-            setSelectedMessage(null);
-          }
-          showFeedback("Demande déplacée vers la corbeille.", "info");
+          fetchMessages(true);
         }
       }
     } catch (err) {
@@ -310,7 +338,7 @@ export default function MessagesManagementPage() {
           )}
 
           <button
-            onClick={fetchMessages}
+            onClick={() => fetchMessages()}
             className="btn-secondary py-2 px-4 text-xs font-semibold self-start sm:self-auto"
           >
             {t.refresh}

@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db/db";
 import { getAuthenticatedAdmin } from "@/lib/auth";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+export const fetchCache = "force-no-store";
+
 export async function POST(req: NextRequest) {
   const admin = await getAuthenticatedAdmin();
   if (!admin) {
@@ -10,9 +14,11 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = await req.json();
-    const { order_id, amount, date, method, reference, notes } = body;
+    const rawOrderId = body.order_id || body.id;
+    const cleanOrderId = String(rawOrderId || "").trim();
+    const { amount, date, method, reference, notes } = body;
 
-    if (!order_id) {
+    if (!cleanOrderId) {
       return NextResponse.json(
         { error: "order_id est obligatoire." },
         { status: 400 }
@@ -27,7 +33,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const updated = db.orders.addPayment(order_id, {
+    const updated = db.orders.addPayment(cleanOrderId, {
       amount: paymentAmount,
       date: date || new Date().toISOString().split("T")[0],
       method: method || "virement",

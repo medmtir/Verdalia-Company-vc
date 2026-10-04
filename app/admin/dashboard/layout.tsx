@@ -64,6 +64,9 @@ function AdminDashboardInner({
 
   const lastUnreadCountRef = React.useRef<number | null>(null);
   const notifRef = React.useRef<HTMLDivElement>(null);
+  const knownMessageIdsRef = React.useRef<Set<string>>(new Set());
+  const isInitialLoadRef = React.useRef(true);
+  const [notifPermission, setNotifPermission] = useState<NotificationPermission | "unsupported">("default");
 
   // Play subtle high-end chime when a new request arrives
   const playNotificationSound = () => {
@@ -89,8 +92,70 @@ function AdminDashboardInner({
     } catch {}
   };
 
+  // Trigger native desktop / mobile PWA popup notification
+  const sendNativeNotification = async (payload: {
+    title: string;
+    body: string;
+    tag?: string;
+    url?: string;
+  }) => {
+    if (typeof window === "undefined" || !("Notification" in window)) return;
+    if (Notification.permission !== "granted") return;
+
+    const notifOptions: NotificationOptions = {
+      body: payload.body,
+      icon: "/images/verdalia-logo.jpg",
+      badge: "/images/verdalia-logo.jpg",
+      tag: payload.tag || `rfq-${Date.now()}`,
+      data: { url: payload.url || "/admin/dashboard/messages" },
+      vibrate: [200, 100, 200],
+    } as any;
+
+    try {
+      if ("serviceWorker" in navigator) {
+        const reg = await navigator.serviceWorker.ready;
+        if (reg && reg.showNotification) {
+          await reg.showNotification(payload.title, notifOptions);
+          return;
+        }
+      }
+      const n = new Notification(payload.title, notifOptions);
+      n.onclick = () => {
+        window.focus();
+        router.push(payload.url || "/admin/dashboard/messages");
+      };
+    } catch (e) {
+      console.warn("Native notification display failed:", e);
+    }
+  };
+
+  // Request native permission
+  const requestNotificationPermission = async () => {
+    if (typeof window === "undefined" || !("Notification" in window)) {
+      alert("Ce navigateur ne supporte pas les notifications système.");
+      return;
+    }
+    try {
+      const res = await Notification.requestPermission();
+      setNotifPermission(res);
+      if (res === "granted") {
+        sendNativeNotification({
+          title: "🟢 Notifications Verdalia Activées",
+          body: "Vous recevrez désormais des alertes pop-up en temps réel sur cet appareil.",
+          tag: "verdalia-welcome",
+        });
+      }
+    } catch (err) {
+      console.error("Error requesting notification permission:", err);
+    }
+  };
+
+  // Check for incoming messages and RFQs
   const checkMessages = () => {
-    fetch("/api/admin/messages")
+    fetch(`/api/admin/messages?_t=${Date.now()}`, {
+      cache: "no-store",
+      headers: { "Cache-Control": "no-cache" },
+    })
       .then((res) => {
         if (res.status === 401) {
           router.push("/admin/login");
@@ -100,28 +165,45 @@ function AdminDashboardInner({
       })
       .then((data) => {
         if (!data) return;
-        if (data.unreadCount !== undefined) {
-          // If unread count increased, trigger sound and toast!
-          if (
-            lastUnreadCountRef.current !== null &&
-            data.unreadCount > lastUnreadCountRef.current
-          ) {
+        const messagesList: any[] = data.messages || [];
+
+        // On first run, seed known IDs so we don't spam notifications on initial load
+        if (isInitialLoadRef.current) {
+          messagesList.forEach((m) => knownMessageIdsRef.current.add(m.id));
+          isInitialLoadRef.current = false;
+        } else {
+          // Detect brand new incoming unread messages
+          const newUnread = messagesList.filter(
+            (m) => m.status === "unread" && !knownMessageIdsRef.current.has(m.id)
+          );
+
+          if (newUnread.length > 0) {
             playNotificationSound();
-            const latest = data.messages?.find((m: any) => m.status === "unread");
-            if (latest) {
-              setToastNotification({
-                id: latest.id,
-                name: latest.full_name,
-                company: latest.company_name,
-                product: latest.product_interest,
-              });
-            }
+            const latest = newUnread[0];
+            setToastNotification({
+              id: latest.id,
+              name: latest.full_name,
+              company: latest.company_name,
+              product: latest.product_interest,
+            });
+
+            // Native Pop-up alert for Windows/Mac & Mobile PWA
+            sendNativeNotification({
+              title: `🟢 Nouveau Devis : ${latest.company_name || latest.full_name}`,
+              body: `${latest.product_interest || "Demande de cotation"} • ${latest.country || "International"}${latest.quantity ? " • " + latest.quantity : ""}`,
+              tag: `rfq-${latest.id}`,
+              url: "/admin/dashboard/messages",
+            });
+
+            newUnread.forEach((m) => knownMessageIdsRef.current.add(m.id));
           }
+        }
+
+        if (data.unreadCount !== undefined) {
           lastUnreadCountRef.current = data.unreadCount;
           setUnreadCount(data.unreadCount);
         }
         if (data.messages) {
-          // Keep only non-trash recent messages for the notifications list
           setRecentInquiries(
             data.messages.filter((m: any) => m.status !== "trash").slice(0, 5)
           );
@@ -131,10 +213,24 @@ function AdminDashboardInner({
   };
 
   useEffect(() => {
+    // Check Notification API permission & Register Service Worker
+    if (typeof window !== "undefined") {
+      if ("Notification" in window) {
+        setNotifPermission(Notification.permission);
+      } else {
+        setNotifPermission("unsupported");
+      }
+      if ("serviceWorker" in navigator) {
+        navigator.serviceWorker.register("/sw.js").catch((err) => {
+          console.warn("SW register error:", err);
+        });
+      }
+    }
+
     checkMessages();
 
     // Check auth status
-    fetch("/api/admin/auth")
+    fetch(`/api/admin/auth?_t=${Date.now()}`, { cache: "no-store" })
       .then((res) => res.json())
       .then((data) => {
         if (data?.authenticated) {
@@ -143,9 +239,22 @@ function AdminDashboardInner({
       })
       .catch(() => {});
 
-    // Polling every 12 seconds for new incoming RFQs
-    const interval = setInterval(checkMessages, 12000);
-    return () => clearInterval(interval);
+    // Polling every 4 seconds for instant real-time sync without delays
+    const interval = setInterval(checkMessages, 4000);
+
+    // Sync instantly when user focuses or returns to the dashboard tab
+    const handleFocus = () => checkMessages();
+    const handleVisibility = () => {
+      if (document.visibilityState === "visible") checkMessages();
+    };
+    window.addEventListener("focus", handleFocus);
+    document.addEventListener("visibilitychange", handleVisibility);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener("focus", handleFocus);
+      document.removeEventListener("visibilitychange", handleVisibility);
+    };
   }, [pathname, router]);
 
   // Lock Admin Dashboard strictly to LTR and English
@@ -488,6 +597,19 @@ function AdminDashboardInner({
               <span className="hidden sm:inline">App Mobile</span>
             </button>
 
+            {/* Native OS/Browser Popup Notifications Toggle Button */}
+            {notifPermission !== "unsupported" && notifPermission !== "granted" && (
+              <button
+                type="button"
+                onClick={requestNotificationPermission}
+                className="flex items-center gap-1.5 px-2 sm:px-2.5 py-1.5 rounded-lg text-xs font-bold text-amber-900 bg-amber-50 hover:bg-amber-100 border border-amber-300 animate-pulse transition-all shadow-2xs"
+                title="Activer les alertes pop-up sur votre PC et Mobile"
+              >
+                <BellRing className="w-3.5 h-3.5 text-amber-600 flex-shrink-0" />
+                <span className="hidden sm:inline">Activer Popups</span>
+              </button>
+            )}
+
             {/* Admin Language Switcher */}
             <div className="relative" ref={langRef}>
               <button
@@ -569,6 +691,46 @@ function AdminDashboardInner({
               {/* Notification Popover Dropdown - Responsive on mobile */}
               {notificationsOpen && (
                 <div className="fixed sm:absolute inset-x-2 sm:inset-x-auto sm:right-0 top-14 sm:top-full mt-1 sm:mt-2 w-auto sm:w-96 max-w-[calc(100vw-1rem)] bg-white rounded-2xl sm:rounded-xl shadow-2xl border border-gray-200 overflow-hidden z-50 animate-fade-in">
+                  {/* Native Pop-up Permission Banner */}
+                  {notifPermission !== "granted" && notifPermission !== "unsupported" && (
+                    <div className="p-3 bg-gradient-to-r from-amber-50 to-orange-50 border-b border-amber-200/80 flex items-center justify-between gap-2.5">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <BellRing className="w-4 h-4 text-amber-600 flex-shrink-0 animate-bounce" />
+                        <span className="text-[11px] leading-tight font-medium text-amber-950">
+                          Activez les pop-ups PC & Mobile pour recevoir les alertes même hors onglet.
+                        </span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={requestNotificationPermission}
+                        className="px-2.5 py-1 text-[11px] font-bold bg-amber-600 hover:bg-amber-700 active:scale-95 text-white rounded-md flex-shrink-0 shadow-xs transition-all"
+                      >
+                        Activer
+                      </button>
+                    </div>
+                  )}
+
+                  {notifPermission === "granted" && (
+                    <div className="px-3.5 py-1.5 bg-emerald-50 border-b border-emerald-100 flex items-center justify-between text-[11px] text-emerald-800">
+                      <span className="flex items-center gap-1.5 font-medium">
+                        <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                        Pop-ups natifs actifs (PC & Mobile)
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          sendNativeNotification({
+                            title: "🔔 Test Notification Verdalia",
+                            body: "Le système d'alerte pop-up fonctionne parfaitement !",
+                          })
+                        }
+                        className="text-[10px] font-bold text-emerald-700 hover:underline"
+                      >
+                        Tester l&apos;alerte
+                      </button>
+                    </div>
+                  )}
+
                   <div className="p-3.5 bg-gray-50 border-b border-gray-100 flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <span className="font-serif text-xs font-bold text-verdalia-dark">

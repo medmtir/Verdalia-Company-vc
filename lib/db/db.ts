@@ -835,7 +835,8 @@ export const db = {
     getById(id: string): ClientOrder | null {
       const state = getDatabase();
       if (!state.orders) state.orders = [];
-      return state.orders.find((o) => o.id === id) || null;
+      const trimmed = id.trim();
+      return state.orders.find((o) => o.id === trimmed || o.order_number?.toLowerCase() === trimmed.toLowerCase()) || null;
     },
     create(data: Omit<ClientOrder, "id" | "created_at" | "updated_at" | "remaining_amount" | "payment_status"> & {
       remaining_amount?: number;
@@ -872,7 +873,8 @@ export const db = {
     update(id: string, updates: Partial<ClientOrder>): ClientOrder | null {
       const state = getDatabase();
       if (!state.orders) state.orders = [];
-      const index = state.orders.findIndex((o) => o.id === id);
+      const trimmed = id.trim();
+      const index = state.orders.findIndex((o) => o.id === trimmed || o.order_number?.toLowerCase() === trimmed.toLowerCase());
       if (index === -1) return null;
 
       const current = state.orders[index];
@@ -899,7 +901,8 @@ export const db = {
     addPayment(id: string, payment: { amount: number; date: string; method?: string; reference?: string; notes?: string }): ClientOrder | null {
       const state = getDatabase();
       if (!state.orders) state.orders = [];
-      const index = state.orders.findIndex((o) => o.id === id);
+      const trimmed = id.trim();
+      const index = state.orders.findIndex((o) => o.id === trimmed || o.order_number?.toLowerCase() === trimmed.toLowerCase());
       if (index === -1) return null;
 
       const order = state.orders[index];
@@ -934,7 +937,8 @@ export const db = {
     trash(id: string): ClientOrder | null {
       const state = getDatabase();
       if (!state.orders) state.orders = [];
-      const index = state.orders.findIndex((o) => o.id === id);
+      const trimmed = id.trim();
+      const index = state.orders.findIndex((o) => o.id === trimmed || o.order_number?.toLowerCase() === trimmed.toLowerCase());
       if (index === -1) return null;
       state.orders[index].is_deleted = true;
       state.orders[index].order_status = "trash";
@@ -945,7 +949,8 @@ export const db = {
     restore(id: string): ClientOrder | null {
       const state = getDatabase();
       if (!state.orders) state.orders = [];
-      const index = state.orders.findIndex((o) => o.id === id);
+      const trimmed = id.trim();
+      const index = state.orders.findIndex((o) => o.id === trimmed || o.order_number?.toLowerCase() === trimmed.toLowerCase());
       if (index === -1) return null;
       state.orders[index].is_deleted = false;
       state.orders[index].order_status = "confirmed";
@@ -956,8 +961,9 @@ export const db = {
     deletePermanently(id: string): boolean {
       const state = getDatabase();
       if (!state.orders) state.orders = [];
+      const trimmed = id.trim();
       const initialLen = state.orders.length;
-      state.orders = state.orders.filter((o) => o.id !== id);
+      state.orders = state.orders.filter((o) => o.id !== trimmed && o.order_number?.toLowerCase() !== trimmed.toLowerCase());
       if (state.orders.length !== initialLen) {
         saveDatabase(state);
         return true;
