@@ -33,8 +33,17 @@ export const I18nProvider: React.FC<{
   const pathname = usePathname();
   const isAdmin = pathname?.startsWith("/admin");
   const [locale, setLocaleState] = useState<Locale>(initialLocale);
-  const [dynamicContent, setDynamicContent] =
-    useState<ContentBlockTranslation | null>(null);
+  const [dynamicContent, setDynamicContent] = useState<ContentBlockTranslation | null>(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const cached = localStorage.getItem("verdalia_content_cache");
+        if (cached) return JSON.parse(cached);
+      } catch (e) {
+        // Ignore
+      }
+    }
+    return null;
+  });
 
   useEffect(() => {
     // If in admin panel, never load non-English locale
@@ -56,6 +65,9 @@ export const I18nProvider: React.FC<{
         const data = await res.json();
         if (data.contentBlock) {
           setDynamicContent(data.contentBlock);
+          if (typeof window !== "undefined") {
+            localStorage.setItem("verdalia_content_cache", JSON.stringify(data.contentBlock));
+          }
         }
       }
     } catch {
