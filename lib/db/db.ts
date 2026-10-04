@@ -301,7 +301,7 @@ export function saveDatabase(state: DatabaseState): void {
     try {
       const url = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/verdalia-uploads/verdalia.db.json`;
       // Write a temporary file for curl to upload
-      const tempFile = path.join(process.cwd(), ".tmp-db.json");
+      const tempFile = path.join(require("os").tmpdir(), `verdalia-tmp-${Date.now()}.json`);
       fs.writeFileSync(tempFile, JSON.stringify(state), "utf-8");
       
       // Use curl to upload synchronously
