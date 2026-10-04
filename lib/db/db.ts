@@ -242,6 +242,28 @@ export function getDatabase(): DatabaseState {
   }
 
   cachedState = JSON.parse(JSON.stringify(bundledDatabaseData)) as DatabaseState;
+  
+  // Vercel Serverless persistence workaround: Download from Supabase Storage synchronously
+  if (process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    try {
+      const url = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/verdalia-uploads/verdalia.db.json`;
+      const curlCmd = `curl -s -H "Authorization: Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}" -H "apikey: ${process.env.SUPABASE_SERVICE_ROLE_KEY}" "${url}"`;
+      const result = require("child_process").execSync(curlCmd, { encoding: "utf-8" });
+      if (result && result.trim().startsWith("{")) {
+        const parsed = JSON.parse(result);
+        if (parsed && Array.isArray(parsed.messages)) {
+          cachedState = parsed;
+          console.log("Loaded Database from Supabase Storage successfully.");
+        }
+      }
+    } catch (err) {
+      console.log("No valid DB found in Supabase Storage, using bundled data.");
+    }
+  }
+
+  if (!cachedState) {
+    cachedState = JSON.parse(JSON.stringify(bundledDatabaseData)) as DatabaseState;
+  }
   if (!Array.isArray(cachedState.packagings) || cachedState.packagings.length === 0) {
     cachedState.packagings = DEFAULT_PACKAGINGS;
   }
@@ -269,6 +291,21 @@ export function saveDatabase(state: DatabaseState): void {
     } catch {}
   } catch (err) {
     console.error("Error writing database to disk:", err);
+  }
+
+  // Vercel Serverless persistence workaround: Upload to Supabase Storage asynchronously
+  if (process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    const url = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/verdalia-uploads/verdalia.db.json`;
+    fetch(url, {
+      method: "POST",
+      headers: {
+        apikey: process.env.SUPABASE_SERVICE_ROLE_KEY,
+        Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`,
+        "Content-Type": "application/json",
+        "x-upsert": "true",
+      },
+      body: JSON.stringify(state),
+    }).catch((err) => console.error("Error uploading DB to Supabase:", err));
   }
 }
 

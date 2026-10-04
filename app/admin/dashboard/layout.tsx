@@ -265,11 +265,15 @@ function AdminDashboardInner({
     }
   }, [pathname]);
 
-  // Close notifications dropdown on click outside
+  // Close dropdowns on click outside
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
-      if (notifRef.current && !notifRef.current.contains(e.target as Node)) {
+      const target = e.target as Node;
+      if (notifRef.current && !notifRef.current.contains(target)) {
         setNotificationsOpen(false);
+      }
+      if (langRef.current && !langRef.current.contains(target)) {
+        setLangDropdownOpen(false);
       }
     }
     document.addEventListener("mousedown", handleClickOutside);
@@ -571,7 +575,7 @@ function AdminDashboardInner({
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0 h-[100dvh] overflow-hidden">
         {/* Top Header Bar - Fixed permanently at top on scroll with iOS Safe Area */}
-        <header className="bg-white border-b border-gray-200 px-3 sm:px-6 pb-2.5 sm:pb-3.5 pt-[calc(env(safe-area-inset-top,0px)+0.65rem)] flex items-center justify-between z-10 flex-shrink-0 shadow-xs">
+        <header className="bg-white border-b border-gray-200 px-3 sm:px-6 pb-2.5 sm:pb-3.5 pt-[calc(env(safe-area-inset-top,0px)+0.65rem)] flex items-center justify-between z-30 flex-shrink-0 shadow-xs relative">
           <div className="flex items-center gap-2 sm:gap-4 min-w-0">
             <button
               onClick={() => setMobileOpen(true)}
@@ -614,7 +618,10 @@ function AdminDashboardInner({
             <div className="relative" ref={langRef}>
               <button
                 type="button"
-                onClick={() => setLangDropdownOpen(!langDropdownOpen)}
+                onClick={() => {
+                  setLangDropdownOpen(!langDropdownOpen);
+                  setNotificationsOpen(false);
+                }}
                 className="flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 py-1.5 text-xs font-semibold text-verdalia-dark tracking-wider uppercase hover:text-verdalia-olive transition-colors rounded hover:bg-verdalia-beige/60 border border-gray-200 shadow-2xs"
                 title="Changer la langue du panneau d'administration"
               >
@@ -854,7 +861,7 @@ function AdminDashboardInner({
         )}
 
         {/* Main Content Scrollable Area */}
-        <main className="flex-1 overflow-y-auto p-3.5 sm:p-6 md:p-8 bg-[#F8F7F4] pb-[calc(env(safe-area-inset-bottom,0px)+2rem)] relative z-20">
+        <main className="flex-1 overflow-y-auto p-3.5 sm:p-6 md:p-8 bg-[#F8F7F4] pb-[calc(env(safe-area-inset-bottom,0px)+2rem)] relative z-10">
           {children}
         </main>
       </div>

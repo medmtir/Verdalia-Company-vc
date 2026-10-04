@@ -181,14 +181,18 @@ export interface ContentBlockTranslation {
   hero_badge: string;
   hero_cta_primary: string;
   hero_cta_secondary: string;
+  hero_image_url?: string;
   about_title: string;
   about_subtitle: string;
   about_text: string;
+  about_image_url_1?: string;
+  about_image_url_2?: string;
   why_choose_title: string;
   why_choose_subtitle: string;
   export_title: string;
   export_subtitle: string;
   export_text: string;
+  export_image_url?: string;
   about_who_we_are?: string;
   about_mission?: string;
   about_vision?: string;
