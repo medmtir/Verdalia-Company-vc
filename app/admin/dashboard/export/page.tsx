@@ -43,6 +43,7 @@ export default function ExportContentCMS() {
         body: JSON.stringify({
           targetLocale: activeLocale,
           contentBlocks: content[activeLocale],
+          allLocalesContent: content,
         }),
       });
 

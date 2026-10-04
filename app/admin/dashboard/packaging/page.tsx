@@ -19,9 +19,12 @@ import {
   ExternalLink,
   Save,
   Image as ImageIcon,
+  Loader2,
+  Languages,
 } from "lucide-react";
 import { PackagingFormat, Locale } from "@/lib/types";
 import { LOCALES, LOCALE_METAS } from "@/lib/i18n/config";
+import { AutoTranslateButton } from "@/components/ui/AutoTranslateButton";
 
 export default function PackagingManagerPage() {
   const [packagings, setPackagings] = useState<PackagingFormat[]>([]);
@@ -174,20 +177,162 @@ export default function PackagingManagerPage() {
     }
   };
 
+  const [translatingAll, setTranslatingAll] = useState(false);
+
+  // Auto-translate a specific field across all 5 languages
+  const handleAutoTranslateField = (
+    field: "title" | "capacity" | "badge" | "description",
+    translations: Record<string, string>
+  ) => {
+    setFormData((prev) => {
+      const nextTranslations = { ...prev.translations };
+      Object.entries(translations).forEach(([lang, val]) => {
+        const l = lang as Locale;
+        if (nextTranslations[l]) {
+          nextTranslations[l] = {
+            ...nextTranslations[l],
+            [field]: val,
+          };
+        }
+      });
+      return {
+        ...prev,
+        translations: nextTranslations,
+      };
+    });
+    showNotification(`Traduction automatique appliquée pour toutes les langues !`);
+  };
+
+  // One-click Auto-translate ALL fields (title, capacity, badge, description) to all other languages
+  const handleAutoTranslateAll = async () => {
+    const curSource = formData.translations[activeLangTab] || {
+      title: formData.title,
+      capacity: formData.capacity,
+      badge: formData.badge,
+      description: formData.description,
+    };
+
+    const srcTitle = (curSource.title || formData.title || "").trim();
+    const srcCap = (curSource.capacity || formData.capacity || "").trim();
+    const srcBadge = (curSource.badge || formData.badge || "").trim();
+    const srcDesc = (curSource.description || formData.description || "").trim();
+
+    if (!srcTitle && !srcCap) {
+      alert("Veuillez d'abord saisir au moins le titre ou la capacité avant d'auto-traduire.");
+      return;
+    }
+
+    setTranslatingAll(true);
+    try {
+      const targetLangs = LOCALES.filter((l) => l !== activeLangTab);
+      const fieldsToTranslate = [
+        { key: "title" as const, text: srcTitle },
+        { key: "capacity" as const, text: srcCap },
+        { key: "badge" as const, text: srcBadge },
+        { key: "description" as const, text: srcDesc },
+      ].filter((f) => f.text.length > 0);
+
+      const translationResults = await Promise.all(
+        fieldsToTranslate.map(async ({ key, text }) => {
+          const res = await fetch("/api/admin/translate", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              text,
+              sourceLang: activeLangTab,
+              targetLangs,
+            }),
+          });
+          const data = await res.json();
+          return { key, translations: (data.translations || {}) as Record<string, string> };
+        })
+      );
+
+      setFormData((prev) => {
+        const nextTranslations = { ...prev.translations };
+        // Update source tab
+        nextTranslations[activeLangTab] = {
+          title: srcTitle,
+          capacity: srcCap,
+          badge: srcBadge,
+          description: srcDesc,
+        };
+
+        // Update target languages
+        translationResults.forEach(({ key, translations }) => {
+          Object.entries(translations).forEach(([lang, val]) => {
+            const l = lang as Locale;
+            if (nextTranslations[l]) {
+              nextTranslations[l] = {
+                ...nextTranslations[l],
+                [key]: val,
+              };
+            }
+          });
+        });
+
+        return {
+          ...prev,
+          title: activeLangTab === "fr" ? srcTitle : prev.title || srcTitle,
+          capacity: activeLangTab === "fr" ? srcCap : prev.capacity || srcCap,
+          badge: activeLangTab === "fr" ? srcBadge : prev.badge || srcBadge,
+          description: activeLangTab === "fr" ? srcDesc : prev.description || srcDesc,
+          translations: nextTranslations,
+        };
+      });
+
+      showNotification("✨ Toutes les langues (FR, EN, AR, ES, IT) ont été traduites avec succès !");
+    } catch {
+      alert("Erreur lors de la traduction automatique.");
+    } finally {
+      setTranslatingAll(false);
+    }
+  };
+
   // Save changes (Create or Update)
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.title || !formData.capacity) {
+
+    const primaryTitle = (formData.translations.fr?.title || formData.title || "").trim();
+    const primaryCapacity = (formData.translations.fr?.capacity || formData.capacity || "").trim();
+    const primaryBadge = (formData.translations.fr?.badge || formData.badge || "Export").trim();
+    const primaryDesc = (formData.translations.fr?.description || formData.description || "").trim();
+
+    if (!primaryTitle || !primaryCapacity) {
       alert("Veuillez saisir un titre et une capacité.");
       return;
     }
 
     setSaving(true);
+
+    // Build complete translations map ensuring all 5 locales have values
+    const completeTranslations: Record<Locale, { title: string; capacity: string; badge: string; description: string }> = {
+      fr: { title: primaryTitle, capacity: primaryCapacity, badge: primaryBadge, description: primaryDesc },
+      en: { title: "", capacity: "", badge: "", description: "" },
+      ar: { title: "", capacity: "", badge: "", description: "" },
+      es: { title: "", capacity: "", badge: "", description: "" },
+      it: { title: "", capacity: "", badge: "", description: "" },
+    };
+
+    LOCALES.forEach((loc) => {
+      const cur = formData.translations[loc] || {};
+      completeTranslations[loc] = {
+        title: (cur.title || primaryTitle).trim(),
+        capacity: (cur.capacity || primaryCapacity).trim(),
+        badge: (cur.badge || primaryBadge).trim(),
+        description: (cur.description || primaryDesc).trim(),
+      };
+    });
+
     const payload = {
-      ...formData,
-      title: formData.title.trim(),
-      capacity: formData.capacity.trim(),
+      title: primaryTitle,
+      capacity: primaryCapacity,
+      badge: primaryBadge,
+      description: primaryDesc,
       image_url: (formData.image_url || "/images/packaging/ibc-container.jpg").trim(),
+      sort_order: Number(formData.sort_order) || 1,
+      is_active: Boolean(formData.is_active),
+      translations: completeTranslations,
     };
 
     try {
@@ -203,7 +348,7 @@ export default function PackagingManagerPage() {
         });
         const data = await res.json();
         if (data.success) {
-          showNotification(`Conditionnement "${payload.title}" mis à jour !`);
+          showNotification(`Conditionnement "${payload.title}" mis à jour dans les 5 langues !`);
           setIsModalOpen(false);
           fetchPackagings();
         } else {
@@ -218,7 +363,7 @@ export default function PackagingManagerPage() {
         });
         const data = await res.json();
         if (data.success) {
-          showNotification(`Nouveau conditionnement "${payload.title}" créé avec succès !`);
+          showNotification(`Nouveau conditionnement "${payload.title}" créé avec succès dans toutes les langues !`);
           setIsModalOpen(false);
           fetchPackagings();
         } else {
@@ -226,7 +371,7 @@ export default function PackagingManagerPage() {
         }
       }
     } catch {
-      alert("Une erreur est survenue.");
+      alert("Une erreur est survenue lors de l'enregistrement.");
     } finally {
       setSaving(false);
     }
@@ -592,161 +737,224 @@ export default function PackagingManagerPage() {
                 </div>
               </div>
 
-              {/* Main Information */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-bold uppercase text-gray-700 mb-1">
-                    Titre du Format *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={formData.title}
-                    onChange={(e) =>
-                      setFormData({ ...formData, title: e.target.value })
-                    }
-                    placeholder="ex: Conteneur IBC, Fûts Acier..."
-                    className="w-full px-3 py-2 text-xs bg-gray-50 border border-gray-200 rounded font-medium focus:bg-white transition-colors"
-                  />
+              {/* Multilingual Information & Translation System */}
+              <div className="bg-gray-50/80 p-4 sm:p-5 rounded-2xl border border-gray-200 space-y-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-gray-200">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <Languages className="w-4 h-4 text-verdalia-olive" />
+                      <span className="text-xs font-bold uppercase tracking-wider text-verdalia-dark">
+                        Informations & Traductions ({activeLangTab.toUpperCase()})
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-gray-500 mt-0.5">
+                      Remplissez les informations dans la langue source, puis cliquez sur auto-traduire.
+                    </p>
+                  </div>
+
+                  {/* One-Click Translate ALL button */}
+                  <button
+                    type="button"
+                    onClick={handleAutoTranslateAll}
+                    disabled={translatingAll}
+                    className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#172B13] hover:bg-[#203A1A] text-white text-xs font-bold shadow-md hover:shadow-lg transition-all disabled:opacity-50 flex-shrink-0"
+                    title="Traduire instantanément Titre, Capacité, Badge et Description vers les 4 autres langues"
+                  >
+                    {translatingAll ? (
+                      <>
+                        <Loader2 className="w-3.5 h-3.5 animate-spin text-verdalia-gold" />
+                        <span>Traduction des 5 langues...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="w-3.5 h-3.5 text-verdalia-gold" />
+                        <span>✨ Auto-Traduire Toutes les Langues</span>
+                      </>
+                    )}
+                  </button>
                 </div>
 
-                <div>
-                  <label className="block text-xs font-bold uppercase text-gray-700 mb-1">
-                    Capacité / Volume *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={formData.capacity}
-                    onChange={(e) =>
-                      setFormData({ ...formData, capacity: e.target.value })
-                    }
-                    placeholder="ex: 1 000 Litres, 24 000 Litres..."
-                    className="w-full px-3 py-2 text-xs bg-gray-50 border border-gray-200 rounded font-medium focus:bg-white transition-colors"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold uppercase text-gray-700 mb-1">
-                    Badge / Catégorie
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.badge}
-                    onChange={(e) =>
-                      setFormData({ ...formData, badge: e.target.value })
-                    }
-                    placeholder="ex: Semi-Vrac / Distribution, Vrac Industriel..."
-                    className="w-full px-3 py-2 text-xs bg-gray-50 border border-gray-200 rounded focus:bg-white transition-colors"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold uppercase text-gray-700 mb-1">
-                    Ordre d&apos;Affichage
-                  </label>
-                  <input
-                    type="number"
-                    value={formData.sort_order}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        sort_order: parseInt(e.target.value) || 1,
-                      })
-                    }
-                    className="w-full px-3 py-2 text-xs bg-gray-50 border border-gray-200 rounded focus:bg-white transition-colors"
-                  />
-                </div>
-              </div>
-
-              {/* Description */}
-              <div>
-                <label className="block text-xs font-bold uppercase text-gray-700 mb-1">
-                  Description Détaillée (Page Export)
-                </label>
-                <textarea
-                  rows={3}
-                  value={formData.description}
-                  onChange={(e) =>
-                    setFormData({ ...formData, description: e.target.value })
-                  }
-                  placeholder="Détails techniques, certifications alimentaires, armature de protection, vannes, etc."
-                  className="w-full px-3 py-2 text-xs bg-gray-50 border border-gray-200 rounded focus:bg-white transition-colors resize-none"
-                />
-              </div>
-
-              {/* Multilingual Tabs */}
-              <div className="bg-gray-50 p-4 rounded-xl border border-gray-200 space-y-3">
-                <div className="flex items-center justify-between">
-                  <label className="text-xs font-bold uppercase text-gray-700">
-                    Traductions Multilingues
-                  </label>
-                  <div className="flex gap-1">
-                    {LOCALES.map((loc) => (
+                {/* Language Tabs */}
+                <div className="flex items-center gap-1.5 overflow-x-auto pb-1">
+                  {LOCALES.map((loc) => {
+                    const isFilled = Boolean(
+                      formData.translations[loc]?.title &&
+                      formData.translations[loc]?.capacity
+                    );
+                    return (
                       <button
                         key={loc}
                         type="button"
                         onClick={() => setActiveLangTab(loc)}
-                        className={`px-2 py-0.5 text-[10px] font-bold rounded uppercase transition-colors ${
+                        className={`px-3 py-1.5 text-xs font-bold rounded-xl uppercase transition-all flex items-center gap-1.5 flex-shrink-0 ${
                           activeLangTab === loc
-                            ? "bg-[#172B13] text-white"
-                            : "bg-white text-gray-600 hover:bg-gray-200"
+                            ? "bg-[#172B13] text-white shadow-sm ring-2 ring-[#172B13]/20"
+                            : "bg-white text-gray-600 hover:bg-gray-100 border border-gray-200"
                         }`}
                       >
-                        {loc}
+                        <span>{LOCALE_METAS[loc]?.flag || ""}</span>
+                        <span>{loc.toUpperCase()}</span>
+                        {isFilled && (
+                          <span className={`w-1.5 h-1.5 rounded-full ${activeLangTab === loc ? "bg-verdalia-gold" : "bg-emerald-500"}`} />
+                        )}
                       </button>
-                    ))}
+                    );
+                  })}
+                </div>
+
+                {/* Form fields for the currently active language tab */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
+                  <div>
+                    <div className="flex items-center justify-between mb-1">
+                      <label className="text-[11px] font-bold uppercase text-gray-700">
+                        Titre ({activeLangTab.toUpperCase()}) *
+                      </label>
+                      <AutoTranslateButton
+                        sourceText={formData.translations[activeLangTab]?.title || formData.title || ""}
+                        sourceLang={activeLangTab}
+                        onTranslate={(t) => handleAutoTranslateField("title", t)}
+                      />
+                    </div>
+                    <input
+                      type="text"
+                      required={activeLangTab === "fr"}
+                      value={formData.translations[activeLangTab]?.title || ""}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setFormData((prev) => ({
+                          ...prev,
+                          title: activeLangTab === "fr" ? val : prev.title || val,
+                          translations: {
+                            ...prev.translations,
+                            [activeLangTab]: {
+                              ...prev.translations[activeLangTab],
+                              title: val,
+                            },
+                          },
+                        }));
+                      }}
+                      placeholder="ex: Conteneur IBC, Flexitank..."
+                      className="w-full px-3 py-2 text-xs bg-white border border-gray-200 rounded-lg font-medium focus:border-verdalia-olive focus:ring-1 focus:ring-verdalia-olive transition-all"
+                    />
+                  </div>
+
+                  <div>
+                    <div className="flex items-center justify-between mb-1">
+                      <label className="text-[11px] font-bold uppercase text-gray-700">
+                        Capacité / Volume ({activeLangTab.toUpperCase()}) *
+                      </label>
+                      <AutoTranslateButton
+                        sourceText={formData.translations[activeLangTab]?.capacity || formData.capacity || ""}
+                        sourceLang={activeLangTab}
+                        onTranslate={(t) => handleAutoTranslateField("capacity", t)}
+                      />
+                    </div>
+                    <input
+                      type="text"
+                      required={activeLangTab === "fr"}
+                      value={formData.translations[activeLangTab]?.capacity || ""}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setFormData((prev) => ({
+                          ...prev,
+                          capacity: activeLangTab === "fr" ? val : prev.capacity || val,
+                          translations: {
+                            ...prev.translations,
+                            [activeLangTab]: {
+                              ...prev.translations[activeLangTab],
+                              capacity: val,
+                            },
+                          },
+                        }));
+                      }}
+                      placeholder="ex: 1 000 Litres, 24 000 Litres..."
+                      className="w-full px-3 py-2 text-xs bg-white border border-gray-200 rounded-lg font-medium focus:border-verdalia-olive focus:ring-1 focus:ring-verdalia-olive transition-all"
+                    />
+                  </div>
+
+                  <div>
+                    <div className="flex items-center justify-between mb-1">
+                      <label className="text-[11px] font-bold uppercase text-gray-700">
+                        Badge / Catégorie ({activeLangTab.toUpperCase()})
+                      </label>
+                      <AutoTranslateButton
+                        sourceText={formData.translations[activeLangTab]?.badge || formData.badge || ""}
+                        sourceLang={activeLangTab}
+                        onTranslate={(t) => handleAutoTranslateField("badge", t)}
+                      />
+                    </div>
+                    <input
+                      type="text"
+                      value={formData.translations[activeLangTab]?.badge || ""}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setFormData((prev) => ({
+                          ...prev,
+                          badge: activeLangTab === "fr" ? val : prev.badge || val,
+                          translations: {
+                            ...prev.translations,
+                            [activeLangTab]: {
+                              ...prev.translations[activeLangTab],
+                              badge: val,
+                            },
+                          },
+                        }));
+                      }}
+                      placeholder="ex: Vrac Industriel, Semi-Vrac..."
+                      className="w-full px-3 py-2 text-xs bg-white border border-gray-200 rounded-lg focus:border-verdalia-olive focus:ring-1 focus:ring-verdalia-olive transition-all"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-bold uppercase text-gray-700 mb-1">
+                      Ordre d&apos;Affichage
+                    </label>
+                    <input
+                      type="number"
+                      value={formData.sort_order}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          sort_order: parseInt(e.target.value) || 1,
+                        })
+                      }
+                      className="w-full px-3 py-2 text-xs bg-white border border-gray-200 rounded-lg focus:border-verdalia-olive focus:ring-1 focus:ring-verdalia-olive transition-all"
+                    />
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
-                  <div>
-                    <span className="text-[10px] text-gray-500 font-bold block mb-1">
-                      Titre ({activeLangTab.toUpperCase()}) :
-                    </span>
-                    <input
-                      type="text"
-                      value={formData.translations[activeLangTab]?.title || ""}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          translations: {
-                            ...formData.translations,
-                            [activeLangTab]: {
-                              ...formData.translations[activeLangTab],
-                              title: e.target.value,
-                            },
-                          },
-                        })
-                      }
-                      placeholder={formData.title}
-                      className="w-full px-2.5 py-1.5 text-xs bg-white border border-gray-200 rounded"
+                {/* Description input */}
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="text-[11px] font-bold uppercase text-gray-700">
+                      Description Détaillée ({activeLangTab.toUpperCase()})
+                    </label>
+                    <AutoTranslateButton
+                      sourceText={formData.translations[activeLangTab]?.description || formData.description || ""}
+                      sourceLang={activeLangTab}
+                      onTranslate={(t) => handleAutoTranslateField("description", t)}
                     />
                   </div>
-
-                  <div>
-                    <span className="text-[10px] text-gray-500 font-bold block mb-1">
-                      Capacité ({activeLangTab.toUpperCase()}) :
-                    </span>
-                    <input
-                      type="text"
-                      value={formData.translations[activeLangTab]?.capacity || ""}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          translations: {
-                            ...formData.translations,
-                            [activeLangTab]: {
-                              ...formData.translations[activeLangTab],
-                              capacity: e.target.value,
-                            },
+                  <textarea
+                    rows={3}
+                    value={formData.translations[activeLangTab]?.description || ""}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setFormData((prev) => ({
+                        ...prev,
+                        description: activeLangTab === "fr" ? val : prev.description || val,
+                        translations: {
+                          ...prev.translations,
+                          [activeLangTab]: {
+                            ...prev.translations[activeLangTab],
+                            description: val,
                           },
-                        })
-                      }
-                      placeholder={formData.capacity}
-                      className="w-full px-2.5 py-1.5 text-xs bg-white border border-gray-200 rounded"
-                    />
-                  </div>
+                        },
+                      }));
+                    }}
+                    placeholder="Détails techniques, certifications de contact alimentaire, armature de protection en acier, etc."
+                    className="w-full px-3 py-2 text-xs bg-white border border-gray-200 rounded-lg focus:border-verdalia-olive focus:ring-1 focus:ring-verdalia-olive transition-all resize-none"
+                  />
                 </div>
               </div>
 

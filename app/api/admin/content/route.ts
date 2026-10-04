@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db/db";
 import { getAuthenticatedAdmin } from "@/lib/auth";
-import { Locale } from "@/lib/types";
+import { Locale, ContentBlockTranslation } from "@/lib/types";
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
@@ -32,7 +32,7 @@ export async function PUT(req: NextRequest) {
 
   try {
     const body = await req.json();
-    const { siteSettings, contentBlocks, targetLocale } = body;
+    const { siteSettings, contentBlocks, targetLocale, allLocalesContent } = body;
 
     if (siteSettings) {
       db.siteSettings.update(siteSettings);
@@ -46,7 +46,19 @@ export async function PUT(req: NextRequest) {
       } catch {}
     }
 
-    if (contentBlocks && targetLocale) {
+    if (allLocalesContent && typeof allLocalesContent === "object") {
+      Object.entries(allLocalesContent).forEach(([loc, blocks]) => {
+        if (blocks && typeof blocks === "object") {
+          db.contentBlocks.update(loc as Locale, blocks as ContentBlockTranslation);
+        }
+      });
+      try {
+        revalidatePath("/", "layout");
+        revalidatePath("/");
+        revalidatePath("/export");
+        revalidatePath("/about");
+      } catch {}
+    } else if (contentBlocks && targetLocale) {
       db.contentBlocks.update(targetLocale as Locale, contentBlocks);
       try {
         revalidatePath("/", "layout");
@@ -58,6 +70,13 @@ export async function PUT(req: NextRequest) {
       success: true,
       siteSettings: db.siteSettings.get(),
       contentBlock: targetLocale ? db.contentBlocks.get(targetLocale) : null,
+      allLocalesContent: {
+        en: db.contentBlocks.get("en"),
+        fr: db.contentBlocks.get("fr"),
+        ar: db.contentBlocks.get("ar"),
+        es: db.contentBlocks.get("es"),
+        it: db.contentBlocks.get("it"),
+      },
     });
   } catch (error) {
     return NextResponse.json(

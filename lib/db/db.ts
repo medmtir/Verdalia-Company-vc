@@ -216,7 +216,7 @@ export function getDatabase(): DatabaseState {
         const raw = fs.readFileSync(DB_FILE, "utf-8");
         const parsed = JSON.parse(raw);
         if (parsed && Array.isArray(parsed.messages)) {
-          if (!parsed.packagings || parsed.packagings.length === 0) {
+          if (!Array.isArray(parsed.packagings) || parsed.packagings.length === 0) {
             parsed.packagings = DEFAULT_PACKAGINGS;
           }
           cachedState = parsed;
@@ -224,7 +224,7 @@ export function getDatabase(): DatabaseState {
           return cachedState!;
         }
       } else {
-        if (!cachedState.packagings || cachedState.packagings.length === 0) {
+        if (!Array.isArray(cachedState.packagings) || cachedState.packagings.length === 0) {
           cachedState.packagings = DEFAULT_PACKAGINGS;
         }
         return cachedState;
@@ -235,14 +235,14 @@ export function getDatabase(): DatabaseState {
   }
 
   if (cachedState) {
-    if (!cachedState.packagings || cachedState.packagings.length === 0) {
+    if (!Array.isArray(cachedState.packagings) || cachedState.packagings.length === 0) {
       cachedState.packagings = DEFAULT_PACKAGINGS;
     }
     return cachedState;
   }
 
   cachedState = JSON.parse(JSON.stringify(bundledDatabaseData)) as DatabaseState;
-  if (!cachedState.packagings || cachedState.packagings.length === 0) {
+  if (!Array.isArray(cachedState.packagings) || cachedState.packagings.length === 0) {
     cachedState.packagings = DEFAULT_PACKAGINGS;
   }
   try {
@@ -257,6 +257,9 @@ export function getDatabase(): DatabaseState {
 
 export function saveDatabase(state: DatabaseState): void {
   ensureDirectoryExists(DATA_DIR);
+  if (!Array.isArray(state.packagings)) {
+    state.packagings = DEFAULT_PACKAGINGS;
+  }
   cachedState = state;
   try {
     fs.writeFileSync(DB_FILE, JSON.stringify(state, null, 2), "utf-8");
@@ -1087,9 +1090,18 @@ export const db = {
       if (typeof sanitizedData.image_url === "string") {
         sanitizedData.image_url = sanitizedData.image_url.trim();
       }
+      const existing = state.packagings[index];
+      const mergedTranslations = sanitizedData.translations
+        ? {
+            ...(existing.translations || {}),
+            ...sanitizedData.translations,
+          }
+        : existing.translations;
+
       state.packagings[index] = {
-        ...state.packagings[index],
+        ...existing,
         ...sanitizedData,
+        translations: mergedTranslations,
         updated_at: new Date().toISOString(),
       };
       saveDatabase(state);
