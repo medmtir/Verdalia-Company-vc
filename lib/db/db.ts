@@ -8,6 +8,7 @@ import {
   ContactMessage,
   ContentBlockTranslation,
   DatabaseState,
+  DeliveryInstallment,
   Locale,
   MediaFile,
   PaymentInstallment,
@@ -982,6 +983,46 @@ export const db = {
       saveDatabase(state);
       return state.orders[index];
     },
+    addDelivery(id: string, delivery: { quantity: number; delivery_date: string; bl_number?: string; notes?: string }): ClientOrder | null {
+      const state = getDatabase();
+      if (!state.orders) state.orders = [];
+      const trimmed = id.trim();
+      const index = state.orders.findIndex((o) => o.id === trimmed || o.order_number?.toLowerCase() === trimmed.toLowerCase());
+      if (index === -1) return null;
+
+      const order = state.orders[index];
+      const newDelivery: DeliveryInstallment = {
+        id: `del-${Date.now()}`,
+        order_id: order.id,
+        quantity: Number(delivery.quantity),
+        delivery_date: delivery.delivery_date || new Date().toISOString().split("T")[0],
+        bl_number: delivery.bl_number,
+        notes: delivery.notes,
+        created_at: new Date().toISOString(),
+      };
+
+      const deliveries = [...(order.delivery_installments || []), newDelivery];
+      const newDelivered = deliveries.reduce((sum, d) => sum + Number(d.quantity || 0), 0);
+      const totalQty = Number(order.quantity) || 0;
+      const newRemainingQty = Math.max(0, totalQty - newDelivered);
+      let deliveryStatus: "pending" | "partially_delivered" | "fully_delivered" = "pending";
+      if (newDelivered >= totalQty && totalQty > 0) deliveryStatus = "fully_delivered";
+      else if (newDelivered > 0) deliveryStatus = "partially_delivered";
+
+      state.orders[index] = {
+        ...order,
+        delivery_installments: deliveries,
+        delivered_quantity: newDelivered,
+        remaining_quantity: newRemainingQty,
+        delivery_status: deliveryStatus,
+        updated_at: new Date().toISOString(),
+      };
+      saveDatabase(state);
+      return state.orders[index];
+    },
+    addDeliveryInstallment(orderId: string, installment: Omit<DeliveryInstallment, "id" | "created_at">): ClientOrder | null {
+      return this.addDelivery(orderId, installment);
+    },
     trash(id: string): ClientOrder | null {
       const state = getDatabase();
       if (!state.orders) state.orders = [];
@@ -1174,3 +1215,10 @@ export const db = {
     },
   },
 };
+
+export function addDeliveryInstallment(
+  orderId: string,
+  installment: Omit<DeliveryInstallment, "id" | "created_at">
+): ClientOrder | null {
+  return db.orders.addDelivery(orderId, installment);
+}

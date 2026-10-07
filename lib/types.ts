@@ -210,6 +210,16 @@ export interface PaymentInstallment {
   notes?: string;
 }
 
+export interface DeliveryInstallment {
+  id: string;
+  order_id: string;
+  quantity: number;
+  delivery_date: string;
+  bl_number?: string;
+  notes?: string;
+  created_at: string;
+}
+
 export interface Client {
   id: string;
   name: string;
@@ -247,6 +257,10 @@ export interface ClientOrder {
   order_status: "pending" | "confirmed" | "processing" | "shipped" | "delivered" | "cancelled" | "trash";
   order_date: string;
   payments: PaymentInstallment[];
+  delivery_installments?: DeliveryInstallment[];
+  delivered_quantity?: number;
+  remaining_quantity?: number;
+  delivery_status?: "pending" | "partially_delivered" | "fully_delivered";
   notes?: string;
   is_deleted?: boolean;
   deleted_at?: string;

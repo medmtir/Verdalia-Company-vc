@@ -32,8 +32,9 @@ import {
   AlertTriangle,
   Sparkles,
   Coins,
+  Truck,
 } from "lucide-react";
-import { Client, ClientOrder, Product } from "@/lib/types";
+import { Client, ClientOrder, DeliveryInstallment, Product } from "@/lib/types";
 
 export default function ClientsAndOrdersPage() {
   const [clients, setClients] = useState<Client[]>([]);
@@ -65,6 +66,9 @@ export default function ClientsAndOrdersPage() {
 
   const [paymentModalOpen, setPaymentModalOpen] = useState(false);
   const [selectedOrderForPayment, setSelectedOrderForPayment] = useState<ClientOrder | null>(null);
+
+  const [deliveryModalOpen, setDeliveryModalOpen] = useState(false);
+  const [selectedOrderForDelivery, setSelectedOrderForDelivery] = useState<ClientOrder | null>(null);
 
   // Confirmation Modal (like messages)
   const [confirmModal, setConfirmModal] = useState<{
@@ -120,6 +124,15 @@ export default function ClientsAndOrdersPage() {
     reference: "",
     notes: "",
   });
+
+  // Delivery installment form state
+  const [deliveryForm, setDeliveryForm] = useState({
+    quantity: "",
+    delivery_date: new Date().toISOString().split("T")[0],
+    bl_number: "",
+    notes: "",
+  });
+
 
   const [submitting, setSubmitting] = useState(false);
   const [actionMessage, setActionMessage] = useState<string | null>(null);
@@ -409,6 +422,62 @@ export default function ClientsAndOrdersPage() {
         await fetchData();
       } else {
         alert(data.error || "Erreur lors de l'enregistrement du paiement.");
+      }
+    } catch {
+      alert("Une erreur est survenue.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  // Open Delivery installment modal
+  const openDeliveryModal = (order: ClientOrder) => {
+    const freshOrder = orders.find((o) => o.id === order.id) || order;
+    setSelectedOrderForDelivery(freshOrder);
+    const totalQty = Number(freshOrder.quantity) || 0;
+    const delivered = Number(freshOrder.delivered_quantity) || 0;
+    const remainQty = Math.max(0, totalQty - delivered);
+    setDeliveryForm({
+      quantity: remainQty > 0 ? String(remainQty) : "",
+      delivery_date: new Date().toISOString().split("T")[0],
+      bl_number: "",
+      notes: `Livraison pour commande ${freshOrder.order_number}`,
+    });
+    setDeliveryModalOpen(true);
+  };
+
+  // Submit Delivery installment
+  const handleSaveDelivery = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedOrderForDelivery) return;
+    const qty = parseFloat(deliveryForm.quantity);
+    if (isNaN(qty) || qty <= 0) {
+      alert("Veuillez saisir une quantité valide.");
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      const res = await fetch("/api/admin/orders/deliveries", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          order_id: selectedOrderForDelivery.id,
+          ...deliveryForm,
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        if (data.order) {
+          setOrders((prev) =>
+            prev.map((o) => (o.id === data.order.id ? data.order : o))
+          );
+        }
+        showNotification(`Livraison de ${qty.toLocaleString()} ${selectedOrderForDelivery.unit} enregistrée !`);
+        setDeliveryModalOpen(false);
+        await fetchData();
+      } else {
+        alert(data.error || "Erreur lors de l'enregistrement de la livraison.");
       }
     } catch {
       alert("Une erreur est survenue.");
@@ -1019,6 +1088,7 @@ export default function ClientsAndOrdersPage() {
                     <th className="py-3 px-4 text-right">Flous Payé</th>
                     <th className="py-3 px-4 text-right">Reste Flous</th>
                     <th className="py-3 px-4 text-center">Statut Paiement</th>
+                    <th className="py-3 px-4 text-center">Livraison / Expédition</th>
                     <th className="py-3 px-4 text-right">Actions</th>
                   </tr>
                 </thead>
@@ -1108,6 +1178,60 @@ export default function ClientsAndOrdersPage() {
                           )}
                         </td>
 
+                        {/* Delivery status and progress bar */}
+                        <td className="py-3.5 px-4 text-center">
+                          {(() => {
+                            const totalQty = Number(order.quantity) || 0;
+                            const deliveredQty = Number(order.delivered_quantity) || (order.delivery_installments || []).reduce((s, d) => s + Number(d.quantity || 0), 0);
+                            const deliveryPercentage = totalQty > 0 ? Math.min(100, Math.round((deliveredQty / totalQty) * 100)) : 0;
+                            const deliveryStatus = order.delivery_status || (deliveredQty >= totalQty && totalQty > 0 ? "fully_delivered" : deliveredQty > 0 ? "partially_delivered" : "pending");
+
+                            return (
+                              <div className="flex flex-col items-center gap-1 min-w-[130px]">
+                                {deliveryStatus === "fully_delivered" ? (
+                                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 flex items-center gap-1">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                                    Livrée
+                                  </span>
+                                ) : deliveryStatus === "partially_delivered" ? (
+                                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 text-blue-800 flex items-center gap-1">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
+                                    Partiellement livrée
+                                  </span>
+                                ) : (
+                                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-gray-100 text-gray-600 flex items-center gap-1">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-gray-400"></span>
+                                    Non livrée
+                                  </span>
+                                )}
+
+                                <span className="text-[10px] font-semibold text-gray-700">
+                                  {deliveredQty.toLocaleString()} / {totalQty.toLocaleString()} {order.unit}
+                                </span>
+
+                                <div className="w-full bg-gray-200 rounded-full h-1.5 overflow-hidden">
+                                  <div
+                                    className={`h-full rounded-full transition-all duration-300 ${
+                                      deliveryStatus === "fully_delivered"
+                                        ? "bg-emerald-500"
+                                        : deliveryStatus === "partially_delivered"
+                                        ? "bg-blue-500"
+                                        : "bg-gray-300"
+                                    }`}
+                                    style={{ width: `${deliveryPercentage}%` }}
+                                  />
+                                </div>
+
+                                {order.delivery_installments && order.delivery_installments.length > 0 && (
+                                  <span className="text-[9px] text-gray-400 font-medium">
+                                    ({order.delivery_installments.length} expédition{order.delivery_installments.length > 1 ? "s" : ""})
+                                  </span>
+                                )}
+                              </div>
+                            );
+                          })()}
+                        </td>
+
                         {/* Actions */}
                         <td className="py-3.5 px-4 text-right">
                           <div className="flex items-center justify-end gap-1.5">
@@ -1121,6 +1245,14 @@ export default function ClientsAndOrdersPage() {
                                 <span>Paiement</span>
                               </button>
                             )}
+                            <button
+                              onClick={() => openDeliveryModal(order)}
+                              className="px-2.5 py-1 rounded bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold text-[11px] transition-colors flex items-center gap-1"
+                              title="Enregistrer une expédition / livraison"
+                            >
+                              <Truck className="w-3 h-3" />
+                              <span>Livraison</span>
+                            </button>
                             <button
                               onClick={() => openOrderModal(order)}
                               className="p-1.5 text-gray-400 hover:text-verdalia-olive hover:bg-gray-100 rounded transition-colors"
@@ -2136,6 +2268,245 @@ export default function ClientsAndOrdersPage() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* ================= MODAL: ADD DELIVERY / PARTIAL SHIPMENT ================= */}
+      {deliveryModalOpen && selectedOrderForDelivery && (
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-white rounded-2xl max-w-xl w-full p-6 shadow-2xl relative animate-scaleUp my-8 max-h-[90vh] flex flex-col">
+            <button
+              onClick={() => setDeliveryModalOpen(false)}
+              className="p-1.5 text-gray-400 hover:text-gray-700 rounded-lg absolute right-4 top-4 z-10"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <div className="mb-4">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-blue-600 flex items-center gap-1.5">
+                <Truck className="w-3.5 h-3.5" />
+                Suivi Logistique & Expéditions
+              </span>
+              <h3 className="font-serif text-lg font-bold text-verdalia-dark mt-0.5">
+                Expédition & Livraison de Commande
+              </h3>
+              <p className="text-xs text-gray-500 mt-1">
+                Commande <span className="font-bold text-verdalia-dark">{selectedOrderForDelivery.order_number}</span> •{" "}
+                <span className="font-semibold text-gray-900">{selectedOrderForDelivery.client_name}</span> •{" "}
+                <span className="text-verdalia-olive font-medium">{selectedOrderForDelivery.product_name}</span>
+              </p>
+            </div>
+
+            {/* Delivery progress summary card */}
+            {(() => {
+              const total = Number(selectedOrderForDelivery.quantity) || 0;
+              const delivered = Number(selectedOrderForDelivery.delivered_quantity) || (selectedOrderForDelivery.delivery_installments || []).reduce((s, d) => s + Number(d.quantity || 0), 0);
+              const remaining = Math.max(0, total - delivered);
+              const percent = total > 0 ? Math.min(100, Math.round((delivered / total) * 100)) : 0;
+
+              return (
+                <div className="p-4 bg-gradient-to-br from-blue-50/70 to-slate-50 rounded-xl border border-blue-100 mb-4">
+                  <div className="grid grid-cols-3 text-center text-xs mb-3">
+                    <div>
+                      <span className="text-[10px] text-gray-500 uppercase font-bold block">Total Commandé</span>
+                      <span className="font-bold text-gray-800 text-sm">
+                        {total.toLocaleString()} {selectedOrderForDelivery.unit}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-[10px] text-blue-600 uppercase font-bold block">Déjà Livré</span>
+                      <span className="font-bold text-blue-700 text-sm">
+                        {delivered.toLocaleString()} {selectedOrderForDelivery.unit}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-[10px] text-amber-700 uppercase font-bold block">Reste à Livrer</span>
+                      <span className="font-extrabold text-amber-800 text-sm">
+                        {remaining.toLocaleString()} {selectedOrderForDelivery.unit}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Progress bar */}
+                  <div className="space-y-1">
+                    <div className="flex justify-between items-center text-[11px] font-semibold text-gray-600">
+                      <span>Progression de livraison</span>
+                      <span className="text-blue-700 font-bold">{percent}%</span>
+                    </div>
+                    <div className="w-full bg-blue-100 rounded-full h-2 overflow-hidden">
+                      <div
+                        className={`h-full rounded-full transition-all duration-300 ${
+                          percent >= 100 ? "bg-emerald-500" : percent > 0 ? "bg-blue-600" : "bg-gray-300"
+                        }`}
+                        style={{ width: `${percent}%` }}
+                      />
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
+
+            <div className="overflow-y-auto flex-1 pr-1 -mr-1 space-y-5">
+              {/* Form to add a new shipment */}
+              <form onSubmit={handleSaveDelivery} className="space-y-3.5 text-xs bg-gray-50/60 p-4 rounded-xl border border-gray-200">
+                <div className="flex items-center justify-between">
+                  <h4 className="font-bold text-gray-800 text-xs flex items-center gap-1.5 uppercase tracking-wider">
+                    <Plus className="w-3.5 h-3.5 text-blue-600" />
+                    Enregistrer une nouvelle expédition
+                  </h4>
+                  {(() => {
+                    const total = Number(selectedOrderForDelivery.quantity) || 0;
+                    const delivered = Number(selectedOrderForDelivery.delivered_quantity) || (selectedOrderForDelivery.delivery_installments || []).reduce((s, d) => s + Number(d.quantity || 0), 0);
+                    const remain = Math.max(0, total - delivered);
+                    if (remain > 0) {
+                      return (
+                        <button
+                          type="button"
+                          onClick={() => setDeliveryForm({ ...deliveryForm, quantity: String(remain) })}
+                          className="text-[10px] text-blue-600 hover:text-blue-800 underline font-semibold"
+                        >
+                          Remplir le solde ({remain.toLocaleString()} {selectedOrderForDelivery.unit})
+                        </button>
+                      );
+                    }
+                    return null;
+                  })()}
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block font-bold uppercase text-[10px] text-blue-900 mb-1">
+                      Quantité Livrée ({selectedOrderForDelivery.unit}) *
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="number"
+                        step="any"
+                        required
+                        placeholder="Ex: 5000"
+                        value={deliveryForm.quantity}
+                        onChange={(e) => setDeliveryForm({ ...deliveryForm, quantity: e.target.value })}
+                        className="w-full px-3 py-2 bg-white border border-blue-300 rounded-lg text-sm font-bold text-blue-950 focus:outline-none focus:ring-1 focus:ring-blue-500 pr-12"
+                      />
+                      <span className="absolute right-3 top-1/2 -translate-y-1/2 font-bold text-blue-700 text-xs">
+                        {selectedOrderForDelivery.unit}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block font-bold uppercase text-[10px] text-gray-700 mb-1">
+                      Date d&apos;Expédition / Livraison *
+                    </label>
+                    <input
+                      type="date"
+                      required
+                      value={deliveryForm.delivery_date}
+                      onChange={(e) => setDeliveryForm({ ...deliveryForm, delivery_date: e.target.value })}
+                      className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg font-semibold"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block font-bold uppercase text-[10px] text-gray-700 mb-1">
+                      N° Bon de Livraison (BL) / Suivi
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Ex: BL-2026-089 / TRK..."
+                      value={deliveryForm.bl_number}
+                      onChange={(e) => setDeliveryForm({ ...deliveryForm, bl_number: e.target.value })}
+                      className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block font-bold uppercase text-[10px] text-gray-700 mb-1">
+                      Notes / Chauffeur / Camion
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Ex: Camion citerne 2, Chauffeur..."
+                      value={deliveryForm.notes}
+                      onChange={(e) => setDeliveryForm({ ...deliveryForm, notes: e.target.value })}
+                      className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-end gap-2 pt-2">
+                  <button
+                    type="submit"
+                    disabled={submitting}
+                    className="py-2 px-4 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs uppercase tracking-wider flex items-center gap-1.5 transition-colors shadow-sm disabled:opacity-50"
+                  >
+                    <Check className="w-3.5 h-3.5" />
+                    <span>{submitting ? "Enregistrement..." : "Valider Expédition"}</span>
+                  </button>
+                </div>
+              </form>
+
+              {/* Past deliveries history */}
+              <div className="space-y-2">
+                <h4 className="font-bold text-gray-800 text-xs uppercase tracking-wider flex items-center justify-between">
+                  <span>Historique des expéditions</span>
+                  <span className="text-[10px] font-normal text-gray-500">
+                    {selectedOrderForDelivery.delivery_installments?.length || 0} expédition(s)
+                  </span>
+                </h4>
+
+                {(!selectedOrderForDelivery.delivery_installments ||
+                  selectedOrderForDelivery.delivery_installments.length === 0) ? (
+                  <div className="p-4 bg-gray-50 rounded-xl text-center text-gray-400 text-xs italic border border-dashed border-gray-200">
+                    Aucune expédition enregistrée pour le moment.
+                  </div>
+                ) : (
+                  <div className="divide-y divide-gray-100 rounded-xl border border-gray-200 overflow-hidden bg-white">
+                    {selectedOrderForDelivery.delivery_installments.map((installment, idx) => (
+                      <div key={installment.id || idx} className="p-3 hover:bg-gray-50 transition-colors flex items-center justify-between text-xs">
+                        <div className="space-y-0.5">
+                          <div className="flex items-center gap-2">
+                            <span className="font-bold text-gray-900">
+                              {Number(installment.quantity).toLocaleString()} {selectedOrderForDelivery.unit}
+                            </span>
+                            {installment.bl_number && (
+                              <span className="px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 text-[10px] font-mono font-semibold">
+                                BL: {installment.bl_number}
+                              </span>
+                            )}
+                          </div>
+                          {installment.notes && (
+                            <p className="text-[11px] text-gray-500">{installment.notes}</p>
+                          )}
+                        </div>
+
+                        <div className="text-right">
+                          <span className="text-gray-700 font-semibold text-[11px] block">
+                            {installment.delivery_date}
+                          </span>
+                          <span className="text-[10px] text-gray-400">
+                            Expédition #{idx + 1}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="pt-4 border-t border-gray-100 mt-4 flex justify-end">
+              <button
+                type="button"
+                onClick={() => setDeliveryModalOpen(false)}
+                className="px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold text-xs"
+              >
+                Fermer
+              </button>
+            </div>
           </div>
         </div>
       )}
