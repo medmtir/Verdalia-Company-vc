@@ -400,6 +400,17 @@ export default function ClientsAndOrdersPage() {
       return;
     }
 
+    const currentRemaining = typeof selectedOrderForPayment.remaining_amount === "number"
+      ? selectedOrderForPayment.remaining_amount
+      : Math.max(0, selectedOrderForPayment.total_amount - (selectedOrderForPayment.paid_amount || 0));
+
+    if (amt > currentRemaining + 0.001) {
+      alert(
+        `Montant excessif : Le montant saisi (${amt.toLocaleString()} ${selectedOrderForPayment.currency}) dépasse le reste dû (${currentRemaining.toLocaleString()} ${selectedOrderForPayment.currency}).`
+      );
+      return;
+    }
+
     setSubmitting(true);
     try {
       const res = await fetch("/api/admin/orders/payments", {
@@ -435,7 +446,7 @@ export default function ClientsAndOrdersPage() {
     const freshOrder = orders.find((o) => o.id === order.id) || order;
     setSelectedOrderForDelivery(freshOrder);
     const totalQty = Number(freshOrder.quantity) || 0;
-    const delivered = Number(freshOrder.delivered_quantity) || 0;
+    const delivered = Number(freshOrder.delivered_quantity) || (freshOrder.delivery_installments || []).reduce((s, d) => s + Number(d.quantity || 0), 0);
     const remainQty = Math.max(0, totalQty - delivered);
     setDeliveryForm({
       quantity: remainQty > 0 ? String(remainQty) : "",
@@ -453,6 +464,17 @@ export default function ClientsAndOrdersPage() {
     const qty = parseFloat(deliveryForm.quantity);
     if (isNaN(qty) || qty <= 0) {
       alert("Veuillez saisir une quantité valide.");
+      return;
+    }
+
+    const totalQty = Number(selectedOrderForDelivery.quantity) || 0;
+    const delivered = Number(selectedOrderForDelivery.delivered_quantity) || (selectedOrderForDelivery.delivery_installments || []).reduce((s, d) => s + Number(d.quantity || 0), 0);
+    const remainQty = Math.max(0, totalQty - delivered);
+
+    if (qty > remainQty + 0.0001) {
+      alert(
+        `Quantité excessive : La quantité saisie (${qty.toLocaleString()} ${selectedOrderForDelivery.unit}) dépasse la quantité restante à livrer (${remainQty.toLocaleString()} ${selectedOrderForDelivery.unit}).`
+      );
       return;
     }
 
@@ -2171,103 +2193,142 @@ export default function ClientsAndOrdersPage() {
               </div>
             </div>
 
-            <form onSubmit={handleSavePayment} className="space-y-3.5 text-xs">
-              <div>
-                <label className="block font-bold uppercase text-[10px] text-emerald-800 mb-1">
-                  Montant à Encaisser en {selectedOrderForPayment.currency} *
-                </label>
-                <div className="relative">
-                  <input
-                    type="number"
-                    step="any"
-                    required
-                    placeholder="Ex: 50000"
-                    value={paymentForm.amount}
-                    onChange={(e) => setPaymentForm({ ...paymentForm, amount: e.target.value })}
-                    className="w-full px-3 py-2 bg-emerald-50 border border-emerald-300 rounded-lg text-sm font-bold text-emerald-900 focus:bg-white focus:outline-none pr-14"
-                  />
-                  <span className="absolute right-3 top-1/2 -translate-y-1/2 font-bold text-emerald-700 text-xs">
-                    {selectedOrderForPayment.currency}
-                  </span>
-                </div>
-              </div>
+            {(() => {
+              const paymentAmt = parseFloat(paymentForm.amount) || 0;
+              const paymentRemain = typeof selectedOrderForPayment.remaining_amount === "number"
+                ? selectedOrderForPayment.remaining_amount
+                : Math.max(0, selectedOrderForPayment.total_amount - (selectedOrderForPayment.paid_amount || 0));
+              const isPaymentExceeded = paymentAmt > paymentRemain + 0.001;
+              const paymentExcess = Math.max(0, paymentAmt - paymentRemain);
 
-              <div>
-                <label className="block font-bold uppercase text-[10px] text-gray-700 mb-1">
-                  Nhar 9adeh Dfa3 (Date du Versement) *
-                </label>
-                <input
-                  type="date"
-                  required
-                  value={paymentForm.date}
-                  onChange={(e) => setPaymentForm({ ...paymentForm, date: e.target.value })}
-                  className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg font-semibold"
-                />
-              </div>
+              return (
+                <form onSubmit={handleSavePayment} className="space-y-3.5 text-xs">
+                  <div>
+                    <div className="flex items-center justify-between mb-1">
+                      <label className="block font-bold uppercase text-[10px] text-emerald-800">
+                        Montant à Encaisser en {selectedOrderForPayment.currency} *
+                      </label>
+                      {paymentRemain > 0 && (
+                        <button
+                          type="button"
+                          onClick={() => setPaymentForm({ ...paymentForm, amount: String(paymentRemain) })}
+                          className="text-[10px] text-emerald-700 hover:text-emerald-900 underline font-semibold"
+                        >
+                          Régler le solde ({paymentRemain.toLocaleString()} {selectedOrderForPayment.currency})
+                        </button>
+                      )}
+                    </div>
+                    <div className="relative">
+                      <input
+                        type="number"
+                        step="any"
+                        required
+                        placeholder="Ex: 50000"
+                        value={paymentForm.amount}
+                        onChange={(e) => setPaymentForm({ ...paymentForm, amount: e.target.value })}
+                        className={`w-full px-3 py-2 rounded-lg text-sm font-bold pr-14 focus:outline-none transition-colors ${
+                          isPaymentExceeded
+                            ? "bg-rose-50 border border-rose-300 text-rose-900 focus:ring-1 focus:ring-rose-500"
+                            : "bg-emerald-50 border border-emerald-300 text-emerald-900 focus:bg-white"
+                        }`}
+                      />
+                      <span className={`absolute right-3 top-1/2 -translate-y-1/2 font-bold text-xs ${
+                        isPaymentExceeded ? "text-rose-700" : "text-emerald-700"
+                      }`}>
+                        {selectedOrderForPayment.currency}
+                      </span>
+                    </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block font-bold uppercase text-[10px] text-gray-700 mb-1">
-                    Mode de Règlement
-                  </label>
-                  <select
-                    value={paymentForm.method}
-                    onChange={(e) => setPaymentForm({ ...paymentForm, method: e.target.value })}
-                    className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg"
-                  >
-                    <option value="virement">Virement Bancaire</option>
-                    <option value="lettre_credit">Lettre de Crédit (LC)</option>
-                    <option value="cheque">Chèque Bancaire</option>
-                    <option value="especes">Espèces / Cash</option>
-                    <option value="autre">Autre</option>
-                  </select>
-                </div>
+                    {isPaymentExceeded && (
+                      <div className="mt-1.5 p-2 rounded-lg bg-rose-50 border border-rose-200 text-rose-700 text-[11px] font-semibold flex items-center gap-1.5">
+                        <AlertTriangle className="w-3.5 h-3.5 flex-shrink-0 text-rose-600" />
+                        <span>
+                          Attention : Le montant dépasse le reste dû de +{paymentExcess.toLocaleString()} {selectedOrderForPayment.currency} !
+                        </span>
+                      </div>
+                    )}
+                  </div>
 
-                <div>
-                  <label className="block font-bold uppercase text-[10px] text-gray-700 mb-1">
-                    N° Réf / Chèque
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="VIR-1234 / CHQ..."
-                    value={paymentForm.reference}
-                    onChange={(e) => setPaymentForm({ ...paymentForm, reference: e.target.value })}
-                    className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg"
-                  />
-                </div>
-              </div>
+                  <div>
+                    <label className="block font-bold uppercase text-[10px] text-gray-700 mb-1">
+                      Nhar 9adeh Dfa3 (Date du Versement) *
+                    </label>
+                    <input
+                      type="date"
+                      required
+                      value={paymentForm.date}
+                      onChange={(e) => setPaymentForm({ ...paymentForm, date: e.target.value })}
+                      className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg font-semibold"
+                    />
+                  </div>
 
-              <div>
-                <label className="block font-bold uppercase text-[10px] text-gray-700 mb-1">
-                  Note / Remarque
-                </label>
-                <input
-                  type="text"
-                  placeholder="Ex: Acompte 30%, Solde à la livraison..."
-                  value={paymentForm.notes}
-                  onChange={(e) => setPaymentForm({ ...paymentForm, notes: e.target.value })}
-                  className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg"
-                />
-              </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block font-bold uppercase text-[10px] text-gray-700 mb-1">
+                        Mode de Règlement
+                      </label>
+                      <select
+                        value={paymentForm.method}
+                        onChange={(e) => setPaymentForm({ ...paymentForm, method: e.target.value })}
+                        className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg"
+                      >
+                        <option value="virement">Virement Bancaire</option>
+                        <option value="lettre_credit">Lettre de Crédit (LC)</option>
+                        <option value="cheque">Chèque Bancaire</option>
+                        <option value="especes">Espèces / Cash</option>
+                        <option value="autre">Autre</option>
+                      </select>
+                    </div>
 
-              <div className="flex items-center justify-end gap-2 pt-3 border-t border-gray-100">
-                <button
-                  type="button"
-                  onClick={() => setPaymentModalOpen(false)}
-                  className="px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold"
-                >
-                  Annuler
-                </button>
-                <button
-                  type="submit"
-                  disabled={submitting}
-                  className="btn-primary py-2 px-5 font-bold uppercase tracking-wider flex items-center gap-1.5"
-                >
-                  <Check className="w-4 h-4" />
-                  <span>{submitting ? "Validation..." : "Valider Encaissement"}</span>
-                </button>
-              </div>
-            </form>
+                    <div>
+                      <label className="block font-bold uppercase text-[10px] text-gray-700 mb-1">
+                        N° Réf / Chèque
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="VIR-1234 / CHQ..."
+                        value={paymentForm.reference}
+                        onChange={(e) => setPaymentForm({ ...paymentForm, reference: e.target.value })}
+                        className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block font-bold uppercase text-[10px] text-gray-700 mb-1">
+                      Note / Remarque
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Ex: Acompte 30%, Solde à la livraison..."
+                      value={paymentForm.notes}
+                      onChange={(e) => setPaymentForm({ ...paymentForm, notes: e.target.value })}
+                      className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg"
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-end gap-2 pt-3 border-t border-gray-100">
+                    <button
+                      type="button"
+                      onClick={() => setPaymentModalOpen(false)}
+                      className="px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold"
+                    >
+                      Annuler
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={submitting || isPaymentExceeded}
+                      className={`btn-primary py-2 px-5 font-bold uppercase tracking-wider flex items-center gap-1.5 ${
+                        isPaymentExceeded ? "opacity-50 cursor-not-allowed bg-gray-400" : ""
+                      }`}
+                    >
+                      <Check className="w-4 h-4" />
+                      <span>{submitting ? "Validation..." : "Valider Encaissement"}</span>
+                    </button>
+                  </div>
+                </form>
+              );
+            })()}
           </div>
         </div>
       )}
@@ -2349,18 +2410,22 @@ export default function ClientsAndOrdersPage() {
 
             <div className="overflow-y-auto flex-1 pr-1 -mr-1 space-y-5">
               {/* Form to add a new shipment */}
-              <form onSubmit={handleSaveDelivery} className="space-y-3.5 text-xs bg-gray-50/60 p-4 rounded-xl border border-gray-200">
-                <div className="flex items-center justify-between">
-                  <h4 className="font-bold text-gray-800 text-xs flex items-center gap-1.5 uppercase tracking-wider">
-                    <Plus className="w-3.5 h-3.5 text-blue-600" />
-                    Enregistrer une nouvelle expédition
-                  </h4>
-                  {(() => {
-                    const total = Number(selectedOrderForDelivery.quantity) || 0;
-                    const delivered = Number(selectedOrderForDelivery.delivered_quantity) || (selectedOrderForDelivery.delivery_installments || []).reduce((s, d) => s + Number(d.quantity || 0), 0);
-                    const remain = Math.max(0, total - delivered);
-                    if (remain > 0) {
-                      return (
+              {(() => {
+                const total = Number(selectedOrderForDelivery.quantity) || 0;
+                const delivered = Number(selectedOrderForDelivery.delivered_quantity) || (selectedOrderForDelivery.delivery_installments || []).reduce((s, d) => s + Number(d.quantity || 0), 0);
+                const remain = Math.max(0, total - delivered);
+                const deliveryQty = parseFloat(deliveryForm.quantity) || 0;
+                const isDeliveryExceeded = deliveryQty > remain + 0.0001;
+                const deliveryExcess = Math.max(0, deliveryQty - remain);
+
+                return (
+                  <form onSubmit={handleSaveDelivery} className="space-y-3.5 text-xs bg-gray-50/60 p-4 rounded-xl border border-gray-200">
+                    <div className="flex items-center justify-between">
+                      <h4 className="font-bold text-gray-800 text-xs flex items-center gap-1.5 uppercase tracking-wider">
+                        <Plus className="w-3.5 h-3.5 text-blue-600" />
+                        Enregistrer une nouvelle expédition
+                      </h4>
+                      {remain > 0 && (
                         <button
                           type="button"
                           onClick={() => setDeliveryForm({ ...deliveryForm, quantity: String(remain) })}
@@ -2368,86 +2433,104 @@ export default function ClientsAndOrdersPage() {
                         >
                           Remplir le solde ({remain.toLocaleString()} {selectedOrderForDelivery.unit})
                         </button>
-                      );
-                    }
-                    return null;
-                  })()}
-                </div>
-
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="block font-bold uppercase text-[10px] text-blue-900 mb-1">
-                      Quantité Livrée ({selectedOrderForDelivery.unit}) *
-                    </label>
-                    <div className="relative">
-                      <input
-                        type="number"
-                        step="any"
-                        required
-                        placeholder="Ex: 5000"
-                        value={deliveryForm.quantity}
-                        onChange={(e) => setDeliveryForm({ ...deliveryForm, quantity: e.target.value })}
-                        className="w-full px-3 py-2 bg-white border border-blue-300 rounded-lg text-sm font-bold text-blue-950 focus:outline-none focus:ring-1 focus:ring-blue-500 pr-12"
-                      />
-                      <span className="absolute right-3 top-1/2 -translate-y-1/2 font-bold text-blue-700 text-xs">
-                        {selectedOrderForDelivery.unit}
-                      </span>
+                      )}
                     </div>
-                  </div>
 
-                  <div>
-                    <label className="block font-bold uppercase text-[10px] text-gray-700 mb-1">
-                      Date d&apos;Expédition / Livraison *
-                    </label>
-                    <input
-                      type="date"
-                      required
-                      value={deliveryForm.delivery_date}
-                      onChange={(e) => setDeliveryForm({ ...deliveryForm, delivery_date: e.target.value })}
-                      className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg font-semibold"
-                    />
-                  </div>
-                </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="block font-bold uppercase text-[10px] text-blue-900 mb-1">
+                          Quantité Livrée ({selectedOrderForDelivery.unit}) *
+                        </label>
+                        <div className="relative">
+                          <input
+                            type="number"
+                            step="any"
+                            required
+                            placeholder="Ex: 5000"
+                            value={deliveryForm.quantity}
+                            onChange={(e) => setDeliveryForm({ ...deliveryForm, quantity: e.target.value })}
+                            className={`w-full px-3 py-2 rounded-lg text-sm font-bold pr-12 focus:outline-none transition-colors ${
+                              isDeliveryExceeded
+                                ? "bg-rose-50 border border-rose-300 text-rose-950 focus:ring-1 focus:ring-rose-500"
+                                : "bg-white border border-blue-300 text-blue-950 focus:ring-1 focus:ring-blue-500"
+                            }`}
+                          />
+                          <span className={`absolute right-3 top-1/2 -translate-y-1/2 font-bold text-xs ${
+                            isDeliveryExceeded ? "text-rose-700" : "text-blue-700"
+                          }`}>
+                            {selectedOrderForDelivery.unit}
+                          </span>
+                        </div>
 
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="block font-bold uppercase text-[10px] text-gray-700 mb-1">
-                      N° Bon de Livraison (BL) / Suivi
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="Ex: BL-2026-089 / TRK..."
-                      value={deliveryForm.bl_number}
-                      onChange={(e) => setDeliveryForm({ ...deliveryForm, bl_number: e.target.value })}
-                      className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg"
-                    />
-                  </div>
+                        {isDeliveryExceeded && (
+                          <div className="mt-1.5 p-2 rounded-lg bg-rose-50 border border-rose-200 text-rose-700 text-[11px] font-semibold flex items-center gap-1.5">
+                            <AlertTriangle className="w-3.5 h-3.5 flex-shrink-0 text-rose-600" />
+                            <span>
+                              Attention : La quantité dépasse le reste à livrer de +{deliveryExcess.toLocaleString()} {selectedOrderForDelivery.unit} !
+                            </span>
+                          </div>
+                        )}
+                      </div>
 
-                  <div>
-                    <label className="block font-bold uppercase text-[10px] text-gray-700 mb-1">
-                      Notes / Chauffeur / Camion
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="Ex: Camion citerne 2, Chauffeur..."
-                      value={deliveryForm.notes}
-                      onChange={(e) => setDeliveryForm({ ...deliveryForm, notes: e.target.value })}
-                      className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg"
-                    />
-                  </div>
-                </div>
+                      <div>
+                        <label className="block font-bold uppercase text-[10px] text-gray-700 mb-1">
+                          Date d&apos;Expédition / Livraison *
+                        </label>
+                        <input
+                          type="date"
+                          required
+                          value={deliveryForm.delivery_date}
+                          onChange={(e) => setDeliveryForm({ ...deliveryForm, delivery_date: e.target.value })}
+                          className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg font-semibold"
+                        />
+                      </div>
+                    </div>
 
-                <div className="flex items-center justify-end gap-2 pt-2">
-                  <button
-                    type="submit"
-                    disabled={submitting}
-                    className="py-2 px-4 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs uppercase tracking-wider flex items-center gap-1.5 transition-colors shadow-sm disabled:opacity-50"
-                  >
-                    <Check className="w-3.5 h-3.5" />
-                    <span>{submitting ? "Enregistrement..." : "Valider Expédition"}</span>
-                  </button>
-                </div>
-              </form>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="block font-bold uppercase text-[10px] text-gray-700 mb-1">
+                          N° Bon de Livraison (BL) / Suivi
+                        </label>
+                        <input
+                          type="text"
+                          placeholder="Ex: BL-2026-089 / TRK..."
+                          value={deliveryForm.bl_number}
+                          onChange={(e) => setDeliveryForm({ ...deliveryForm, bl_number: e.target.value })}
+                          className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block font-bold uppercase text-[10px] text-gray-700 mb-1">
+                          Notes / Chauffeur / Camion
+                        </label>
+                        <input
+                          type="text"
+                          placeholder="Ex: Camion citerne 2, Chauffeur..."
+                          value={deliveryForm.notes}
+                          onChange={(e) => setDeliveryForm({ ...deliveryForm, notes: e.target.value })}
+                          className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-end gap-2 pt-2">
+                      <button
+                        type="submit"
+                        disabled={submitting || isDeliveryExceeded}
+                        className={`py-2 px-4 rounded-lg font-bold text-xs uppercase tracking-wider flex items-center gap-1.5 transition-colors shadow-sm ${
+                          isDeliveryExceeded
+                            ? "bg-gray-400 text-white cursor-not-allowed opacity-50"
+                            : "bg-blue-600 hover:bg-blue-700 text-white disabled:opacity-50"
+                        }`}
+                      >
+                        <Check className="w-3.5 h-3.5" />
+                        <span>{submitting ? "Enregistrement..." : "Valider Expédition"}</span>
+                      </button>
+                    </div>
+                  </form>
+                );
+              })()}
 
               {/* Past deliveries history */}
               <div className="space-y-2">

@@ -33,6 +33,27 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    const order = db.orders.getById(cleanOrderId);
+    if (!order) {
+      return NextResponse.json(
+        { error: "Commande introuvable." },
+        { status: 404 }
+      );
+    }
+
+    const currentRemaining = typeof order.remaining_amount === "number"
+      ? order.remaining_amount
+      : Math.max(0, (order.total_amount || 0) - (order.paid_amount || 0));
+
+    if (paymentAmount > currentRemaining + 0.001) {
+      return NextResponse.json(
+        {
+          error: `Le montant saisi (${paymentAmount.toLocaleString()} ${order.currency}) dépasse le reste dû (${currentRemaining.toLocaleString()} ${order.currency}).`,
+        },
+        { status: 400 }
+      );
+    }
+
     const updated = db.orders.addPayment(cleanOrderId, {
       amount: paymentAmount,
       date: date || new Date().toISOString().split("T")[0],

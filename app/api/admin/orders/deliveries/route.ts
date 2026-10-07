@@ -33,6 +33,27 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    const order = db.orders.getById(cleanOrderId);
+    if (!order) {
+      return NextResponse.json(
+        { error: "Commande introuvable." },
+        { status: 404 }
+      );
+    }
+
+    const totalQty = Number(order.quantity) || 0;
+    const deliveredQty = Number(order.delivered_quantity) || (order.delivery_installments || []).reduce((sum, d) => sum + Number(d.quantity || 0), 0);
+    const currentRemainingQty = Math.max(0, totalQty - deliveredQty);
+
+    if (deliveryQuantity > currentRemainingQty + 0.0001) {
+      return NextResponse.json(
+        {
+          error: `La quantité saisie (${deliveryQuantity.toLocaleString()} ${order.unit}) dépasse la quantité restante à livrer (${currentRemainingQty.toLocaleString()} ${order.unit}).`,
+        },
+        { status: 400 }
+      );
+    }
+
     const updated = db.orders.addDelivery(cleanOrderId, {
       quantity: deliveryQuantity,
       delivery_date: delivery_date || new Date().toISOString().split("T")[0],
