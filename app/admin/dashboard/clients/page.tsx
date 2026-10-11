@@ -32,7 +32,7 @@ import {
   AlertTriangle,
   Sparkles,
   Coins,
-  Truck,
+  Ship,
 } from "lucide-react";
 import { Client, ClientOrder, DeliveryInstallment, Product } from "@/lib/types";
 
@@ -764,6 +764,46 @@ export default function ClientsAndOrdersPage() {
     };
   }, [orders, selectedCurrency]);
 
+  // Maritime Delivery / Shipping stats for clients & orders page
+  const deliveryStats = useMemo(() => {
+    const list = selectedCurrency === "ALL" ? orders : orders.filter((o) => o.currency === selectedCurrency);
+    const activeOrders = list.filter((o) => !o.is_deleted && o.order_status !== "trash" && o.order_status !== "cancelled");
+    const totalCount = activeOrders.length;
+
+    const fullyDelivered = activeOrders.filter((o) => {
+      const totalQty = Number(o.quantity) || 0;
+      const deliveredQty = Number(o.delivered_quantity) || (o.delivery_installments || []).reduce((s, d) => s + Number(d.quantity || 0), 0);
+      return o.order_status === "delivered" || o.delivery_status === "fully_delivered" || (totalQty > 0 && deliveredQty >= totalQty);
+    }).length;
+
+    const partiallyDelivered = activeOrders.filter((o) => {
+      const totalQty = Number(o.quantity) || 0;
+      const deliveredQty = Number(o.delivered_quantity) || (o.delivery_installments || []).reduce((s, d) => s + Number(d.quantity || 0), 0);
+      const isFull = o.order_status === "delivered" || o.delivery_status === "fully_delivered" || (totalQty > 0 && deliveredQty >= totalQty);
+      return !isFull && (o.delivery_status === "partially_delivered" || deliveredQty > 0);
+    }).length;
+
+    const pendingDelivery = Math.max(0, totalCount - fullyDelivered - partiallyDelivered);
+
+    const totalQuantity = activeOrders.reduce((sum, o) => sum + (Number(o.quantity) || 0), 0);
+    const deliveredQuantity = activeOrders.reduce((sum, o) => {
+      const qty = Number(o.delivered_quantity) || (o.delivery_installments || []).reduce((s, d) => s + Number(d.quantity || 0), 0);
+      return sum + qty;
+    }, 0);
+
+    const rate = totalCount > 0 ? Math.round((fullyDelivered / totalCount) * 100) : 0;
+
+    return {
+      totalCount,
+      fullyDelivered,
+      partiallyDelivered,
+      pendingDelivery,
+      totalQuantity,
+      deliveredQuantity,
+      rate,
+    };
+  }, [orders, selectedCurrency]);
+
   const totalTrashCount = trashedOrders.length + trashedClients.length;
 
   if (loading) {
@@ -905,45 +945,45 @@ export default function ClientsAndOrdersPage() {
         </div>
 
         {/* Financial KPI Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3 sm:gap-4">
           {/* Chiffre d'Affaires */}
-          <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm relative overflow-hidden">
+          <div className="bg-white p-4 sm:p-5 rounded-xl border border-gray-200 shadow-sm relative overflow-hidden flex flex-col justify-between">
             <div className="flex items-center justify-between">
-              <span className="text-[11px] font-bold uppercase tracking-wider text-gray-400">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-gray-400 truncate">
                 Chiffre d&apos;Affaires Total
               </span>
-              <div className="w-9 h-9 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
-                <TrendingUp className="w-5 h-5" />
+              <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center flex-shrink-0 ml-1">
+                <TrendingUp className="w-4 h-4" />
               </div>
             </div>
-            <p className="text-2xl font-bold text-verdalia-dark mt-2">
+            <p className="text-xl sm:text-2xl font-bold text-verdalia-dark mt-2 truncate">
               {currencyStats.filteredRevenue.toLocaleString(undefined, { minimumFractionDigits: 0 })}{" "}
-              <span className="text-sm font-semibold text-verdalia-olive">
+              <span className="text-xs font-semibold text-verdalia-olive">
                 {selectedCurrency === "ALL" ? "(Cumul)" : selectedCurrency}
               </span>
             </p>
-            <p className="text-[11px] text-gray-500 mt-1">
+            <p className="text-[11px] text-gray-500 mt-1 truncate">
               {currencyStats.filteredCount} commande(s) active(s)
             </p>
           </div>
 
           {/* Total Encaissé / Paid */}
-          <div className="bg-white p-5 rounded-xl border border-emerald-100 bg-gradient-to-br from-white to-emerald-50/30 shadow-sm">
+          <div className="bg-white p-4 sm:p-5 rounded-xl border border-emerald-100 bg-gradient-to-br from-white to-emerald-50/30 shadow-sm flex flex-col justify-between">
             <div className="flex items-center justify-between">
-              <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-700">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-700 truncate">
                 Total Encaissé (Flous reçu)
               </span>
-              <div className="w-9 h-9 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center">
-                <CheckCircle2 className="w-5 h-5" />
+              <div className="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center flex-shrink-0 ml-1">
+                <CheckCircle2 className="w-4 h-4" />
               </div>
             </div>
-            <p className="text-2xl font-bold text-emerald-700 mt-2">
+            <p className="text-xl sm:text-2xl font-bold text-emerald-700 mt-2 truncate">
               {currencyStats.filteredPaid.toLocaleString(undefined, { minimumFractionDigits: 0 })}{" "}
-              <span className="text-sm font-semibold text-emerald-600">
+              <span className="text-xs font-semibold text-emerald-600">
                 {selectedCurrency === "ALL" ? "(Cumul)" : selectedCurrency}
               </span>
             </p>
-            <p className="text-[11px] text-emerald-600 font-medium mt-1">
+            <p className="text-[11px] text-emerald-600 font-medium mt-1 truncate">
               {currencyStats.filteredRevenue > 0
                 ? `${((currencyStats.filteredPaid / currencyStats.filteredRevenue) * 100).toFixed(1)}% recouvré`
                 : "0%"}
@@ -951,40 +991,72 @@ export default function ClientsAndOrdersPage() {
           </div>
 
           {/* Total Reste à Payer / Balance Due */}
-          <div className="bg-white p-5 rounded-xl border border-amber-200 bg-gradient-to-br from-white to-amber-50/40 shadow-sm">
+          <div className="bg-white p-4 sm:p-5 rounded-xl border border-amber-200 bg-gradient-to-br from-white to-amber-50/40 shadow-sm flex flex-col justify-between">
             <div className="flex items-center justify-between">
-              <span className="text-[11px] font-bold uppercase tracking-wider text-amber-800">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-amber-800 truncate">
                 Reste Flous (À Recouvrer)
               </span>
-              <div className="w-9 h-9 rounded-lg bg-amber-100 text-amber-800 flex items-center justify-center">
-                <Clock className="w-5 h-5" />
+              <div className="w-8 h-8 rounded-lg bg-amber-100 text-amber-800 flex items-center justify-center flex-shrink-0 ml-1">
+                <Clock className="w-4 h-4" />
               </div>
             </div>
-            <p className="text-2xl font-bold text-amber-800 mt-2">
+            <p className="text-xl sm:text-2xl font-bold text-amber-800 mt-2 truncate">
               {currencyStats.filteredRemaining.toLocaleString(undefined, { minimumFractionDigits: 0 })}{" "}
-              <span className="text-sm font-bold text-amber-700">
+              <span className="text-xs font-bold text-amber-700">
                 {selectedCurrency === "ALL" ? "(Cumul)" : selectedCurrency}
               </span>
             </p>
-            <p className="text-[11px] text-amber-700 font-medium mt-1">
+            <p className="text-[11px] text-amber-700 font-medium mt-1 truncate">
               Créances clients à encaisser
             </p>
           </div>
 
-          {/* Total Clients */}
-          <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
+          {/* Commandes Livrées / Expéditions Maritimes (Ship / Boat) */}
+          <div className="bg-white p-4 sm:p-5 rounded-xl border border-sky-200 bg-gradient-to-br from-white to-sky-50/30 shadow-sm flex flex-col justify-between">
             <div className="flex items-center justify-between">
-              <span className="text-[11px] font-bold uppercase tracking-wider text-gray-400">
-                Clients B2B Actifs
+              <span className="text-[11px] font-bold uppercase tracking-wider text-sky-800 truncate flex items-center gap-1">
+                <span>Livraisons Maritimes</span>
+                <span className="text-[9px] px-1 py-0.2 rounded bg-sky-100 text-sky-800 font-extrabold">
+                  {deliveryStats.rate}%
+                </span>
               </span>
-              <div className="w-9 h-9 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
-                <Building2 className="w-5 h-5" />
+              <div className="w-8 h-8 rounded-lg bg-sky-100 text-sky-700 flex items-center justify-center flex-shrink-0 ml-1">
+                <Ship className="w-4 h-4" />
               </div>
             </div>
-            <p className="text-2xl font-bold text-verdalia-dark mt-2">
+            <div>
+              <p className="text-xl sm:text-2xl font-bold text-sky-900 mt-2 truncate">
+                {deliveryStats.fullyDelivered} / {deliveryStats.totalCount}{" "}
+                <span className="text-xs font-semibold text-sky-700">
+                  livrée{deliveryStats.fullyDelivered > 1 ? "s" : ""}
+                </span>
+              </p>
+              <div className="w-full bg-sky-100 rounded-full h-1.5 mt-2 overflow-hidden">
+                <div
+                  className="h-full bg-sky-600 rounded-full transition-all duration-500"
+                  style={{ width: `${deliveryStats.rate}%` }}
+                />
+              </div>
+            </div>
+            <p className="text-[11px] text-sky-700 font-medium mt-1 truncate">
+              {deliveryStats.rate}% expédié ({deliveryStats.deliveredQuantity.toLocaleString()} livrés)
+            </p>
+          </div>
+
+          {/* Total Clients */}
+          <div className="bg-white p-4 sm:p-5 rounded-xl border border-gray-200 shadow-sm flex flex-col justify-between">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-gray-400 truncate">
+                Clients B2B Actifs
+              </span>
+              <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center flex-shrink-0 ml-1">
+                <Building2 className="w-4 h-4" />
+              </div>
+            </div>
+            <p className="text-xl sm:text-2xl font-bold text-verdalia-dark mt-2 truncate">
               {clients.length}
             </p>
-            <p className="text-[11px] text-gray-500 mt-1">
+            <p className="text-[11px] text-gray-500 mt-1 truncate">
               Comptes avec Matricule Fiscal
             </p>
           </div>
@@ -995,10 +1067,10 @@ export default function ClientsAndOrdersPage() {
       <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
         {/* Tab Headers */}
         <div className="p-4 border-b border-gray-200 flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div className="flex flex-wrap items-center gap-1.5 bg-gray-100 p-1 rounded-xl">
+          <div className="flex items-center gap-1.5 bg-gray-100 p-1 rounded-xl overflow-x-auto no-scrollbar max-w-full flex-nowrap sm:flex-wrap">
             <button
               onClick={() => setActiveTab("orders")}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 whitespace-nowrap flex-shrink-0 ${
                 activeTab === "orders"
                   ? "bg-white text-verdalia-dark shadow-sm"
                   : "text-gray-500 hover:text-gray-900"
@@ -1009,7 +1081,7 @@ export default function ClientsAndOrdersPage() {
             </button>
             <button
               onClick={() => setActiveTab("clients")}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 whitespace-nowrap flex-shrink-0 ${
                 activeTab === "clients"
                   ? "bg-white text-verdalia-dark shadow-sm"
                   : "text-gray-500 hover:text-gray-900"
@@ -1020,7 +1092,7 @@ export default function ClientsAndOrdersPage() {
             </button>
             <button
               onClick={() => setActiveTab("overview")}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 whitespace-nowrap flex-shrink-0 ${
                 activeTab === "overview"
                   ? "bg-white text-verdalia-dark shadow-sm"
                   : "text-gray-500 hover:text-gray-900"
@@ -1031,7 +1103,7 @@ export default function ClientsAndOrdersPage() {
             </button>
             <button
               onClick={() => setActiveTab("trash")}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 whitespace-nowrap flex-shrink-0 ${
                 activeTab === "trash"
                   ? "bg-rose-50 text-rose-800 shadow-sm border border-rose-200"
                   : "text-gray-500 hover:text-rose-700"
@@ -1094,13 +1166,154 @@ export default function ClientsAndOrdersPage() {
 
         {/* TAB 1: ACTIVE ORDERS */}
         {activeTab === "orders" && (
-          <div className="overflow-x-auto">
+          <div>
             {filteredOrders.length === 0 ? (
               <div className="py-16 text-center text-xs text-gray-500">
                 Aucune commande trouvée. Cliquez sur &quot;Nouvelle Commande&quot; pour en ajouter une.
               </div>
             ) : (
-              <table className="w-full text-left text-xs">
+              <>
+                {/* Mobile Cards View (md:hidden) for Smartphone Screens */}
+                <div className="md:hidden divide-y divide-gray-100">
+                  {filteredOrders.map((order) => {
+                    const isFullyPaid = order.payment_status === "paid" || order.remaining_amount <= 0;
+                    const isPartial = order.payment_status === "partial" && order.remaining_amount > 0;
+                    const totalQty = Number(order.quantity) || 0;
+                    const deliveredQty = Number(order.delivered_quantity) || (order.delivery_installments || []).reduce((s, d) => s + Number(d.quantity || 0), 0);
+                    const percent = totalQty > 0 ? Math.min(100, Math.round((deliveredQty / totalQty) * 100)) : 0;
+                    const isFullyDelivered = order.delivery_status === "fully_delivered" || (totalQty > 0 && deliveredQty >= totalQty);
+
+                    return (
+                      <div key={order.id} className="p-4 bg-white space-y-3">
+                        {/* Header: Ref, Date & Payment Status */}
+                        <div className="flex items-start justify-between gap-2">
+                          <div>
+                            <span className="font-bold text-gray-900 text-sm">{order.order_number}</span>
+                            <span className="text-[11px] text-gray-400 block flex items-center gap-1 mt-0.5">
+                              <Calendar className="w-3 h-3" />
+                              <span>{order.order_date}</span>
+                            </span>
+                          </div>
+                          <span
+                            className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
+                              isFullyPaid
+                                ? "bg-emerald-100 text-emerald-800"
+                                : isPartial
+                                ? "bg-amber-100 text-amber-800"
+                                : "bg-rose-100 text-rose-800"
+                            }`}
+                          >
+                            {isFullyPaid ? "Payé 100%" : isPartial ? "Partiel (Reste)" : "En attente"}
+                          </span>
+                        </div>
+
+                        {/* Client details & MF */}
+                        <div className="bg-gray-50/80 p-2.5 rounded-lg border border-gray-100">
+                          <p className="font-semibold text-gray-900 text-xs">{order.client_name}</p>
+                          {order.client_tax_id ? (
+                            <span className="inline-block px-1.5 py-0.2 rounded bg-blue-50 text-blue-700 font-mono text-[10px] font-semibold mt-1">
+                              MF: {order.client_tax_id}
+                            </span>
+                          ) : (
+                            <span className="text-[10px] text-gray-400 italic block mt-0.5">MF non renseigné</span>
+                          )}
+                        </div>
+
+                        {/* Product & Qty */}
+                        <div className="flex items-center justify-between text-xs text-verdalia-dark p-2 bg-emerald-50/40 rounded-lg border border-emerald-100/60">
+                          <span className="font-semibold text-verdalia-olive truncate">{order.product_name}</span>
+                          <span className="text-gray-600 font-bold text-[11px] flex-shrink-0 ml-2">
+                            {order.quantity} {order.unit} • {order.packaging}
+                          </span>
+                        </div>
+
+                        {/* Financial figures */}
+                        <div className="grid grid-cols-3 gap-2 text-center text-xs bg-gray-50 p-2.5 rounded-lg border border-gray-100">
+                          <div>
+                            <span className="text-[9px] uppercase font-bold text-gray-400 block">Total</span>
+                            <span className="font-bold text-gray-900 text-xs">
+                              {order.total_amount.toLocaleString()} {order.currency}
+                            </span>
+                          </div>
+                          <div>
+                            <span className="text-[9px] uppercase font-bold text-emerald-600 block">Payé</span>
+                            <span className="font-bold text-emerald-700 text-xs">
+                              {order.paid_amount.toLocaleString()} {order.currency}
+                            </span>
+                          </div>
+                          <div>
+                            <span className="text-[9px] uppercase font-bold text-amber-600 block">Reste</span>
+                            <span className={`font-bold text-xs ${order.remaining_amount > 0 ? "text-amber-800 font-extrabold" : "text-gray-400"}`}>
+                              {order.remaining_amount.toLocaleString()} {order.currency}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Maritime Delivery / Boat Section */}
+                        <div className="p-2.5 bg-sky-50/60 rounded-xl border border-sky-100 space-y-1.5">
+                          <div className="flex items-center justify-between text-xs">
+                            <div className="flex items-center gap-1.5">
+                              <div className="w-5 h-5 rounded bg-sky-100 text-sky-800 flex items-center justify-center">
+                                <Ship className="w-3 h-3" />
+                              </div>
+                              <span className="text-[11px] font-bold text-sky-900">
+                                {isFullyDelivered ? "Livrée à 100%" : deliveredQty > 0 ? "Partiellement Livrée" : "Non livrée"}
+                              </span>
+                            </div>
+                            <span className="text-[11px] font-bold text-sky-800">
+                              {deliveredQty.toLocaleString()} / {totalQty.toLocaleString()} {order.unit}
+                            </span>
+                          </div>
+                          <div className="w-full bg-sky-200 rounded-full h-1.5 overflow-hidden">
+                            <div
+                              className={`h-full rounded-full ${isFullyDelivered ? "bg-emerald-500" : "bg-sky-600"}`}
+                              style={{ width: `${percent}%` }}
+                            />
+                          </div>
+                        </div>
+
+                        {/* Action buttons on mobile */}
+                        <div className="flex items-center justify-end gap-2 pt-1 border-t border-gray-100">
+                          {order.remaining_amount > 0 && (
+                            <button
+                              onClick={() => openPaymentModal(order)}
+                              className="px-2.5 py-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold text-xs transition-colors flex items-center gap-1"
+                            >
+                              <DollarSign className="w-3.5 h-3.5" />
+                              <span>Paiement</span>
+                            </button>
+                          )}
+                          <button
+                            onClick={() => openDeliveryModal(order)}
+                            className="px-2.5 py-1.5 rounded-lg bg-sky-50 hover:bg-sky-100 text-sky-700 font-bold text-xs transition-colors flex items-center gap-1"
+                            title="Enregistrer une expédition / livraison maritime"
+                          >
+                            <Ship className="w-3.5 h-3.5" />
+                            <span>Livraison</span>
+                          </button>
+                          <button
+                            onClick={() => openOrderModal(order)}
+                            className="p-1.5 text-gray-500 hover:text-verdalia-olive hover:bg-gray-100 rounded-lg transition-colors"
+                            title="Modifier"
+                          >
+                            <Edit3 className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => handleTrashOrder(order.id, order.order_number)}
+                            className="p-1.5 text-gray-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
+                            title="Déplacer vers la corbeille"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Desktop Table View (hidden md:block) */}
+                <div className="hidden md:block overflow-x-auto">
+                  <table className="w-full text-left text-xs">
                 <thead className="bg-gray-50 border-b border-gray-200 text-gray-500 font-bold uppercase tracking-wider text-[10px]">
                   <tr>
                     <th className="py-3 px-4">Réf & Date</th>
@@ -1267,14 +1480,14 @@ export default function ClientsAndOrdersPage() {
                                 <span>Paiement</span>
                               </button>
                             )}
-                            <button
-                              onClick={() => openDeliveryModal(order)}
-                              className="px-2.5 py-1 rounded bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold text-[11px] transition-colors flex items-center gap-1"
-                              title="Enregistrer une expédition / livraison"
-                            >
-                              <Truck className="w-3 h-3" />
-                              <span>Livraison</span>
-                            </button>
+                              <button
+                                onClick={() => openDeliveryModal(order)}
+                                className="px-2.5 py-1 rounded bg-sky-50 hover:bg-sky-100 text-sky-700 font-bold text-[11px] transition-colors flex items-center gap-1"
+                                title="Enregistrer une expédition / livraison maritime"
+                              >
+                                <Ship className="w-3 h-3" />
+                                <span>Livraison</span>
+                              </button>
                             <button
                               onClick={() => openOrderModal(order)}
                               className="p-1.5 text-gray-400 hover:text-verdalia-olive hover:bg-gray-100 rounded transition-colors"
@@ -1296,121 +1509,225 @@ export default function ClientsAndOrdersPage() {
                   })}
                 </tbody>
               </table>
-            )}
-          </div>
+            </div>
+          </>
         )}
+      </div>
+    )}
 
         {/* TAB 2: ACTIVE CLIENTS */}
         {activeTab === "clients" && (
-          <div className="overflow-x-auto">
+          <div>
             {filteredClients.length === 0 ? (
               <div className="py-16 text-center text-xs text-gray-500">
                 Aucun client trouvé. Cliquez sur &quot;Nouveau Client B2B&quot; pour commencer.
               </div>
             ) : (
-              <table className="w-full text-left text-xs">
-                <thead className="bg-gray-50 border-b border-gray-200 text-gray-500 font-bold uppercase tracking-wider text-[10px]">
-                  <tr>
-                    <th className="py-3 px-4">Client / Société</th>
-                    <th className="py-3 px-4">Matricule Fiscal (MF)</th>
-                    <th className="py-3 px-4">Contact & Coordonnées</th>
-                    <th className="py-3 px-4">Pays / Adresse</th>
-                    <th className="py-3 px-4 text-center">Commandes</th>
-                    <th className="py-3 px-4 text-right">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-100">
+              <>
+                {/* Mobile Client Cards View (md:hidden) for Smartphones */}
+                <div className="md:hidden divide-y divide-gray-100">
                   {filteredClients.map((client) => {
                     const clientOrders = orders.filter((o) => o.client_id === client.id);
                     const clientRemaining = clientOrders.reduce((s, o) => s + (Number(o.remaining_amount) || 0), 0);
                     const clientCurrency = clientOrders[0]?.currency || "TND";
 
                     return (
-                      <tr key={client.id} className="hover:bg-gray-50/80 transition-colors">
-                        <td className="py-3.5 px-4">
-                          <p className="font-bold text-verdalia-dark text-sm">{client.name}</p>
-                          {client.notes && (
-                            <p className="text-[11px] text-gray-400 mt-0.5 line-clamp-1">
-                              {client.notes}
-                            </p>
-                          )}
-                        </td>
-
-                        <td className="py-3.5 px-4">
+                      <div key={client.id} className="p-4 bg-white space-y-3">
+                        <div className="flex items-start justify-between gap-2">
+                          <div>
+                            <p className="font-bold text-gray-900 text-sm">{client.name}</p>
+                            {client.notes && (
+                              <p className="text-[11px] text-gray-400 mt-0.5 line-clamp-1">{client.notes}</p>
+                            )}
+                          </div>
                           {client.tax_id ? (
-                            <span className="inline-block px-2.5 py-1 rounded bg-blue-50 text-blue-800 font-mono font-bold text-xs border border-blue-200">
-                              {client.tax_id}
+                            <span className="inline-block px-2 py-0.5 rounded bg-blue-50 text-blue-800 font-mono font-bold text-xs border border-blue-200 flex-shrink-0">
+                              MF: {client.tax_id}
                             </span>
                           ) : (
-                            <span className="text-[11px] text-gray-400 italic">Non renseigné</span>
+                            <span className="text-[10px] text-gray-400 italic">MF —</span>
                           )}
-                        </td>
+                        </div>
 
-                        <td className="py-3.5 px-4 space-y-0.5">
-                          <p className="font-semibold text-gray-800">{client.contact_person || "—"}</p>
-                          {client.phone && (
-                            <p className="text-[11px] text-gray-500 flex items-center gap-1">
-                              <Phone className="w-3 h-3 text-verdalia-olive" />
-                              <span>{client.phone}</span>
-                            </p>
-                          )}
-                          {client.email && (
-                            <p className="text-[11px] text-gray-500 flex items-center gap-1">
-                              <Mail className="w-3 h-3 text-verdalia-olive" />
-                              <span>{client.email}</span>
-                            </p>
-                          )}
-                        </td>
+                        {/* Contact details */}
+                        <div className="bg-gray-50 p-2.5 rounded-lg border border-gray-100 space-y-1 text-xs">
+                          <p className="font-semibold text-gray-800">{client.contact_person || "Contact non spécifié"}</p>
+                          <div className="flex flex-wrap items-center gap-3 text-[11px] text-gray-500">
+                            {client.phone && (
+                              <a
+                                href={`tel:${client.phone}`}
+                                className="flex items-center gap-1 text-verdalia-olive hover:underline font-medium"
+                              >
+                                <Phone className="w-3 h-3" />
+                                <span>{client.phone}</span>
+                              </a>
+                            )}
+                            {client.email && (
+                              <a
+                                href={`mailto:${client.email}`}
+                                className="flex items-center gap-1 text-verdalia-olive hover:underline"
+                              >
+                                <Mail className="w-3 h-3" />
+                                <span className="truncate max-w-[180px]">{client.email}</span>
+                              </a>
+                            )}
+                          </div>
+                          <p className="text-[11px] text-gray-400">
+                            {client.country} {client.address ? `• ${client.address}` : ""}
+                          </p>
+                        </div>
 
-                        <td className="py-3.5 px-4">
-                          <span className="font-semibold text-gray-800 block">{client.country}</span>
-                          <span className="text-[11px] text-gray-400">{client.address || "—"}</span>
-                        </td>
-
-                        <td className="py-3.5 px-4 text-center">
-                          <span className="inline-block px-2 py-0.5 rounded-full bg-gray-100 text-gray-700 font-bold text-[11px]">
-                            {clientOrders.length} commande(s)
-                          </span>
-                          {clientRemaining > 0 && (
-                            <span className="block text-[10px] text-amber-700 font-bold mt-1">
-                              Reste: {clientRemaining.toLocaleString()} {clientCurrency}
+                        {/* Order stats & Actions */}
+                        <div className="flex items-center justify-between pt-1 border-t border-gray-100">
+                          <div>
+                            <span className="inline-block px-2 py-0.5 rounded-full bg-gray-100 text-gray-700 font-bold text-[10px]">
+                              {clientOrders.length} commande(s)
                             </span>
-                          )}
-                        </td>
+                            {clientRemaining > 0 && (
+                              <span className="block text-[10px] text-amber-700 font-bold mt-0.5">
+                                Reste: {clientRemaining.toLocaleString()} {clientCurrency}
+                              </span>
+                            )}
+                          </div>
 
-                        <td className="py-3.5 px-4 text-right">
-                          <div className="flex items-center justify-end gap-1.5">
+                          <div className="flex items-center gap-1.5">
                             <button
                               onClick={() => {
                                 setClientFilter(client.id);
                                 setActiveTab("orders");
                               }}
-                              className="px-2.5 py-1 rounded bg-gray-100 hover:bg-gray-200 text-gray-700 text-[11px] font-semibold transition-colors"
-                              title="Voir ses commandes"
+                              className="px-2.5 py-1 rounded bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-semibold transition-colors"
                             >
                               Commandes
                             </button>
                             <button
                               onClick={() => openClientModal(client)}
-                              className="p-1.5 text-gray-400 hover:text-verdalia-olive hover:bg-gray-100 rounded transition-colors"
+                              className="p-1.5 text-gray-400 hover:text-verdalia-olive hover:bg-gray-100 rounded-lg transition-colors"
                               title="Modifier"
                             >
-                              <Edit3 className="w-3.5 h-3.5" />
+                              <Edit3 className="w-4 h-4" />
                             </button>
                             <button
                               onClick={() => handleTrashClient(client.id, client.name)}
-                              className="p-1.5 text-gray-400 hover:text-rose-600 hover:bg-rose-50 rounded transition-colors"
+                              className="p-1.5 text-gray-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
                               title="Déplacer vers la corbeille"
                             >
-                              <Trash2 className="w-3.5 h-3.5" />
+                              <Trash2 className="w-4 h-4" />
                             </button>
                           </div>
-                        </td>
-                      </tr>
+                        </div>
+                      </div>
                     );
                   })}
-                </tbody>
-              </table>
+                </div>
+
+                {/* Desktop Table View (hidden md:block) */}
+                <div className="hidden md:block overflow-x-auto">
+                  <table className="w-full text-left text-xs">
+                    <thead className="bg-gray-50 border-b border-gray-200 text-gray-500 font-bold uppercase tracking-wider text-[10px]">
+                      <tr>
+                        <th className="py-3 px-4">Client / Société</th>
+                        <th className="py-3 px-4">Matricule Fiscal (MF)</th>
+                        <th className="py-3 px-4">Contact & Coordonnées</th>
+                        <th className="py-3 px-4">Pays / Adresse</th>
+                        <th className="py-3 px-4 text-center">Commandes</th>
+                        <th className="py-3 px-4 text-right">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-100">
+                      {filteredClients.map((client) => {
+                        const clientOrders = orders.filter((o) => o.client_id === client.id);
+                        const clientRemaining = clientOrders.reduce((s, o) => s + (Number(o.remaining_amount) || 0), 0);
+                        const clientCurrency = clientOrders[0]?.currency || "TND";
+
+                        return (
+                          <tr key={client.id} className="hover:bg-gray-50/80 transition-colors">
+                            <td className="py-3.5 px-4">
+                              <p className="font-bold text-verdalia-dark text-sm">{client.name}</p>
+                              {client.notes && (
+                                <p className="text-[11px] text-gray-400 mt-0.5 line-clamp-1">
+                                  {client.notes}
+                                </p>
+                              )}
+                            </td>
+
+                            <td className="py-3.5 px-4">
+                              {client.tax_id ? (
+                                <span className="inline-block px-2.5 py-1 rounded bg-blue-50 text-blue-800 font-mono font-bold text-xs border border-blue-200">
+                                  {client.tax_id}
+                                </span>
+                              ) : (
+                                <span className="text-[11px] text-gray-400 italic">Non renseigné</span>
+                              )}
+                            </td>
+
+                            <td className="py-3.5 px-4 space-y-0.5">
+                              <p className="font-semibold text-gray-800">{client.contact_person || "—"}</p>
+                              {client.phone && (
+                                <p className="text-[11px] text-gray-500 flex items-center gap-1">
+                                  <Phone className="w-3 h-3 text-verdalia-olive" />
+                                  <span>{client.phone}</span>
+                                </p>
+                              )}
+                              {client.email && (
+                                <p className="text-[11px] text-gray-500 flex items-center gap-1">
+                                  <Mail className="w-3 h-3 text-verdalia-olive" />
+                                  <span>{client.email}</span>
+                                </p>
+                              )}
+                            </td>
+
+                            <td className="py-3.5 px-4">
+                              <span className="font-semibold text-gray-800 block">{client.country}</span>
+                              <span className="text-[11px] text-gray-400">{client.address || "—"}</span>
+                            </td>
+
+                            <td className="py-3.5 px-4 text-center">
+                              <span className="inline-block px-2 py-0.5 rounded-full bg-gray-100 text-gray-700 font-bold text-[11px]">
+                                {clientOrders.length} commande(s)
+                              </span>
+                              {clientRemaining > 0 && (
+                                <span className="block text-[10px] text-amber-700 font-bold mt-1">
+                                  Reste: {clientRemaining.toLocaleString()} {clientCurrency}
+                                </span>
+                              )}
+                            </td>
+
+                            <td className="py-3.5 px-4 text-right">
+                              <div className="flex items-center justify-end gap-1.5">
+                                <button
+                                  onClick={() => {
+                                    setClientFilter(client.id);
+                                    setActiveTab("orders");
+                                  }}
+                                  className="px-2.5 py-1 rounded bg-gray-100 hover:bg-gray-200 text-gray-700 text-[11px] font-semibold transition-colors"
+                                  title="Voir ses commandes"
+                                >
+                                  Commandes
+                                </button>
+                                <button
+                                  onClick={() => openClientModal(client)}
+                                  className="p-1.5 text-gray-400 hover:text-verdalia-olive hover:bg-gray-100 rounded transition-colors"
+                                  title="Modifier"
+                                >
+                                  <Edit3 className="w-3.5 h-3.5" />
+                                </button>
+                                <button
+                                  onClick={() => handleTrashClient(client.id, client.name)}
+                                  className="p-1.5 text-gray-400 hover:text-rose-600 hover:bg-rose-50 rounded transition-colors"
+                                  title="Déplacer vers la corbeille"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </>
             )}
           </div>
         )}
@@ -1469,31 +1786,34 @@ export default function ClientsAndOrdersPage() {
                       </p>
                     </div>
 
-                    <div className="flex items-center gap-6 text-xs text-right">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:flex md:items-center gap-3 md:gap-6 text-xs text-left md:text-right pt-2 md:pt-0 border-t md:border-t-0 border-gray-100">
                       <div>
                         <span className="text-[10px] uppercase font-bold text-gray-400 block">Total Commandé</span>
-                        <span className="font-bold text-gray-900">{cOrdered.toLocaleString()} {cCur}</span>
+                        <span className="font-bold text-gray-900 text-xs sm:text-sm">{cOrdered.toLocaleString()} {cCur}</span>
                       </div>
                       <div>
                         <span className="text-[10px] uppercase font-bold text-emerald-600 block">Total Payé</span>
-                        <span className="font-bold text-emerald-700">{cPaid.toLocaleString()} {cCur}</span>
+                        <span className="font-bold text-emerald-700 text-xs sm:text-sm">{cPaid.toLocaleString()} {cCur}</span>
                       </div>
                       <div>
                         <span className="text-[10px] uppercase font-bold text-amber-600 block">Reste Flous</span>
-                        <span className={`font-bold ${cRemaining > 0 ? "text-amber-800 font-extrabold" : "text-gray-400"}`}>
+                        <span className={`font-bold text-xs sm:text-sm ${cRemaining > 0 ? "text-amber-800 font-extrabold" : "text-gray-400"}`}>
                           {cRemaining.toLocaleString()} {cCur}
                         </span>
                       </div>
-                      <button
-                        onClick={() => {
-                          setClientFilter(client.id);
-                          setActiveTab("orders");
-                        }}
-                        className="p-1.5 rounded hover:bg-gray-200 text-gray-500 transition-colors"
-                        title="Voir les commandes détaillées"
-                      >
-                        <Eye className="w-4 h-4" />
-                      </button>
+                      <div className="col-span-2 sm:col-span-3 md:col-span-1 flex justify-end">
+                        <button
+                          onClick={() => {
+                            setClientFilter(client.id);
+                            setActiveTab("orders");
+                          }}
+                          className="px-3 py-1.5 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-semibold flex items-center gap-1.5 transition-colors"
+                          title="Voir les commandes détaillées"
+                        >
+                          <Eye className="w-4 h-4" />
+                          <span>Voir Commandes</span>
+                        </button>
+                      </div>
                     </div>
                   </div>
                 );
@@ -2345,9 +2665,9 @@ export default function ClientsAndOrdersPage() {
             </button>
 
             <div className="mb-4">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-blue-600 flex items-center gap-1.5">
-                <Truck className="w-3.5 h-3.5" />
-                Suivi Logistique & Expéditions
+              <span className="text-[10px] font-bold uppercase tracking-wider text-sky-700 flex items-center gap-1.5">
+                <Ship className="w-3.5 h-3.5" />
+                Suivi Logistique & Expéditions Maritimes
               </span>
               <h3 className="font-serif text-lg font-bold text-verdalia-dark mt-0.5">
                 Expédition & Livraison de Commande

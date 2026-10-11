@@ -17,6 +17,7 @@ import {
   Calendar,
   DollarSign,
   CheckCircle2,
+  Ship,
 } from "lucide-react";
 import { ContactMessage, Product, Certification, Publication, ClientOrder } from "@/lib/types";
 import { useAdminI18n } from "@/lib/i18n/admin-context";
@@ -78,6 +79,48 @@ export default function DashboardOverviewPage() {
       tndCount,
       eurCount,
       usdCount,
+    };
+  }, [clientOrders, selectedCurrency]);
+
+  // Delivery / Shipping specific calculations for dashboard overview
+  const deliveryStats = React.useMemo(() => {
+    const list = selectedCurrency === "ALL" ? clientOrders : clientOrders.filter((o) => o.currency === selectedCurrency);
+    const activeOrders = list.filter((o) => !o.is_deleted && o.order_status !== "trash" && o.order_status !== "cancelled");
+    const totalCount = activeOrders.length;
+
+    const fullyDelivered = activeOrders.filter((o) => {
+      const totalQty = Number(o.quantity) || 0;
+      const deliveredQty = Number(o.delivered_quantity) || (o.delivery_installments || []).reduce((s, d) => s + Number(d.quantity || 0), 0);
+      return o.order_status === "delivered" || o.delivery_status === "fully_delivered" || (totalQty > 0 && deliveredQty >= totalQty);
+    }).length;
+
+    const partiallyDelivered = activeOrders.filter((o) => {
+      const totalQty = Number(o.quantity) || 0;
+      const deliveredQty = Number(o.delivered_quantity) || (o.delivery_installments || []).reduce((s, d) => s + Number(d.quantity || 0), 0);
+      const isFull = o.order_status === "delivered" || o.delivery_status === "fully_delivered" || (totalQty > 0 && deliveredQty >= totalQty);
+      return !isFull && (o.delivery_status === "partially_delivered" || deliveredQty > 0);
+    }).length;
+
+    const pendingDelivery = Math.max(0, totalCount - fullyDelivered - partiallyDelivered);
+
+    const totalQuantity = activeOrders.reduce((sum, o) => sum + (Number(o.quantity) || 0), 0);
+    const deliveredQuantity = activeOrders.reduce((sum, o) => {
+      const qty = Number(o.delivered_quantity) || (o.delivery_installments || []).reduce((s, d) => s + Number(d.quantity || 0), 0);
+      return sum + qty;
+    }, 0);
+
+    const rate = totalCount > 0 ? Math.round((fullyDelivered / totalCount) * 100) : 0;
+    const volumeRate = totalQuantity > 0 ? Math.min(100, Math.round((deliveredQuantity / totalQuantity) * 100)) : 0;
+
+    return {
+      totalCount,
+      fullyDelivered,
+      partiallyDelivered,
+      pendingDelivery,
+      totalQuantity,
+      deliveredQuantity,
+      rate,
+      volumeRate,
     };
   }, [clientOrders, selectedCurrency]);
 
@@ -193,86 +236,163 @@ export default function DashboardOverviewPage() {
           </Link>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3 sm:gap-4">
           {/* Chiffre d'Affaires */}
-          <div className="bg-white p-4 sm:p-6 rounded-xl border border-gray-200 shadow-sm flex items-center justify-between">
-            <div>
-              <p className="text-xs font-bold uppercase tracking-wider text-gray-400">
+          <div className="bg-white p-4 sm:p-5 rounded-xl border border-gray-200 shadow-sm flex items-center justify-between">
+            <div className="min-w-0 flex-1">
+              <p className="text-[11px] font-bold uppercase tracking-wider text-gray-400 truncate">
                 Chiffre d&apos;Affaires ({selectedCurrency === "ALL" ? "Tous" : selectedCurrency})
               </p>
-              <p className="text-2xl sm:text-3xl font-bold text-verdalia-dark mt-1">
+              <p className="text-xl sm:text-2xl font-bold text-verdalia-dark mt-1 truncate">
                 {currencyStats.revenue.toLocaleString()}{" "}
-                <span className="text-sm font-semibold text-gray-500">
+                <span className="text-xs font-semibold text-gray-500">
                   {selectedCurrency === "ALL" ? "Total" : selectedCurrency}
                 </span>
               </p>
-              <p className="text-[11px] text-gray-400 mt-1">
+              <p className="text-[11px] text-gray-400 mt-1 truncate">
                 {currencyStats.count} commande(s) conclue(s)
               </p>
             </div>
-            <div className="w-11 sm:w-12 h-11 sm:h-12 rounded-lg bg-emerald-50 text-verdalia-olive flex items-center justify-center flex-shrink-0">
-              <TrendingUp className="w-5 sm:w-6 h-5 sm:h-6" />
+            <div className="w-10 sm:w-11 h-10 sm:h-11 rounded-lg bg-emerald-50 text-verdalia-olive flex items-center justify-center flex-shrink-0 ml-2">
+              <TrendingUp className="w-5 h-5" />
             </div>
           </div>
 
           {/* Total Encaissé / Paid */}
-          <div className="bg-white p-4 sm:p-6 rounded-xl border border-emerald-100 bg-gradient-to-br from-white to-emerald-50/20 shadow-sm flex items-center justify-between">
-            <div>
-              <p className="text-xs font-bold uppercase tracking-wider text-emerald-700">
-                Total Flous Encaissé ({selectedCurrency === "ALL" ? "Tous" : selectedCurrency})
+          <div className="bg-white p-4 sm:p-5 rounded-xl border border-emerald-100 bg-gradient-to-br from-white to-emerald-50/20 shadow-sm flex items-center justify-between">
+            <div className="min-w-0 flex-1">
+              <p className="text-[11px] font-bold uppercase tracking-wider text-emerald-700 truncate">
+                Total Encaissé ({selectedCurrency === "ALL" ? "Tous" : selectedCurrency})
               </p>
-              <p className="text-2xl sm:text-3xl font-bold text-emerald-700 mt-1">
+              <p className="text-xl sm:text-2xl font-bold text-emerald-700 mt-1 truncate">
                 {currencyStats.paid.toLocaleString()}{" "}
-                <span className="text-sm font-semibold text-emerald-600">
+                <span className="text-xs font-semibold text-emerald-600">
                   {selectedCurrency === "ALL" ? "Total" : selectedCurrency}
                 </span>
               </p>
-              <p className="text-[11px] text-emerald-600 mt-1 font-medium">
+              <p className="text-[11px] text-emerald-600 mt-1 font-medium truncate">
                 Paiements validés
               </p>
             </div>
-            <div className="w-11 sm:w-12 h-11 sm:h-12 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center flex-shrink-0">
-              <CheckCircle2 className="w-5 sm:w-6 h-5 sm:h-6" />
+            <div className="w-10 sm:w-11 h-10 sm:h-11 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center flex-shrink-0 ml-2">
+              <CheckCircle2 className="w-5 h-5" />
             </div>
           </div>
 
           {/* Reste Flous */}
-          <div className="bg-white p-4 sm:p-6 rounded-xl border border-amber-100 bg-gradient-to-br from-white to-amber-50/20 shadow-sm flex items-center justify-between">
-            <div>
-              <p className="text-xs font-bold uppercase tracking-wider text-amber-700">
+          <div className="bg-white p-4 sm:p-5 rounded-xl border border-amber-100 bg-gradient-to-br from-white to-amber-50/20 shadow-sm flex items-center justify-between">
+            <div className="min-w-0 flex-1">
+              <p className="text-[11px] font-bold uppercase tracking-wider text-amber-700 truncate">
                 Reste Flous (À Recouvrer)
               </p>
-              <p className="text-2xl sm:text-3xl font-bold text-amber-700 mt-1">
+              <p className="text-xl sm:text-2xl font-bold text-amber-700 mt-1 truncate">
                 {currencyStats.remaining.toLocaleString()}{" "}
-                <span className="text-sm font-semibold text-amber-600">
+                <span className="text-xs font-semibold text-amber-600">
                   {selectedCurrency === "ALL" ? "Total" : selectedCurrency}
                 </span>
               </p>
-              <p className="text-[11px] text-amber-600 mt-1 font-medium">
-                Créances clients en cours
+              <p className="text-[11px] text-amber-600 mt-1 font-medium truncate">
+                Créances en cours
               </p>
             </div>
-            <div className="w-11 sm:w-12 h-11 sm:h-12 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center flex-shrink-0">
-              <Clock className="w-5 sm:w-6 h-5 sm:h-6" />
+            <div className="w-10 sm:w-11 h-10 sm:h-11 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center flex-shrink-0 ml-2">
+              <Clock className="w-5 h-5" />
+            </div>
+          </div>
+
+          {/* Commandes Livrées / Expéditions Maritimes (Boat / Ship) */}
+          <div className="bg-white p-4 sm:p-5 rounded-xl border border-sky-100 bg-gradient-to-br from-white to-sky-50/25 shadow-sm flex items-center justify-between">
+            <div className="min-w-0 flex-1">
+              <p className="text-[11px] font-bold uppercase tracking-wider text-sky-800 truncate flex items-center gap-1">
+                <span>Livraisons Maritimes</span>
+                <span className="text-[9px] px-1 py-0.2 rounded bg-sky-100 text-sky-800 font-extrabold">
+                  {deliveryStats.rate}%
+                </span>
+              </p>
+              <p className="text-xl sm:text-2xl font-bold text-sky-900 mt-1 truncate">
+                {deliveryStats.fullyDelivered} / {deliveryStats.totalCount}{" "}
+                <span className="text-xs font-semibold text-sky-700">
+                  livrée{deliveryStats.fullyDelivered > 1 ? "s" : ""}
+                </span>
+              </p>
+              <div className="w-full bg-sky-100 rounded-full h-1.5 mt-2 overflow-hidden max-w-[140px]">
+                <div
+                  className="h-full bg-sky-600 rounded-full transition-all duration-500"
+                  style={{ width: `${deliveryStats.rate}%` }}
+                />
+              </div>
+              <p className="text-[10px] text-sky-700 mt-1 font-medium truncate">
+                {deliveryStats.deliveredQuantity > 0
+                  ? `${deliveryStats.deliveredQuantity.toLocaleString()} unités livrées`
+                  : `${deliveryStats.pendingDelivery} en attente`}
+              </p>
+            </div>
+            <div className="w-10 sm:w-11 h-10 sm:h-11 rounded-lg bg-sky-100 text-sky-700 flex items-center justify-center flex-shrink-0 ml-2 shadow-2xs">
+              <Ship className="w-5 h-5" />
             </div>
           </div>
 
           {/* Clients B2B */}
-          <div className="bg-white p-4 sm:p-6 rounded-xl border border-gray-200 shadow-sm flex items-center justify-between">
-            <div>
-              <p className="text-xs font-bold uppercase tracking-wider text-gray-400">
+          <div className="bg-white p-4 sm:p-5 rounded-xl border border-gray-200 shadow-sm flex items-center justify-between">
+            <div className="min-w-0 flex-1">
+              <p className="text-[11px] font-bold uppercase tracking-wider text-gray-400 truncate">
                 Clients B2B Actifs
               </p>
-              <p className="text-2xl sm:text-3xl font-bold text-verdalia-dark mt-1">
+              <p className="text-xl sm:text-2xl font-bold text-verdalia-dark mt-1 truncate">
                 {orderStats?.totalClients ?? 0}
               </p>
-              <p className="text-[11px] text-gray-400 mt-1">
+              <p className="text-[11px] text-gray-400 mt-1 truncate">
                 Avec Matricule Fiscal (MF)
               </p>
             </div>
-            <div className="w-11 sm:w-12 h-11 sm:h-12 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center flex-shrink-0">
-              <Building2 className="w-5 sm:w-6 h-5 sm:h-6" />
+            <div className="w-10 sm:w-11 h-10 sm:h-11 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center flex-shrink-0 ml-2">
+              <Building2 className="w-5 h-5" />
             </div>
+          </div>
+        </div>
+
+        {/* Maritime Shipping & Delivery Quick Status Banner */}
+        <div className="bg-white p-3.5 sm:p-4 rounded-xl border border-sky-100 bg-gradient-to-r from-sky-50/40 via-white to-emerald-50/30 shadow-2xs flex flex-col md:flex-row md:items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-lg bg-sky-100 text-sky-800 flex items-center justify-center flex-shrink-0">
+              <Ship className="w-4 h-4" />
+            </div>
+            <div className="min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="font-serif text-xs sm:text-sm font-bold text-verdalia-dark">
+                  Expéditions & Livraisons Maritimes
+                </span>
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-sky-100 text-sky-800">
+                  {deliveryStats.fullyDelivered} sur {deliveryStats.totalCount} commande(s) soldée(s)
+                </span>
+              </div>
+              <p className="text-[11px] text-gray-500 mt-0.5 truncate">
+                Suivi des conteneurs, flexitanks et cargaisons d&apos;export d&apos;huile d&apos;olive par bateau.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2 text-xs">
+            <span className="px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-800 font-bold border border-emerald-200/80 flex items-center gap-1.5 text-[11px]">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+              <span>{deliveryStats.fullyDelivered} Livrée(s) 100%</span>
+            </span>
+            <span className="px-2.5 py-1 rounded-lg bg-blue-50 text-blue-800 font-bold border border-blue-200/80 flex items-center gap-1.5 text-[11px]">
+              <span className="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
+              <span>{deliveryStats.partiallyDelivered} En cours / Partiel</span>
+            </span>
+            <span className="px-2.5 py-1 rounded-lg bg-gray-100 text-gray-700 font-semibold border border-gray-200 flex items-center gap-1.5 text-[11px]">
+              <span className="w-1.5 h-1.5 rounded-full bg-gray-400"></span>
+              <span>{deliveryStats.pendingDelivery} En attente</span>
+            </span>
+            <Link
+              href="/admin/dashboard/clients"
+              className="px-3 py-1 bg-[#1A3315] hover:bg-verdalia-olive text-white rounded-lg text-xs font-bold transition-all flex items-center gap-1 ml-auto md:ml-0 shadow-2xs"
+            >
+              <Ship className="w-3 h-3 text-verdalia-gold" />
+              <span>Gérer les livraisons</span>
+              <ArrowRight className="w-3 h-3" />
+            </Link>
           </div>
         </div>
       </div>
@@ -500,59 +620,29 @@ export default function DashboardOverviewPage() {
             Aucune commande enregistrée pour le moment.
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs">
-              <thead className="bg-gray-50 border-b border-gray-200 text-gray-500 font-bold uppercase tracking-wider text-[10px]">
-                <tr>
-                  <th className="py-3 px-6">Réf & Date</th>
-                  <th className="py-3 px-6">Client & Matricule Fiscal</th>
-                  <th className="py-3 px-6">Produit & Quantité</th>
-                  <th className="py-3 px-6 text-right">Montant Total</th>
-                  <th className="py-3 px-6 text-right">Flous Payé</th>
-                  <th className="py-3 px-6 text-right">Reste Flous</th>
-                  <th className="py-3 px-6 text-center">Statut</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100">
-                {recentOrders.map((o) => (
-                  <tr key={o.id} className="hover:bg-gray-50/80 transition-colors">
-                    <td className="py-3.5 px-6 font-bold text-verdalia-dark">
-                      {o.order_number}
-                      <span className="block text-[11px] font-normal text-gray-400">{o.order_date}</span>
-                    </td>
-                    <td className="py-3.5 px-6">
-                      <p className="font-semibold text-gray-900">{o.client_name}</p>
-                      {o.client_tax_id ? (
-                        <span className="inline-block px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 font-mono text-[10px] font-semibold mt-0.5">
-                          MF: {o.client_tax_id}
-                        </span>
-                      ) : (
-                        <span className="text-[10px] text-gray-400 italic">MF —</span>
-                      )}
-                    </td>
-                    <td className="py-3.5 px-6">
-                      <p className="font-semibold text-verdalia-olive">{o.product_name}</p>
-                      <p className="text-[11px] text-gray-400">{o.quantity} {o.unit} • {o.packaging}</p>
-                    </td>
-                    <td className="py-3.5 px-6 text-right font-bold text-gray-900">
-                      {o.total_amount.toLocaleString()} {o.currency}
-                    </td>
-                    <td className="py-3.5 px-6 text-right">
-                      <span className="font-bold text-emerald-700">
-                        {o.paid_amount.toLocaleString()} {o.currency}
-                      </span>
-                      {o.payment_date && (
-                        <span className="block text-[10px] text-gray-400">Payé le: {o.payment_date}</span>
-                      )}
-                    </td>
-                    <td className="py-3.5 px-6 text-right font-bold">
-                      <span className={o.remaining_amount > 0 ? "text-amber-700" : "text-gray-400"}>
-                        {o.remaining_amount.toLocaleString()} {o.currency}
-                      </span>
-                    </td>
-                    <td className="py-3.5 px-6 text-center">
+          <>
+            {/* Mobile Card View (md:hidden) for Smartphone Screens */}
+            <div className="md:hidden divide-y divide-gray-100">
+              {recentOrders.map((o) => {
+                const totalQty = Number(o.quantity) || 0;
+                const deliveredQty = Number(o.delivered_quantity) || (o.delivery_installments || []).reduce((s, d) => s + Number(d.quantity || 0), 0);
+                const percent = totalQty > 0 ? Math.min(100, Math.round((deliveredQty / totalQty) * 100)) : 0;
+                const isFullyDelivered = o.order_status === "delivered" || o.delivery_status === "fully_delivered" || (totalQty > 0 && deliveredQty >= totalQty);
+
+                return (
+                  <Link
+                    key={o.id}
+                    href="/admin/dashboard/clients"
+                    className="block p-4 hover:bg-gray-50 transition-colors"
+                  >
+                    {/* Header: Ref, Date & Status */}
+                    <div className="flex items-start justify-between gap-2 mb-2">
+                      <div>
+                        <span className="font-bold text-gray-900 text-sm">{o.order_number}</span>
+                        <span className="text-[11px] text-gray-400 block">{o.order_date}</span>
+                      </div>
                       <span
-                        className={`inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
+                        className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
                           o.payment_status === "paid"
                             ? "bg-emerald-100 text-emerald-800"
                             : o.payment_status === "partial"
@@ -562,12 +652,172 @@ export default function DashboardOverviewPage() {
                       >
                         {o.payment_status === "paid" ? "Payé 100%" : o.payment_status === "partial" ? "Partiel (Reste)" : "En attente"}
                       </span>
-                    </td>
+                    </div>
+
+                    {/* Client & MF */}
+                    <div className="mb-2">
+                      <p className="font-semibold text-gray-900 text-xs">{o.client_name}</p>
+                      {o.client_tax_id ? (
+                        <span className="inline-block px-1.5 py-0.2 rounded bg-blue-50 text-blue-700 font-mono text-[10px] font-semibold mt-0.5">
+                          MF: {o.client_tax_id}
+                        </span>
+                      ) : (
+                        <span className="text-[10px] text-gray-400 italic">MF —</span>
+                      )}
+                    </div>
+
+                    {/* Product & Qty */}
+                    <div className="flex items-center justify-between text-xs text-verdalia-dark bg-gray-50 p-2 rounded border border-gray-100 mb-2">
+                      <span className="font-medium truncate">{o.product_name}</span>
+                      <span className="text-gray-500 text-[11px] flex-shrink-0 ml-2 font-semibold">
+                        {o.quantity} {o.unit}
+                      </span>
+                    </div>
+
+                    {/* Financial summary: Total / Paid / Remaining */}
+                    <div className="grid grid-cols-3 gap-2 text-center text-xs bg-gray-50/70 p-2 rounded-lg border border-gray-100 mb-2.5">
+                      <div>
+                        <span className="text-[9px] uppercase font-bold text-gray-400 block">Total</span>
+                        <span className="font-bold text-gray-900 text-[11px]">
+                          {o.total_amount.toLocaleString()} {o.currency}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-[9px] uppercase font-bold text-emerald-600 block">Encaissé</span>
+                        <span className="font-bold text-emerald-700 text-[11px]">
+                          {o.paid_amount.toLocaleString()} {o.currency}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-[9px] uppercase font-bold text-amber-600 block">Reste</span>
+                        <span className={`font-bold text-[11px] ${o.remaining_amount > 0 ? "text-amber-800" : "text-gray-400"}`}>
+                          {o.remaining_amount.toLocaleString()} {o.currency}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Maritime Delivery Progress with Ship Boat Icon */}
+                    <div className="p-2 bg-sky-50/50 rounded-lg border border-sky-100 flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-1.5 min-w-0">
+                        <div className="w-6 h-6 rounded bg-sky-100 text-sky-800 flex items-center justify-center flex-shrink-0">
+                          <Ship className="w-3.5 h-3.5" />
+                        </div>
+                        <div className="min-w-0">
+                          <span className="text-[10px] font-bold text-sky-900 block truncate">
+                            {isFullyDelivered ? "Livrée à 100%" : deliveredQty > 0 ? "Partiellement Livrée" : "En attente navire"}
+                          </span>
+                          <span className="text-[10px] text-sky-700">
+                            {deliveredQty.toLocaleString()} / {totalQty.toLocaleString()} {o.unit}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="w-20 bg-sky-200 rounded-full h-1.5 overflow-hidden flex-shrink-0">
+                        <div
+                          className={`h-full rounded-full ${isFullyDelivered ? "bg-emerald-500" : "bg-sky-600"}`}
+                          style={{ width: `${percent}%` }}
+                        />
+                      </div>
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+
+            {/* Desktop Table View (hidden md:block) */}
+            <div className="hidden md:block overflow-x-auto">
+              <table className="w-full text-left text-xs">
+                <thead className="bg-gray-50 border-b border-gray-200 text-gray-500 font-bold uppercase tracking-wider text-[10px]">
+                  <tr>
+                    <th className="py-3 px-6">Réf & Date</th>
+                    <th className="py-3 px-6">Client & Matricule Fiscal</th>
+                    <th className="py-3 px-6">Produit & Quantité</th>
+                    <th className="py-3 px-6 text-right">Montant Total</th>
+                    <th className="py-3 px-6 text-right">Flous Payé</th>
+                    <th className="py-3 px-6 text-right">Reste Flous</th>
+                    <th className="py-3 px-6 text-center">Paiement</th>
+                    <th className="py-3 px-6 text-center">Livraison (Navire)</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                  {recentOrders.map((o) => {
+                    const totalQty = Number(o.quantity) || 0;
+                    const deliveredQty = Number(o.delivered_quantity) || (o.delivery_installments || []).reduce((s, d) => s + Number(d.quantity || 0), 0);
+                    const percent = totalQty > 0 ? Math.min(100, Math.round((deliveredQty / totalQty) * 100)) : 0;
+                    const isFullyDelivered = o.order_status === "delivered" || o.delivery_status === "fully_delivered" || (totalQty > 0 && deliveredQty >= totalQty);
+
+                    return (
+                      <tr key={o.id} className="hover:bg-gray-50/80 transition-colors">
+                        <td className="py-3.5 px-6 font-bold text-verdalia-dark">
+                          {o.order_number}
+                          <span className="block text-[11px] font-normal text-gray-400">{o.order_date}</span>
+                        </td>
+                        <td className="py-3.5 px-6">
+                          <p className="font-semibold text-gray-900">{o.client_name}</p>
+                          {o.client_tax_id ? (
+                            <span className="inline-block px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 font-mono text-[10px] font-semibold mt-0.5">
+                              MF: {o.client_tax_id}
+                            </span>
+                          ) : (
+                            <span className="text-[10px] text-gray-400 italic">MF —</span>
+                          )}
+                        </td>
+                        <td className="py-3.5 px-6">
+                          <p className="font-semibold text-verdalia-olive">{o.product_name}</p>
+                          <p className="text-[11px] text-gray-400">{o.quantity} {o.unit} • {o.packaging}</p>
+                        </td>
+                        <td className="py-3.5 px-6 text-right font-bold text-gray-900">
+                          {o.total_amount.toLocaleString()} {o.currency}
+                        </td>
+                        <td className="py-3.5 px-6 text-right">
+                          <span className="font-bold text-emerald-700">
+                            {o.paid_amount.toLocaleString()} {o.currency}
+                          </span>
+                          {o.payment_date && (
+                            <span className="block text-[10px] text-gray-400">Payé le: {o.payment_date}</span>
+                          )}
+                        </td>
+                        <td className="py-3.5 px-6 text-right font-bold">
+                          <span className={o.remaining_amount > 0 ? "text-amber-700" : "text-gray-400"}>
+                            {o.remaining_amount.toLocaleString()} {o.currency}
+                          </span>
+                        </td>
+                        <td className="py-3.5 px-6 text-center">
+                          <span
+                            className={`inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
+                              o.payment_status === "paid"
+                                ? "bg-emerald-100 text-emerald-800"
+                                : o.payment_status === "partial"
+                                ? "bg-amber-100 text-amber-800"
+                                : "bg-rose-100 text-rose-800"
+                            }`}
+                          >
+                            {o.payment_status === "paid" ? "Payé 100%" : o.payment_status === "partial" ? "Partiel (Reste)" : "En attente"}
+                          </span>
+                        </td>
+                        <td className="py-3.5 px-6 text-center">
+                          <div className="flex flex-col items-center gap-1 min-w-[110px]">
+                            <div className="flex items-center gap-1 text-[10px] font-bold text-sky-900">
+                              <Ship className="w-3 h-3 text-sky-700" />
+                              <span>{deliveredQty.toLocaleString()} / {totalQty.toLocaleString()}</span>
+                            </div>
+                            <div className="w-full bg-sky-100 rounded-full h-1.5 overflow-hidden">
+                              <div
+                                className={`h-full rounded-full ${isFullyDelivered ? "bg-emerald-500" : "bg-sky-600"}`}
+                                style={{ width: `${percent}%` }}
+                              />
+                            </div>
+                            <span className="text-[9px] text-gray-400 font-medium">
+                              {isFullyDelivered ? "Livrée" : `${percent}% expédié`}
+                            </span>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </>
         )}
       </div>
 
