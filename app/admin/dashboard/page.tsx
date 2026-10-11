@@ -88,29 +88,59 @@ export default function DashboardOverviewPage() {
     const activeOrders = list.filter((o) => !o.is_deleted && o.order_status !== "trash" && o.order_status !== "cancelled");
     const totalCount = activeOrders.length;
 
-    const fullyDelivered = activeOrders.filter((o) => {
-      const totalQty = Number(o.quantity) || 0;
-      const deliveredQty = Number(o.delivered_quantity) || (o.delivery_installments || []).reduce((s, d) => s + Number(d.quantity || 0), 0);
-      return o.order_status === "delivered" || o.delivery_status === "fully_delivered" || (totalQty > 0 && deliveredQty >= totalQty);
-    }).length;
+    let totalTons = 0;
+    let deliveredTons = 0;
+    let remainingTons = 0;
 
-    const partiallyDelivered = activeOrders.filter((o) => {
+    let totalLitres = 0;
+    let deliveredLitres = 0;
+    let remainingLitres = 0;
+
+    let totalOtherQty = 0;
+    let deliveredOtherQty = 0;
+    let remainingOtherQty = 0;
+
+    let fullyDelivered = 0;
+    let partiallyDelivered = 0;
+
+    activeOrders.forEach((o) => {
       const totalQty = Number(o.quantity) || 0;
-      const deliveredQty = Number(o.delivered_quantity) || (o.delivery_installments || []).reduce((s, d) => s + Number(d.quantity || 0), 0);
-      const isFull = o.order_status === "delivered" || o.delivery_status === "fully_delivered" || (totalQty > 0 && deliveredQty >= totalQty);
-      return !isFull && (o.delivery_status === "partially_delivered" || deliveredQty > 0);
-    }).length;
+      const delQty = Number(o.delivered_quantity) || (o.delivery_installments || []).reduce((s, d) => s + Number(d.quantity || 0), 0);
+      const remQty = Math.max(0, totalQty - delQty);
+      const isFull = o.order_status === "delivered" || o.delivery_status === "fully_delivered" || (totalQty > 0 && delQty >= totalQty);
+
+      if (isFull) {
+        fullyDelivered++;
+      } else if (o.delivery_status === "partially_delivered" || delQty > 0) {
+        partiallyDelivered++;
+      }
+
+      const unitLower = (o.unit || "tonnes").toLowerCase().trim();
+      if (unitLower.includes("tonne") || unitLower === "t") {
+        totalTons += totalQty;
+        deliveredTons += delQty;
+        remainingTons += remQty;
+      } else if (unitLower.includes("litre") || unitLower === "l") {
+        totalLitres += totalQty;
+        deliveredLitres += delQty;
+        remainingLitres += remQty;
+      } else {
+        totalOtherQty += totalQty;
+        deliveredOtherQty += delQty;
+        remainingOtherQty += remQty;
+      }
+    });
 
     const pendingDelivery = Math.max(0, totalCount - fullyDelivered - partiallyDelivered);
 
-    const totalQuantity = activeOrders.reduce((sum, o) => sum + (Number(o.quantity) || 0), 0);
-    const deliveredQuantity = activeOrders.reduce((sum, o) => {
-      const qty = Number(o.delivered_quantity) || (o.delivery_installments || []).reduce((s, d) => s + Number(d.quantity || 0), 0);
-      return sum + qty;
-    }, 0);
+    const totalQuantity = totalTons + totalLitres + totalOtherQty;
+    const deliveredQuantity = deliveredTons + deliveredLitres + deliveredOtherQty;
+    const remainingQuantity = remainingTons + remainingLitres + remainingOtherQty;
 
     const rate = totalCount > 0 ? Math.round((fullyDelivered / totalCount) * 100) : 0;
-    const volumeRate = totalQuantity > 0 ? Math.min(100, Math.round((deliveredQuantity / totalQuantity) * 100)) : 0;
+    const volumeRate = (totalTons > 0 ? totalTons : totalQuantity) > 0
+      ? Math.min(100, Math.round(((totalTons > 0 ? deliveredTons : deliveredQuantity) / (totalTons > 0 ? totalTons : totalQuantity)) * 100))
+      : 0;
 
     return {
       totalCount,
@@ -119,8 +149,17 @@ export default function DashboardOverviewPage() {
       pendingDelivery,
       totalQuantity,
       deliveredQuantity,
+      remainingQuantity,
+      totalTons,
+      deliveredTons,
+      remainingTons,
+      totalLitres,
+      deliveredLitres,
+      remainingLitres,
       rate,
       volumeRate,
+      hasTons: totalTons > 0,
+      hasLitres: totalLitres > 0,
     };
   }, [clientOrders, selectedCurrency]);
 
@@ -304,27 +343,27 @@ export default function DashboardOverviewPage() {
           <div className="bg-white p-4 sm:p-5 rounded-xl border border-sky-100 bg-gradient-to-br from-white to-sky-50/25 shadow-sm flex items-center justify-between">
             <div className="min-w-0 flex-1">
               <p className="text-[11px] font-bold uppercase tracking-wider text-sky-800 truncate flex items-center gap-1">
-                <span>Livraisons Maritimes</span>
+                <span>Reste à Livrer (Expéditions)</span>
                 <span className="text-[9px] px-1 py-0.2 rounded bg-sky-100 text-sky-800 font-extrabold">
-                  {deliveryStats.rate}%
+                  {deliveryStats.volumeRate}% expédié
                 </span>
               </p>
-              <p className="text-xl sm:text-2xl font-bold text-sky-900 mt-1 truncate">
-                {deliveryStats.fullyDelivered} / {deliveryStats.totalCount}{" "}
+              <p className="text-xl sm:text-2xl font-bold text-sky-950 mt-1 truncate">
+                {deliveryStats.remainingTons.toLocaleString()}{" "}
                 <span className="text-xs font-semibold text-sky-700">
-                  livrée{deliveryStats.fullyDelivered > 1 ? "s" : ""}
+                  Tonne{deliveryStats.remainingTons > 1 ? "s" : ""}
                 </span>
               </p>
               <div className="w-full bg-sky-100 rounded-full h-1.5 mt-2 overflow-hidden max-w-[140px]">
                 <div
                   className="h-full bg-sky-600 rounded-full transition-all duration-500"
-                  style={{ width: `${deliveryStats.rate}%` }}
+                  style={{ width: `${deliveryStats.volumeRate}%` }}
                 />
               </div>
               <p className="text-[10px] text-sky-700 mt-1 font-medium truncate">
-                {deliveryStats.deliveredQuantity > 0
-                  ? `${deliveryStats.deliveredQuantity.toLocaleString()} unités livrées`
-                  : `${deliveryStats.pendingDelivery} en attente`}
+                {deliveryStats.deliveredTons > 0 || deliveryStats.totalTons > 0
+                  ? `${deliveryStats.deliveredTons.toLocaleString()} / ${deliveryStats.totalTons.toLocaleString()} T livrées (${deliveryStats.fullyDelivered}/${deliveryStats.totalCount} cmds)`
+                  : `${deliveryStats.pendingDelivery} commande(s) en attente`}
               </p>
             </div>
             <div className="w-10 sm:w-11 h-10 sm:h-11 rounded-lg bg-sky-100 text-sky-700 flex items-center justify-center flex-shrink-0 ml-2 shadow-2xs">
@@ -362,17 +401,24 @@ export default function DashboardOverviewPage() {
                 <span className="font-serif text-xs sm:text-sm font-bold text-verdalia-dark">
                   Expéditions & Livraisons Maritimes
                 </span>
+                <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 border border-amber-300">
+                  ⏳ Reste à livrer : {deliveryStats.remainingTons.toLocaleString()} Tonne{deliveryStats.remainingTons > 1 ? "s" : ""}
+                </span>
                 <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-sky-100 text-sky-800">
                   {deliveryStats.fullyDelivered} sur {deliveryStats.totalCount} commande(s) soldée(s)
                 </span>
               </div>
               <p className="text-[11px] text-gray-500 mt-0.5 truncate">
-                Suivi des conteneurs, flexitanks et cargaisons d&apos;export d&apos;huile d&apos;olive par bateau.
+                Total commandé : <strong className="text-gray-800">{deliveryStats.totalTons.toLocaleString()} T</strong> • Déjà expédié : <strong className="text-emerald-700">{deliveryStats.deliveredTons.toLocaleString()} T</strong> • Reste en attente : <strong className="text-amber-800">{deliveryStats.remainingTons.toLocaleString()} T</strong>
               </p>
             </div>
           </div>
 
           <div className="flex flex-wrap items-center gap-2 text-xs">
+            <span className="px-2.5 py-1 rounded-lg bg-amber-50 text-amber-900 font-extrabold border border-amber-300 flex items-center gap-1.5 text-[11px] shadow-2xs">
+              <span className="w-1.5 h-1.5 rounded-full bg-amber-600 animate-pulse"></span>
+              <span>Reste: {deliveryStats.remainingTons.toLocaleString()} T</span>
+            </span>
             <span className="px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-800 font-bold border border-emerald-200/80 flex items-center gap-1.5 text-[11px]">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
               <span>{deliveryStats.fullyDelivered} Livrée(s) 100%</span>
@@ -380,10 +426,6 @@ export default function DashboardOverviewPage() {
             <span className="px-2.5 py-1 rounded-lg bg-blue-50 text-blue-800 font-bold border border-blue-200/80 flex items-center gap-1.5 text-[11px]">
               <span className="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
               <span>{deliveryStats.partiallyDelivered} En cours / Partiel</span>
-            </span>
-            <span className="px-2.5 py-1 rounded-lg bg-gray-100 text-gray-700 font-semibold border border-gray-200 flex items-center gap-1.5 text-[11px]">
-              <span className="w-1.5 h-1.5 rounded-full bg-gray-400"></span>
-              <span>{deliveryStats.pendingDelivery} En attente</span>
             </span>
             <Link
               href="/admin/dashboard/clients"
@@ -706,9 +748,16 @@ export default function DashboardOverviewPage() {
                           <span className="text-[10px] font-bold text-sky-900 block truncate">
                             {isFullyDelivered ? "Livrée à 100%" : deliveredQty > 0 ? "Partiellement Livrée" : "En attente navire"}
                           </span>
-                          <span className="text-[10px] text-sky-700">
-                            {deliveredQty.toLocaleString()} / {totalQty.toLocaleString()} {o.unit}
-                          </span>
+                          <div className="flex items-center gap-1.5 flex-wrap text-[10px]">
+                            <span className="text-sky-700 font-medium">
+                              {deliveredQty.toLocaleString()} / {totalQty.toLocaleString()} {o.unit}
+                            </span>
+                            {!isFullyDelivered && totalQty > deliveredQty && (
+                              <span className="font-bold text-amber-900 bg-amber-100/80 px-1 py-0.2 rounded text-[9px]">
+                                Reste: {(totalQty - deliveredQty).toLocaleString()} {o.unit}
+                              </span>
+                            )}
+                          </div>
                         </div>
                       </div>
                       <div className="w-20 bg-sky-200 rounded-full h-1.5 overflow-hidden flex-shrink-0">
@@ -806,9 +855,16 @@ export default function DashboardOverviewPage() {
                                 style={{ width: `${percent}%` }}
                               />
                             </div>
-                            <span className="text-[9px] text-gray-400 font-medium">
-                              {isFullyDelivered ? "Livrée" : `${percent}% expédié`}
-                            </span>
+                            <div className="flex items-center gap-1.5 flex-wrap justify-center text-[9px]">
+                              <span className="text-gray-400 font-medium">
+                                {isFullyDelivered ? "Livrée 100%" : `${percent}% expédié`}
+                              </span>
+                              {!isFullyDelivered && totalQty > deliveredQty && (
+                                <span className="text-amber-800 font-bold bg-amber-50 px-1 py-0.2 rounded border border-amber-200">
+                                  Reste: {(totalQty - deliveredQty).toLocaleString()} {o.unit}
+                                </span>
+                              )}
+                            </div>
                           </div>
                         </td>
                       </tr>

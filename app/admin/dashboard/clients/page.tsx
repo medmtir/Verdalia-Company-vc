@@ -770,28 +770,59 @@ export default function ClientsAndOrdersPage() {
     const activeOrders = list.filter((o) => !o.is_deleted && o.order_status !== "trash" && o.order_status !== "cancelled");
     const totalCount = activeOrders.length;
 
-    const fullyDelivered = activeOrders.filter((o) => {
-      const totalQty = Number(o.quantity) || 0;
-      const deliveredQty = Number(o.delivered_quantity) || (o.delivery_installments || []).reduce((s, d) => s + Number(d.quantity || 0), 0);
-      return o.order_status === "delivered" || o.delivery_status === "fully_delivered" || (totalQty > 0 && deliveredQty >= totalQty);
-    }).length;
+    let totalTons = 0;
+    let deliveredTons = 0;
+    let remainingTons = 0;
 
-    const partiallyDelivered = activeOrders.filter((o) => {
+    let totalLitres = 0;
+    let deliveredLitres = 0;
+    let remainingLitres = 0;
+
+    let totalOtherQty = 0;
+    let deliveredOtherQty = 0;
+    let remainingOtherQty = 0;
+
+    let fullyDelivered = 0;
+    let partiallyDelivered = 0;
+
+    activeOrders.forEach((o) => {
       const totalQty = Number(o.quantity) || 0;
-      const deliveredQty = Number(o.delivered_quantity) || (o.delivery_installments || []).reduce((s, d) => s + Number(d.quantity || 0), 0);
-      const isFull = o.order_status === "delivered" || o.delivery_status === "fully_delivered" || (totalQty > 0 && deliveredQty >= totalQty);
-      return !isFull && (o.delivery_status === "partially_delivered" || deliveredQty > 0);
-    }).length;
+      const delQty = Number(o.delivered_quantity) || (o.delivery_installments || []).reduce((s, d) => s + Number(d.quantity || 0), 0);
+      const remQty = Math.max(0, totalQty - delQty);
+      const isFull = o.order_status === "delivered" || o.delivery_status === "fully_delivered" || (totalQty > 0 && delQty >= totalQty);
+
+      if (isFull) {
+        fullyDelivered++;
+      } else if (o.delivery_status === "partially_delivered" || delQty > 0) {
+        partiallyDelivered++;
+      }
+
+      const unitLower = (o.unit || "tonnes").toLowerCase().trim();
+      if (unitLower.includes("tonne") || unitLower === "t") {
+        totalTons += totalQty;
+        deliveredTons += delQty;
+        remainingTons += remQty;
+      } else if (unitLower.includes("litre") || unitLower === "l") {
+        totalLitres += totalQty;
+        deliveredLitres += delQty;
+        remainingLitres += remQty;
+      } else {
+        totalOtherQty += totalQty;
+        deliveredOtherQty += delQty;
+        remainingOtherQty += remQty;
+      }
+    });
 
     const pendingDelivery = Math.max(0, totalCount - fullyDelivered - partiallyDelivered);
 
-    const totalQuantity = activeOrders.reduce((sum, o) => sum + (Number(o.quantity) || 0), 0);
-    const deliveredQuantity = activeOrders.reduce((sum, o) => {
-      const qty = Number(o.delivered_quantity) || (o.delivery_installments || []).reduce((s, d) => s + Number(d.quantity || 0), 0);
-      return sum + qty;
-    }, 0);
+    const totalQuantity = totalTons + totalLitres + totalOtherQty;
+    const deliveredQuantity = deliveredTons + deliveredLitres + deliveredOtherQty;
+    const remainingQuantity = remainingTons + remainingLitres + remainingOtherQty;
 
     const rate = totalCount > 0 ? Math.round((fullyDelivered / totalCount) * 100) : 0;
+    const volumeRate = (totalTons > 0 ? totalTons : totalQuantity) > 0
+      ? Math.min(100, Math.round(((totalTons > 0 ? deliveredTons : deliveredQuantity) / (totalTons > 0 ? totalTons : totalQuantity)) * 100))
+      : 0;
 
     return {
       totalCount,
@@ -800,7 +831,17 @@ export default function ClientsAndOrdersPage() {
       pendingDelivery,
       totalQuantity,
       deliveredQuantity,
+      remainingQuantity,
+      totalTons,
+      deliveredTons,
+      remainingTons,
+      totalLitres,
+      deliveredLitres,
+      remainingLitres,
       rate,
+      volumeRate,
+      hasTons: totalTons > 0,
+      hasLitres: totalLitres > 0,
     };
   }, [orders, selectedCurrency]);
 
@@ -929,8 +970,12 @@ export default function ClientsAndOrdersPage() {
             </div>
           </div>
 
-          {/* Quick Currency Badges */}
+          {/* Quick Currency & Delivery Badges */}
           <div className="flex flex-wrap items-center gap-2 text-[11px]">
+            <span className="px-2.5 py-0.5 rounded-full bg-sky-50 text-sky-950 font-bold border border-sky-300 flex items-center gap-1 shadow-2xs">
+              <Ship className="w-3.5 h-3.5 text-sky-700" />
+              <span>Reste à Livrer: {deliveryStats.remainingTons.toLocaleString()} Tonnes</span>
+            </span>
             {currencyStats.tnd.count > 0 && (
               <span className="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-800 font-bold border border-emerald-200">
                 TND Reste: {currencyStats.tnd.remaining.toLocaleString()} TND
@@ -1011,35 +1056,37 @@ export default function ClientsAndOrdersPage() {
             </p>
           </div>
 
-          {/* Commandes Livrées / Expéditions Maritimes (Ship / Boat) */}
+          {/* Tonnage Restant / Expéditions Maritimes (Ship / Boat) */}
           <div className="bg-white p-4 sm:p-5 rounded-xl border border-sky-200 bg-gradient-to-br from-white to-sky-50/30 shadow-sm flex flex-col justify-between">
             <div className="flex items-center justify-between">
               <span className="text-[11px] font-bold uppercase tracking-wider text-sky-800 truncate flex items-center gap-1">
-                <span>Livraisons Maritimes</span>
+                <span>Reste à Livrer (Tonnage)</span>
                 <span className="text-[9px] px-1 py-0.2 rounded bg-sky-100 text-sky-800 font-extrabold">
-                  {deliveryStats.rate}%
+                  {deliveryStats.volumeRate}% expédié
                 </span>
               </span>
-              <div className="w-8 h-8 rounded-lg bg-sky-100 text-sky-700 flex items-center justify-center flex-shrink-0 ml-1">
+              <div className="w-8 h-8 rounded-lg bg-sky-100 text-sky-700 flex items-center justify-center flex-shrink-0 ml-1 shadow-2xs">
                 <Ship className="w-4 h-4" />
               </div>
             </div>
             <div>
-              <p className="text-xl sm:text-2xl font-bold text-sky-900 mt-2 truncate">
-                {deliveryStats.fullyDelivered} / {deliveryStats.totalCount}{" "}
+              <p className="text-xl sm:text-2xl font-bold text-sky-950 mt-2 truncate">
+                {deliveryStats.remainingTons.toLocaleString()}{" "}
                 <span className="text-xs font-semibold text-sky-700">
-                  livrée{deliveryStats.fullyDelivered > 1 ? "s" : ""}
+                  Tonne{deliveryStats.remainingTons > 1 ? "s" : ""}
                 </span>
               </p>
               <div className="w-full bg-sky-100 rounded-full h-1.5 mt-2 overflow-hidden">
                 <div
                   className="h-full bg-sky-600 rounded-full transition-all duration-500"
-                  style={{ width: `${deliveryStats.rate}%` }}
+                  style={{ width: `${deliveryStats.volumeRate}%` }}
                 />
               </div>
             </div>
             <p className="text-[11px] text-sky-700 font-medium mt-1 truncate">
-              {deliveryStats.rate}% expédié ({deliveryStats.deliveredQuantity.toLocaleString()} livrés)
+              {deliveryStats.deliveredTons > 0 || deliveryStats.totalTons > 0
+                ? `${deliveryStats.deliveredTons.toLocaleString()} / ${deliveryStats.totalTons.toLocaleString()} T livrées (${deliveryStats.fullyDelivered}/${deliveryStats.totalCount} cmds)`
+                : `${deliveryStats.fullyDelivered} / ${deliveryStats.totalCount} livrée(s)`}
             </p>
           </div>
 
@@ -1260,9 +1307,16 @@ export default function ClientsAndOrdersPage() {
                                 {isFullyDelivered ? "Livrée à 100%" : deliveredQty > 0 ? "Partiellement Livrée" : "Non livrée"}
                               </span>
                             </div>
-                            <span className="text-[11px] font-bold text-sky-800">
-                              {deliveredQty.toLocaleString()} / {totalQty.toLocaleString()} {order.unit}
-                            </span>
+                            <div className="text-right">
+                              <span className="text-[11px] font-bold text-sky-800 block">
+                                {deliveredQty.toLocaleString()} / {totalQty.toLocaleString()} {order.unit}
+                              </span>
+                              {!isFullyDelivered && totalQty > deliveredQty && (
+                                <span className="text-[10px] font-extrabold text-amber-900 bg-amber-100 px-1.5 py-0.2 rounded inline-block mt-0.5">
+                                  Reste: {(totalQty - deliveredQty).toLocaleString()} {order.unit}
+                                </span>
+                              )}
+                            </div>
                           </div>
                           <div className="w-full bg-sky-200 rounded-full h-1.5 overflow-hidden">
                             <div
@@ -1440,9 +1494,16 @@ export default function ClientsAndOrdersPage() {
                                   </span>
                                 )}
 
-                                <span className="text-[10px] font-semibold text-gray-700">
-                                  {deliveredQty.toLocaleString()} / {totalQty.toLocaleString()} {order.unit}
-                                </span>
+                                <div className="flex items-center gap-1.5 flex-wrap justify-center text-[10px]">
+                                  <span className="font-semibold text-gray-700">
+                                    {deliveredQty.toLocaleString()} / {totalQty.toLocaleString()} {order.unit}
+                                  </span>
+                                  {deliveryStatus !== "fully_delivered" && totalQty > deliveredQty && (
+                                    <span className="text-[9px] font-bold text-amber-900 bg-amber-100 px-1.5 py-0.2 rounded border border-amber-200">
+                                      Reste: {(totalQty - deliveredQty).toLocaleString()} {order.unit}
+                                    </span>
+                                  )}
+                                </div>
 
                                 <div className="w-full bg-gray-200 rounded-full h-1.5 overflow-hidden">
                                   <div
@@ -1763,11 +1824,17 @@ export default function ClientsAndOrdersPage() {
             </h3>
             <div className="divide-y divide-gray-100 border border-gray-200 rounded-xl overflow-hidden">
               {clients.map((client) => {
-                const cOrders = orders.filter((o) => o.client_id === client.id);
+                const cOrders = orders.filter((o) => o.client_id === client.id && !o.is_deleted && o.order_status !== "trash");
                 const cOrdered = cOrders.reduce((s, o) => s + (Number(o.total_amount) || 0), 0);
                 const cPaid = cOrders.reduce((s, o) => s + (Number(o.paid_amount) || 0), 0);
                 const cRemaining = cOrders.reduce((s, o) => s + (Number(o.remaining_amount) || 0), 0);
                 const cCur = cOrders[0]?.currency || "TND";
+                const cRemainingQty = cOrders.reduce((s, o) => {
+                  const totalQ = Number(o.quantity) || 0;
+                  const delQ = Number(o.delivered_quantity) || (o.delivery_installments || []).reduce((sum, d) => sum + Number(d.quantity || 0), 0);
+                  return s + Math.max(0, totalQ - delQ);
+                }, 0);
+                const cUnit = cOrders[0]?.unit || "Tonnes";
 
                 return (
                   <div key={client.id} className="p-4 bg-white hover:bg-gray-50/50 flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -1786,7 +1853,7 @@ export default function ClientsAndOrdersPage() {
                       </p>
                     </div>
 
-                    <div className="grid grid-cols-2 sm:grid-cols-3 md:flex md:items-center gap-3 md:gap-6 text-xs text-left md:text-right pt-2 md:pt-0 border-t md:border-t-0 border-gray-100">
+                    <div className="grid grid-cols-2 sm:grid-cols-4 md:flex md:items-center gap-3 md:gap-6 text-xs text-left md:text-right pt-2 md:pt-0 border-t md:border-t-0 border-gray-100">
                       <div>
                         <span className="text-[10px] uppercase font-bold text-gray-400 block">Total Commandé</span>
                         <span className="font-bold text-gray-900 text-xs sm:text-sm">{cOrdered.toLocaleString()} {cCur}</span>
@@ -1801,7 +1868,13 @@ export default function ClientsAndOrdersPage() {
                           {cRemaining.toLocaleString()} {cCur}
                         </span>
                       </div>
-                      <div className="col-span-2 sm:col-span-3 md:col-span-1 flex justify-end">
+                      <div>
+                        <span className="text-[10px] uppercase font-bold text-sky-700 block">Reste à Livrer</span>
+                        <span className={`font-bold text-xs sm:text-sm ${cRemainingQty > 0 ? "text-sky-900 font-extrabold" : "text-gray-400"}`}>
+                          {cRemainingQty.toLocaleString()} {cUnit}
+                        </span>
+                      </div>
+                      <div className="col-span-2 sm:col-span-4 md:col-span-1 flex justify-end">
                         <button
                           onClick={() => {
                             setClientFilter(client.id);
