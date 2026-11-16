@@ -16,16 +16,31 @@ export const Header: React.FC = () => {
   const pathname = usePathname();
 
   const [scrolled, setScrolled] = useState(false);
+  const [visible, setVisible] = useState(true);
+  const [lastScrollY, setLastScrollY] = useState(0);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [quoteModalOpen, setQuoteModalOpen] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => {
-      setScrolled(window.scrollY > 20);
+      const currentScrollY = window.scrollY;
+      setScrolled(currentScrollY > 20);
+
+      // Hide navbar when scrolling down, show when scrolling up
+      if (currentScrollY < 60) {
+        setVisible(true);
+      } else if (currentScrollY > lastScrollY && currentScrollY - lastScrollY > 8) {
+        setVisible(false);
+      } else if (currentScrollY < lastScrollY && lastScrollY - currentScrollY > 8) {
+        setVisible(true);
+      }
+
+      setLastScrollY(currentScrollY);
     };
-    window.addEventListener("scroll", handleScroll);
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
+  }, [lastScrollY]);
 
   const navLinks = [
     { href: "/", label: n.home },
@@ -39,10 +54,12 @@ export const Header: React.FC = () => {
   return (
     <>
       <header
-        className={`fixed top-0 left-0 right-0 z-40 transition-all duration-300 ${
+        className={`fixed top-0 left-0 right-0 z-40 transition-all duration-300 ease-out will-change-transform ${
+          visible || mobileMenuOpen ? "translate-y-0" : "-translate-y-full"
+        } ${
           scrolled
-            ? "bg-verdalia-offwhite/95 backdrop-blur-md shadow-sm border-b border-verdalia-border/70 py-3"
-            : "bg-verdalia-offwhite/85 backdrop-blur-sm border-b border-verdalia-border/40 py-4"
+            ? "bg-verdalia-offwhite/95 backdrop-blur-md shadow-luxury border-b border-verdalia-border/70 py-3"
+            : "bg-verdalia-offwhite/50 md:bg-transparent backdrop-blur-[2px] border-b border-transparent py-4"
         }`}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">

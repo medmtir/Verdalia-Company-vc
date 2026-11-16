@@ -6,6 +6,8 @@ import { SpeedInsights } from "@vercel/speed-insights/next";
 import { I18nProvider } from "@/lib/i18n/context";
 import { SiteSettingsProvider } from "@/lib/context/site-settings-context";
 import { db } from "@/lib/db/db";
+import { SmoothScroll } from "@/components/animations/SmoothScroll";
+import { ScrollProgress } from "@/components/animations/ScrollProgress";
 
 export const viewport: Viewport = {
   width: "device-width",
@@ -17,16 +19,12 @@ export const viewport: Viewport = {
 
 const montserrat = Montserrat({
   subsets: ['latin'],
-  weight: ['300', '400', '500', '600', '700'],
-  style: ['normal', 'italic'],
   variable: '--font-montserrat',
   display: 'swap',
 });
 
 const playfairDisplay = Playfair_Display({
   subsets: ['latin'],
-  weight: ['400', '600', '700', '900'],
-  style: ['normal', 'italic'],
   variable: '--font-playfair',
   display: 'swap',
 });
@@ -231,6 +229,8 @@ export default async function RootLayout({
         />
       </head>
       <body className={`${montserrat.variable} ${playfairDisplay.variable} font-sans bg-verdalia-offwhite text-verdalia-dark antialiased min-h-screen flex flex-col`}>
+        <ScrollProgress />
+        <SmoothScroll />
         <I18nProvider initialLocale={locale}>
           <SiteSettingsProvider initialData={siteSettings}>{children}</SiteSettingsProvider>
         </I18nProvider>

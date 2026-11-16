@@ -8,6 +8,10 @@ import { Footer } from "@/components/layout/Footer";
 import { useI18n } from "@/lib/i18n/context";
 import dynamic from 'next/dynamic';
 const QuoteModal = dynamic(() => import('@/components/ui/QuoteModal').then(m => m.QuoteModal), { ssr: false });
+import { Reveal, StaggerContainer, StaggerItem } from "@/components/animations/Reveal";
+import { AnimatedCounter } from "@/components/animations/AnimatedCounter";
+import { HeroBackgroundParallax, HeroSplitLine } from "@/components/animations/HeroAnimations";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowRight,
   ShieldCheck,
@@ -335,7 +339,7 @@ export default function HomePage() {
       <main className="flex-grow pt-16">
         {/* Hero */}
         <section className="relative min-h-[88vh] flex items-end md:items-center overflow-hidden bg-[#203A1A]">
-          <div className="absolute inset-0 z-0">
+          <HeroBackgroundParallax>
             <Image
               src={dict.hero.image_url || "/images/facility/storage-tanks.jpg"}
               alt="Unités de stockage Verdalia — huile d'olive en vrac Tunisie"
@@ -346,26 +350,42 @@ export default function HomePage() {
             />
             <div className="absolute inset-0 bg-gradient-to-r from-[#172B13]/85 via-[#203A1A]/55 to-transparent" />
             <div className="absolute inset-0 bg-gradient-to-t from-[#152511]/90 via-transparent to-[#203A1A]/30" />
-          </div>
+          </HeroBackgroundParallax>
 
           <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 md:py-32 w-full text-white">
             <div className="max-w-2xl">
-              <p className="text-xs font-semibold tracking-[0.22em] uppercase text-verdalia-gold mb-5">
-                {dict.hero.badge}
-              </p>
+              <HeroSplitLine delay={0.15}>
+                <p className="text-xs font-semibold tracking-[0.22em] uppercase text-verdalia-gold mb-5">
+                  {dict.hero.badge}
+                </p>
+              </HeroSplitLine>
 
               <h1 className="font-serif text-3xl sm:text-5xl md:text-6xl lg:text-[4.25rem] font-bold leading-[1.1] tracking-tight mb-5 sm:mb-6">
-                {dict.hero.title}{" "}
-                <span className="italic font-normal text-verdalia-gold block sm:inline">
-                  {dict.hero.titleAccent}
-                </span>
+                <HeroSplitLine delay={0.3} className="mr-2">
+                  <span>{dict.hero.title}</span>
+                </HeroSplitLine>{" "}
+                <HeroSplitLine delay={0.45}>
+                  <span className="italic font-normal text-verdalia-gold block sm:inline">
+                    {dict.hero.titleAccent}
+                  </span>
+                </HeroSplitLine>
               </h1>
 
-              <p className="text-sm sm:text-lg text-gray-200/95 font-light leading-relaxed mb-8 sm:mb-10 max-w-xl">
+              <motion.p
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8, delay: 0.6, ease: [0.16, 1, 0.3, 1] }}
+                className="text-sm sm:text-lg text-gray-200/95 font-light leading-relaxed mb-8 sm:mb-10 max-w-xl"
+              >
                 {dict.hero.subtitle}
-              </p>
+              </motion.p>
 
-              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4 w-full sm:w-auto">
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8, delay: 0.75, ease: [0.16, 1, 0.3, 1] }}
+                className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4 w-full sm:w-auto"
+              >
                 <Link
                   href="/products"
                   className="btn-gold px-8 py-3.5 sm:py-4 text-xs font-bold tracking-widest uppercase flex items-center justify-center gap-2 text-center shadow-lg"
@@ -380,7 +400,7 @@ export default function HomePage() {
                 >
                   {dict.hero.quoteBtn}
                 </button>
-              </div>
+              </motion.div>
             </div>
           </div>
         </section>
@@ -388,10 +408,10 @@ export default function HomePage() {
         {/* ====================================================
             2. TRUST & KEY FEATURES STRIP
             ==================================================== */}
-        <section className="bg-verdalia-beige/80 border-y border-verdalia-border py-8">
+        <section className="bg-verdalia-beige/80 border-y border-verdalia-border py-8 section-glow-divider">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 divide-y md:divide-y-0 md:divide-x divide-verdalia-border/80">
-              <div className="flex items-center gap-4 py-2 md:py-0 md:px-6">
+            <StaggerContainer className="grid grid-cols-1 md:grid-cols-3 gap-6 divide-y md:divide-y-0 md:divide-x divide-verdalia-border/80">
+              <StaggerItem className="flex items-center gap-4 py-2 md:py-0 md:px-6">
                 <div className="w-12 h-12 rounded-full bg-verdalia-olive/10 flex items-center justify-center flex-shrink-0 text-verdalia-olive">
                   <ShieldCheck className="w-6 h-6" />
                 </div>
@@ -403,9 +423,9 @@ export default function HomePage() {
                     {dict.trustStrip.originDesc}
                   </p>
                 </div>
-              </div>
+              </StaggerItem>
 
-              <div className="flex items-center gap-4 py-2 md:py-0 md:px-6">
+              <StaggerItem className="flex items-center gap-4 py-2 md:py-0 md:px-6">
                 <div className="w-12 h-12 rounded-full bg-verdalia-olive/10 flex items-center justify-center flex-shrink-0 text-verdalia-olive">
                   <Droplets className="w-6 h-6" />
                 </div>
@@ -417,9 +437,9 @@ export default function HomePage() {
                     {dict.trustStrip.pressDesc}
                   </p>
                 </div>
-              </div>
+              </StaggerItem>
 
-              <div className="flex items-center gap-4 py-2 md:py-0 md:px-6">
+              <StaggerItem className="flex items-center gap-4 py-2 md:py-0 md:px-6">
                 <div className="w-12 h-12 rounded-full bg-verdalia-olive/10 flex items-center justify-center flex-shrink-0 text-verdalia-olive">
                   <Globe className="w-6 h-6" />
                 </div>
@@ -431,115 +451,125 @@ export default function HomePage() {
                     {dict.trustStrip.exportDesc}
                   </p>
                 </div>
-              </div>
-            </div>
+              </StaggerItem>
+            </StaggerContainer>
           </div>
         </section>
 
         {/* ====================================================
             3. ABOUT US ASYMMETRICAL EDITORIAL SECTION
             ==================================================== */}
-        <section className="py-24 bg-verdalia-offwhite">
+        <section className="py-24 bg-verdalia-offwhite section-glow-divider">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center">
               {/* Photo Collage Column */}
               <div className="lg:col-span-6 relative pb-12 lg:pb-0">
-                <div className="relative z-10 w-4/5 rounded-lg overflow-hidden shadow-luxury border-4 border-white aspect-[4/3]">
-                  <Image
-                    src={dict.aboutSection.image_url_1 || "/images/facility/storage-tanks.jpg"}
-                    alt="Citernes de stockage Verdalia"
-                    fill
-                    unoptimized={Boolean(dict.aboutSection.image_url_1 && (dict.aboutSection.image_url_1.startsWith("http") || dict.aboutSection.image_url_1.startsWith("data:")))}
-                    className="object-cover"
-                  />
-                </div>
+                <Reveal direction="left" distance={30}>
+                  <div className="relative">
+                    <div className="relative z-10 w-4/5 rounded-lg overflow-hidden shadow-luxury border-4 border-white aspect-[4/3] img-zoom-container">
+                      <Image
+                        src={dict.aboutSection.image_url_1 || "/images/facility/storage-tanks.jpg"}
+                        alt="Citernes de stockage Verdalia"
+                        fill
+                        unoptimized={Boolean(dict.aboutSection.image_url_1 && (dict.aboutSection.image_url_1.startsWith("http") || dict.aboutSection.image_url_1.startsWith("data:")))}
+                        className="object-cover"
+                      />
+                    </div>
 
-                <div className="absolute -bottom-8 -right-2 sm:right-4 z-20 w-3/5 rounded-lg overflow-hidden shadow-2xl border-4 border-white aspect-[4/3]">
-                  <Image
-                    src={dict.aboutSection.image_url_2 || "/images/facility/tanker-truck.jpg"}
-                    alt="Flotte de transport citerne Verdalia"
-                    fill
-                    unoptimized={Boolean(dict.aboutSection.image_url_2 && (dict.aboutSection.image_url_2.startsWith("http") || dict.aboutSection.image_url_2.startsWith("data:")))}
-                    className="object-cover"
-                  />
-                </div>
+                    <div className="absolute -bottom-8 -right-2 sm:right-4 z-20 w-3/5 rounded-lg overflow-hidden shadow-2xl border-4 border-white aspect-[4/3] img-zoom-container">
+                      <Image
+                        src={dict.aboutSection.image_url_2 || "/images/facility/tanker-truck.jpg"}
+                        alt="Flotte de transport citerne Verdalia"
+                        fill
+                        unoptimized={Boolean(dict.aboutSection.image_url_2 && (dict.aboutSection.image_url_2.startsWith("http") || dict.aboutSection.image_url_2.startsWith("data:")))}
+                        className="object-cover"
+                      />
+                    </div>
 
-                {/* Stamp */}
-                <div className="absolute -bottom-6 left-6 z-30 w-24 h-24 rounded-full bg-verdalia-beige border-2 border-verdalia-gold flex flex-col items-center justify-center text-center shadow-lg p-2">
-                  <span className="text-[9px] uppercase tracking-widest font-bold text-verdalia-olive">
-                    Tunisia
-                  </span>
-                  <span className="font-serif text-xs font-extrabold text-verdalia-dark leading-tight">
-                    ORIGINE
-                  </span>
-                  <span className="text-[8px] uppercase tracking-wider text-verdalia-gold font-bold">
-                    100%
-                  </span>
-                </div>
+                    {/* Stamp */}
+                    <div className="absolute -bottom-6 left-6 z-30 w-24 h-24 rounded-full bg-verdalia-beige border-2 border-verdalia-gold flex flex-col items-center justify-center text-center shadow-lg p-2 transition-transform duration-300 hover:scale-105">
+                      <span className="text-[9px] uppercase tracking-widest font-bold text-verdalia-olive">
+                        Tunisia
+                      </span>
+                      <span className="font-serif text-xs font-extrabold text-verdalia-dark leading-tight">
+                        ORIGINE
+                      </span>
+                      <AnimatedCounter
+                        to={100}
+                        suffix="%"
+                        className="text-[8px] uppercase tracking-wider text-verdalia-gold font-bold"
+                      />
+                    </div>
+                  </div>
+                </Reveal>
               </div>
 
               {/* Text Column */}
               <div className="lg:col-span-6 space-y-6">
-                <div className="inline-block text-xs font-bold uppercase tracking-[0.2em] text-verdalia-olive">
-                  {dict.aboutSection.badge}
-                </div>
+                <Reveal direction="right" distance={30}>
+                  <div className="space-y-6">
+                    <div className="inline-block text-xs font-bold uppercase tracking-[0.2em] text-verdalia-olive">
+                      {dict.aboutSection.badge}
+                    </div>
 
-                <h2 className="font-serif text-3xl sm:text-4xl font-bold text-verdalia-dark leading-tight">
-                  {dict.aboutSection.title}
-                </h2>
+                    <h2 className="font-serif text-3xl sm:text-4xl font-bold text-verdalia-dark leading-tight">
+                      {dict.aboutSection.title}
+                    </h2>
 
-                <p className="text-sm text-verdalia-gray leading-relaxed">
-                  {dict.aboutSection.desc1}
-                </p>
+                    <p className="text-sm text-verdalia-gray leading-relaxed">
+                      {dict.aboutSection.desc1}
+                    </p>
 
-                <p className="text-sm text-verdalia-gray leading-relaxed">
-                  {dict.aboutSection.desc2}
-                </p>
+                    <p className="text-sm text-verdalia-gray leading-relaxed">
+                      {dict.aboutSection.desc2}
+                    </p>
 
-                {/* Bullet Points */}
-                <div className="space-y-3.5 pt-2">
-                  <div className="flex items-start gap-3">
-                    <CheckCircle2 className="w-5 h-5 text-verdalia-olive flex-shrink-0 mt-0.5" />
-                    <div>
-                      <h4 className="text-xs font-bold uppercase tracking-wider text-verdalia-dark">
-                        {dict.aboutSection.point1Title}
-                      </h4>
-                      <p className="text-xs text-verdalia-gray mt-0.5">
-                        {dict.aboutSection.point1Desc}
-                      </p>
+                    {/* Bullet Points */}
+                    <div className="space-y-3.5 pt-2">
+                      <div className="flex items-start gap-3">
+                        <CheckCircle2 className="w-5 h-5 text-verdalia-olive flex-shrink-0 mt-0.5" />
+                        <div>
+                          <h4 className="text-xs font-bold uppercase tracking-wider text-verdalia-dark">
+                            {dict.aboutSection.point1Title}
+                          </h4>
+                          <p className="text-xs text-verdalia-gray mt-0.5">
+                            {dict.aboutSection.point1Desc}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-start gap-3">
+                        <CheckCircle2 className="w-5 h-5 text-verdalia-olive flex-shrink-0 mt-0.5" />
+                        <div>
+                          <h4 className="text-xs font-bold uppercase tracking-wider text-verdalia-dark">
+                            {dict.aboutSection.point2Title}
+                          </h4>
+                          <p className="text-xs text-verdalia-gray mt-0.5">
+                            {dict.aboutSection.point2Desc}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-start gap-3">
+                        <CheckCircle2 className="w-5 h-5 text-verdalia-olive flex-shrink-0 mt-0.5" />
+                        <div>
+                          <h4 className="text-xs font-bold uppercase tracking-wider text-verdalia-dark">
+                            {dict.aboutSection.point3Title}
+                          </h4>
+                          <p className="text-xs text-verdalia-gray mt-0.5">
+                            {dict.aboutSection.point3Desc}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="pt-4">
+                      <Link href="/about" className="btn-primary">
+                        {dict.aboutSection.learnMoreBtn} →
+                      </Link>
                     </div>
                   </div>
-
-                  <div className="flex items-start gap-3">
-                    <CheckCircle2 className="w-5 h-5 text-verdalia-olive flex-shrink-0 mt-0.5" />
-                    <div>
-                      <h4 className="text-xs font-bold uppercase tracking-wider text-verdalia-dark">
-                        {dict.aboutSection.point2Title}
-                      </h4>
-                      <p className="text-xs text-verdalia-gray mt-0.5">
-                        {dict.aboutSection.point2Desc}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-start gap-3">
-                    <CheckCircle2 className="w-5 h-5 text-verdalia-olive flex-shrink-0 mt-0.5" />
-                    <div>
-                      <h4 className="text-xs font-bold uppercase tracking-wider text-verdalia-dark">
-                        {dict.aboutSection.point3Title}
-                      </h4>
-                      <p className="text-xs text-verdalia-gray mt-0.5">
-                        {dict.aboutSection.point3Desc}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="pt-4">
-                  <Link href="/about" className="btn-primary">
-                    {dict.aboutSection.learnMoreBtn} →
-                  </Link>
-                </div>
+                </Reveal>
               </div>
             </div>
           </div>
@@ -548,160 +578,173 @@ export default function HomePage() {
         {/* ====================================================
             4. PRODUCTS SHOWCASE (Bottles Line-up & Cards)
             ==================================================== */}
-        <section className="py-24 bg-verdalia-cream border-t border-verdalia-border">
+        <section className="py-24 bg-verdalia-cream border-t border-verdalia-border section-glow-divider">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex flex-col md:flex-row md:items-end justify-between mb-16 gap-6">
-              <div>
-                <span className="text-xs font-bold uppercase tracking-[0.2em] text-verdalia-olive">
-                  {dict.productsSection.badge}
-                </span>
-                <h2 className="font-serif text-3xl sm:text-4xl font-bold text-verdalia-dark mt-2">
-                  {dict.productsSection.title}
-                </h2>
-                <p className="text-sm text-verdalia-gray mt-2 max-w-xl">
-                  {dict.productsSection.subtitle}
-                </p>
-              </div>
+            <Reveal direction="up">
+              <div className="flex flex-col md:flex-row md:items-end justify-between mb-16 gap-6">
+                <div>
+                  <span className="text-xs font-bold uppercase tracking-[0.2em] text-verdalia-olive">
+                    {dict.productsSection.badge}
+                  </span>
+                  <h2 className="font-serif text-3xl sm:text-4xl font-bold text-verdalia-dark mt-2">
+                    {dict.productsSection.title}
+                  </h2>
+                  <p className="text-sm text-verdalia-gray mt-2 max-w-xl">
+                    {dict.productsSection.subtitle}
+                  </p>
+                </div>
 
-              <Link href="/products" className="btn-secondary">
-                {dict.productsSection.viewAllBtn} →
-              </Link>
-            </div>
+                <Link href="/products" className="btn-secondary">
+                  {dict.productsSection.viewAllBtn} →
+                </Link>
+              </div>
+            </Reveal>
 
             {/* Product Cards Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+            <StaggerContainer staggerChildren={0.12} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
               {productsPreview.map((prod) => (
-                <div
-                  key={prod.slug}
-                  className="bg-white rounded-lg border border-verdalia-border overflow-hidden shadow-card card-hover flex flex-col"
-                >
-                  <div className="relative aspect-[4/3] img-zoom-container bg-verdalia-beige/30">
-                    <Image
-                      src={prod.image}
-                      alt={prod.name}
-                      fill
-                      className="object-cover"
-                    />
-                    <div className="absolute top-3 left-3 bg-verdalia-dark/90 text-white text-[9px] font-bold tracking-widest uppercase px-2.5 py-1 rounded">
-                      {prod.badge}
-                    </div>
-                  </div>
-
-                  <div className="p-6 flex-grow flex flex-col justify-between">
-                    <div>
-                      <h3 className="font-serif text-lg font-bold text-verdalia-dark mb-2">
-                        {prod.name}
-                      </h3>
-                      <p className="text-xs text-verdalia-gray leading-relaxed mb-4">
-                        {prod.desc}
-                      </p>
+                <StaggerItem key={prod.slug}>
+                  <div className="bg-white rounded-lg border border-verdalia-border overflow-hidden shadow-card card-hover flex flex-col h-full">
+                    <div className="relative aspect-[4/3] img-zoom-container bg-verdalia-beige/30">
+                      <Image
+                        src={prod.image}
+                        alt={prod.name}
+                        fill
+                        className="object-cover"
+                      />
+                      <div className="absolute top-3 left-3 bg-verdalia-dark/90 text-white text-[9px] font-bold tracking-widest uppercase px-2.5 py-1 rounded">
+                        {prod.badge}
+                      </div>
                     </div>
 
-                    <div className="pt-4 border-t border-verdalia-border/60">
-                      <p className="text-[10px] uppercase tracking-wider text-verdalia-olive font-semibold mb-3">
-                        {prod.formats}
-                      </p>
-                      <button
-                        onClick={() => handleOpenQuote(prod.name)}
-                        className="w-full btn-primary py-2.5 text-xs font-semibold"
-                      >
-                        {dict.productsSection.requestInfoBtn}
-                      </button>
+                    <div className="p-6 flex-grow flex flex-col justify-between">
+                      <div>
+                        <h3 className="font-serif text-lg font-bold text-verdalia-dark mb-2">
+                          {prod.name}
+                        </h3>
+                        <p className="text-xs text-verdalia-gray leading-relaxed mb-4">
+                          {prod.desc}
+                        </p>
+                      </div>
+
+                      <div className="pt-4 border-t border-verdalia-border/60">
+                        <p className="text-[10px] uppercase tracking-wider text-verdalia-olive font-semibold mb-3">
+                          {prod.formats}
+                        </p>
+                        <button
+                          onClick={() => handleOpenQuote(prod.name)}
+                          className="w-full btn-primary py-2.5 text-xs font-semibold"
+                        >
+                          {dict.productsSection.requestInfoBtn}
+                        </button>
+                      </div>
                     </div>
                   </div>
-                </div>
+                </StaggerItem>
               ))}
-            </div>
+            </StaggerContainer>
           </div>
         </section>
 
         {/* ====================================================
             5. WHY CHOOSE VERDALIA
             ==================================================== */}
-        <section className="py-24 bg-verdalia-offwhite">
+        <section className="py-24 bg-verdalia-offwhite section-glow-divider">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center max-w-2xl mx-auto mb-16">
-              <span className="text-xs font-bold uppercase tracking-[0.2em] text-verdalia-olive">
-                {dict.whyChooseUs.badge}
-              </span>
-              <h2 className="font-serif text-3xl sm:text-4xl font-bold text-verdalia-dark mt-2">
-                {dict.whyChooseUs.title}
-              </h2>
-              <p className="text-sm text-verdalia-gray mt-2">
-                {dict.whyChooseUs.subtitle}
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-              <div className="p-8 bg-white rounded-lg border border-verdalia-border shadow-card card-hover">
-                <div className="w-12 h-12 rounded-lg bg-verdalia-olive/10 text-verdalia-olive flex items-center justify-center mb-6">
-                  <ShieldCheck className="w-6 h-6" />
-                </div>
-                <h3 className="font-serif text-base font-bold text-verdalia-dark mb-2">
-                  {dict.whyChooseUs.item1Title}
-                </h3>
-                <p className="text-xs text-verdalia-gray leading-relaxed">
-                  {dict.whyChooseUs.item1Desc}
+            <Reveal direction="up">
+              <div className="text-center max-w-2xl mx-auto mb-16">
+                <span className="text-xs font-bold uppercase tracking-[0.2em] text-verdalia-olive">
+                  {dict.whyChooseUs.badge}
+                </span>
+                <h2 className="font-serif text-3xl sm:text-4xl font-bold text-verdalia-dark mt-2">
+                  {dict.whyChooseUs.title}
+                </h2>
+                <p className="text-sm text-verdalia-gray mt-2">
+                  {dict.whyChooseUs.subtitle}
                 </p>
               </div>
+            </Reveal>
 
-              <div className="p-8 bg-white rounded-lg border border-verdalia-border shadow-card card-hover">
-                <div className="w-12 h-12 rounded-lg bg-verdalia-olive/10 text-verdalia-olive flex items-center justify-center mb-6">
-                  <Container className="w-6 h-6" />
+            <StaggerContainer staggerChildren={0.1} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+              <StaggerItem>
+                <div className="p-8 bg-white rounded-lg border border-verdalia-border shadow-card card-hover h-full flex flex-col">
+                  <div className="w-12 h-12 rounded-lg bg-verdalia-olive/10 text-verdalia-olive flex items-center justify-center mb-6">
+                    <ShieldCheck className="w-6 h-6" />
+                  </div>
+                  <h3 className="font-serif text-base font-bold text-verdalia-dark mb-2">
+                    {dict.whyChooseUs.item1Title}
+                  </h3>
+                  <p className="text-xs text-verdalia-gray leading-relaxed">
+                    {dict.whyChooseUs.item1Desc}
+                  </p>
                 </div>
-                <h3 className="font-serif text-base font-bold text-verdalia-dark mb-2">
-                  {dict.whyChooseUs.item2Title}
-                </h3>
-                <p className="text-xs text-verdalia-gray leading-relaxed">
-                  {dict.whyChooseUs.item2Desc}
-                </p>
-              </div>
+              </StaggerItem>
 
-              <div className="p-8 bg-white rounded-lg border border-verdalia-border shadow-card card-hover">
-                <div className="w-12 h-12 rounded-lg bg-verdalia-olive/10 text-verdalia-olive flex items-center justify-center mb-6">
-                  <Award className="w-6 h-6" />
+              <StaggerItem>
+                <div className="p-8 bg-white rounded-lg border border-verdalia-border shadow-card card-hover h-full flex flex-col">
+                  <div className="w-12 h-12 rounded-lg bg-verdalia-olive/10 text-verdalia-olive flex items-center justify-center mb-6">
+                    <Container className="w-6 h-6" />
+                  </div>
+                  <h3 className="font-serif text-base font-bold text-verdalia-dark mb-2">
+                    {dict.whyChooseUs.item2Title}
+                  </h3>
+                  <p className="text-xs text-verdalia-gray leading-relaxed">
+                    {dict.whyChooseUs.item2Desc}
+                  </p>
                 </div>
-                <h3 className="font-serif text-base font-bold text-verdalia-dark mb-2">
-                  {dict.whyChooseUs.item3Title}
-                </h3>
-                <p className="text-xs text-verdalia-gray leading-relaxed">
-                  {dict.whyChooseUs.item3Desc}
-                </p>
-              </div>
+              </StaggerItem>
 
-              <div className="p-8 bg-white rounded-lg border border-verdalia-border shadow-card card-hover">
-                <div className="w-12 h-12 rounded-lg bg-verdalia-olive/10 text-verdalia-olive flex items-center justify-center mb-6">
-                  <Ship className="w-6 h-6" />
+              <StaggerItem>
+                <div className="p-8 bg-white rounded-lg border border-verdalia-border shadow-card card-hover h-full flex flex-col">
+                  <div className="w-12 h-12 rounded-lg bg-verdalia-olive/10 text-verdalia-olive flex items-center justify-center mb-6">
+                    <Award className="w-6 h-6" />
+                  </div>
+                  <h3 className="font-serif text-base font-bold text-verdalia-dark mb-2">
+                    {dict.whyChooseUs.item3Title}
+                  </h3>
+                  <p className="text-xs text-verdalia-gray leading-relaxed">
+                    {dict.whyChooseUs.item3Desc}
+                  </p>
                 </div>
-                <h3 className="font-serif text-base font-bold text-verdalia-dark mb-2">
-                  {dict.whyChooseUs.item4Title}
-                </h3>
-                <p className="text-xs text-verdalia-gray leading-relaxed">
-                  {dict.whyChooseUs.item4Desc}
-                </p>
-              </div>
-            </div>
+              </StaggerItem>
+
+              <StaggerItem>
+                <div className="p-8 bg-white rounded-lg border border-verdalia-border shadow-card card-hover h-full flex flex-col">
+                  <div className="w-12 h-12 rounded-lg bg-verdalia-olive/10 text-verdalia-olive flex items-center justify-center mb-6">
+                    <Ship className="w-6 h-6" />
+                  </div>
+                  <h3 className="font-serif text-base font-bold text-verdalia-dark mb-2">
+                    {dict.whyChooseUs.item4Title}
+                  </h3>
+                  <p className="text-xs text-verdalia-gray leading-relaxed">
+                    {dict.whyChooseUs.item4Desc}
+                  </p>
+                </div>
+              </StaggerItem>
+            </StaggerContainer>
           </div>
         </section>
 
         {/* Cinematic Journey Video Section */}
-        <section className="relative py-20 bg-[#142611] text-white overflow-hidden border-y border-verdalia-gold/20">
+        <section className="relative py-20 bg-[#142611] text-white overflow-hidden border-y border-verdalia-gold/20 section-glow-divider">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center max-w-3xl mx-auto mb-12">
-              <span className="text-xs font-bold uppercase tracking-[0.25em] text-verdalia-gold">
-                {locale === "fr" ? "Du Terroir aux Ports Mondiaux" : locale === "ar" ? "من مزارع تونس إلى موانئ العالم" : "From Grove to Global Ports"}
-              </span>
-              <h2 className="font-serif text-3xl sm:text-4xl md:text-5xl font-bold mt-2">
-                {locale === "fr" ? "L'Odyssée de l'Huile Verdalia" : locale === "ar" ? "رحلة زيت الزيتون فيرداليا" : "The Verdalia Olive Oil Journey"}
-              </h2>
-              <p className="text-xs sm:text-sm text-gray-300 mt-3 font-light leading-relaxed">
-                {locale === "fr"
-                  ? "Suivez le parcours complet : récolte, pressage à froid, stockage sous azote, conditionnement sécurisé et expédition maritime internationale."
-                  : locale === "ar"
-                  ? "شاهد مسار الإنتاج والتصدير: من الجني والعصر البارد إلى التخزين الآمن والتحميل البحري عبر القارات."
-                  : "Watch the seamless supply chain: harvesting, cold extraction, inert nitrogen storage, bulk packaging, and container vessel shipment."}
-              </p>
-            </div>
+            <Reveal direction="up">
+              <div className="text-center max-w-3xl mx-auto mb-12">
+                <span className="text-xs font-bold uppercase tracking-[0.25em] text-verdalia-gold">
+                  {locale === "fr" ? "Du Terroir aux Ports Mondiaux" : locale === "ar" ? "من مزارع تونس إلى موانئ العالم" : "From Grove to Global Ports"}
+                </span>
+                <h2 className="font-serif text-3xl sm:text-4xl md:text-5xl font-bold mt-2">
+                  {locale === "fr" ? "L'Odyssée de l'Huile Verdalia" : locale === "ar" ? "رحلة زيت الزيتون فيرداليا" : "The Verdalia Olive Oil Journey"}
+                </h2>
+                <p className="text-xs sm:text-sm text-gray-300 mt-3 font-light leading-relaxed">
+                  {locale === "fr"
+                    ? "Suivez le parcours complet : récolte, pressage à froid, stockage sous azote, conditionnement sécurisé et expédition maritime internationale."
+                    : locale === "ar"
+                    ? "شاهد مسار الإنتاج والتصدير: من الجني والعصر البارد إلى التخزين الآمن والتحميل البحري عبر القارات."
+                    : "Watch the seamless supply chain: harvesting, cold extraction, inert nitrogen storage, bulk packaging, and container vessel shipment."}
+                </p>
+              </div>
+            </Reveal>
 
             {/* Video Player Container */}
             <div className="relative rounded-2xl overflow-hidden shadow-2xl border-2 border-verdalia-gold/30 bg-black aspect-video max-w-5xl mx-auto group">
@@ -764,7 +807,7 @@ export default function HomePage() {
                 <div className="hidden sm:flex items-center gap-4 text-xs font-semibold text-white/80 bg-black/50 backdrop-blur-md px-4 py-2 rounded-full border border-white/10">
                   <span>⚓ Port de Radès & Sousse</span>
                   <span>•</span>
-                  <span>🚢 45+ Destinations</span>
+                  <span>🚢 <AnimatedCounter to={45} suffix="+" /> Destinations</span>
                 </div>
               </div>
             </div>
@@ -786,7 +829,7 @@ export default function HomePage() {
                 </Link>
               </div>
 
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+              <StaggerContainer staggerChildren={0.08} className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                 {packagings.map((pkg) => {
                   const t = pkg.translations?.[locale] || pkg.translations?.fr || {};
                   const title = t.title || pkg.title;
@@ -794,26 +837,30 @@ export default function HomePage() {
                   const cleanImageUrl = (pkg.image_url || "/images/packaging/ibc-container.jpg").trim();
 
                   return (
-                    <div key={pkg.id || title} className="bg-white/5 border border-white/10 rounded-xl p-3.5 hover:bg-white/10 transition-colors group">
-                      <div className="relative aspect-square rounded-lg overflow-hidden bg-black/40 mb-3">
-                        <Image
-                          src={cleanImageUrl}
-                          alt={title}
-                          fill
-                          className="object-contain p-2 group-hover:scale-105 transition-transform"
-                          unoptimized={cleanImageUrl.startsWith("http") || cleanImageUrl.startsWith("data:")}
-                        />
+                    <StaggerItem key={pkg.id || title}>
+                      <div className="bg-white/5 border border-white/10 rounded-xl p-3.5 hover:bg-white/10 transition-colors group card-hover h-full flex flex-col justify-between">
+                        <div>
+                          <div className="relative aspect-square rounded-lg overflow-hidden bg-black/40 mb-3 img-zoom-container">
+                            <Image
+                              src={cleanImageUrl}
+                              alt={title}
+                              fill
+                              className="object-contain p-2"
+                              unoptimized={cleanImageUrl.startsWith("http") || cleanImageUrl.startsWith("data:")}
+                            />
+                          </div>
+                          <div className="text-[11px] font-bold text-verdalia-gold uppercase tracking-wider line-clamp-1">
+                            {capacity}
+                          </div>
+                          <div className="text-xs font-bold text-white mt-0.5 line-clamp-1">
+                            {title}
+                          </div>
+                        </div>
                       </div>
-                      <div className="text-[11px] font-bold text-verdalia-gold uppercase tracking-wider line-clamp-1">
-                        {capacity}
-                      </div>
-                      <div className="text-xs font-bold text-white mt-0.5 line-clamp-1">
-                        {title}
-                      </div>
-                    </div>
+                    </StaggerItem>
                   );
                 })}
-              </div>
+              </StaggerContainer>
             </div>
           </div>
         </section>
@@ -821,92 +868,97 @@ export default function HomePage() {
         {/* ====================================================
             7. OFFICIAL CERTIFICATIONS PREVIEW
             ==================================================== */}
-        <section className="py-24 bg-verdalia-offwhite">
+        <section className="py-24 bg-verdalia-offwhite section-glow-divider">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex flex-col md:flex-row md:items-end justify-between mb-16 gap-6">
-              <div>
-                <span className="text-xs font-bold uppercase tracking-[0.2em] text-verdalia-olive">
-                  {dict.certificationsSection.badge}
-                </span>
-                <h2 className="font-serif text-3xl sm:text-4xl font-bold text-verdalia-dark mt-2">
-                  {dict.certificationsSection.title}
-                </h2>
-                <p className="text-sm text-verdalia-gray mt-2 max-w-xl">
-                  {dict.certificationsSection.subtitle}
-                </p>
-              </div>
+            <Reveal direction="up">
+              <div className="flex flex-col md:flex-row md:items-end justify-between mb-16 gap-6">
+                <div>
+                  <span className="text-xs font-bold uppercase tracking-[0.2em] text-verdalia-olive">
+                    {dict.certificationsSection.badge}
+                  </span>
+                  <h2 className="font-serif text-3xl sm:text-4xl font-bold text-verdalia-dark mt-2">
+                    {dict.certificationsSection.title}
+                  </h2>
+                  <p className="text-sm text-verdalia-gray mt-2 max-w-xl">
+                    {dict.certificationsSection.subtitle}
+                  </p>
+                </div>
 
-              <Link href="/certifications" className="btn-secondary">
-                {dict.certificationsSection.viewAllBtn} →
-              </Link>
-            </div>
+                <Link href="/certifications" className="btn-secondary">
+                  {dict.certificationsSection.viewAllBtn} →
+                </Link>
+              </div>
+            </Reveal>
 
             {/* Badges Grid */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-6">
+            <StaggerContainer staggerChildren={0.07} className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-6">
               {certsList.map((c) => (
-                <div
-                  key={c.code}
-                  className="bg-white p-6 rounded-xl border border-verdalia-border shadow-card card-hover flex flex-col items-center text-center"
-                >
-                  <div className="w-20 h-20 relative mb-4">
-                    <Image
-                      src={`/images/certs/${c.file}`}
-                      alt={c.name}
-                      fill
-                      className="object-contain"
-                    />
+                <StaggerItem key={c.code}>
+                  <div className="bg-white p-6 rounded-xl border border-verdalia-border shadow-card card-hover flex flex-col items-center text-center h-full justify-between">
+                    <div className="w-20 h-20 relative mb-4">
+                      <Image
+                        src={`/images/certs/${c.file}`}
+                        alt={c.name}
+                        fill
+                        className="object-contain"
+                      />
+                    </div>
+                    <div>
+                      <h3 className="font-serif text-xs font-bold text-verdalia-dark uppercase tracking-wider">
+                        {c.name}
+                      </h3>
+                      <p className="text-[10px] text-verdalia-gray mt-1">{c.desc}</p>
+                    </div>
                   </div>
-                  <h3 className="font-serif text-xs font-bold text-verdalia-dark uppercase tracking-wider">
-                    {c.name}
-                  </h3>
-                  <p className="text-[10px] text-verdalia-gray mt-1">{c.desc}</p>
-                </div>
+                </StaggerItem>
               ))}
-            </div>
+            </StaggerContainer>
           </div>
         </section>
 
         {/* ====================================================
             8. SEO FAQ ACCORDION SECTION (Structured for Google Rich Snippets)
             ==================================================== */}
-        <section className="py-20 bg-white border-t border-verdalia-border" id="faq">
+        <section className="py-20 bg-white border-t border-verdalia-border section-glow-divider" id="faq">
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center mb-12">
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-verdalia-light/60 text-verdalia-olive text-xs font-bold uppercase tracking-wider mb-3">
-                <HelpCircle className="w-3.5 h-3.5" />
-                {locale === "fr"
-                  ? "Questions Fréquentes"
-                  : locale === "ar"
-                  ? "الأسئلة الشائعة"
-                  : locale === "es"
-                  ? "Preguntas Frecuentes"
-                  : locale === "it"
-                  ? "Domande Frequenti"
-                  : "Frequently Asked Questions"}
-              </span>
-              <h2 className="font-serif text-3xl sm:text-4xl font-bold text-verdalia-dark mt-2">
-                {locale === "fr"
-                  ? "Tout Savoir sur Verdalia Company & l'Export d'Huile d'Olive"
-                  : locale === "ar"
-                  ? "كل ما تحتاج معرفته حول شركة فيرداليا وتصدير زيت الزيتون"
-                  : locale === "es"
-                  ? "Todo sobre Verdalia Company y la Exportación de Aceite"
-                  : locale === "it"
-                  ? "Tutto su Verdalia Company e l'Esportazione di Olio d'Oliva"
-                  : "Everything About Verdalia Company & Olive Oil Export"}
-              </h2>
-              <p className="text-sm sm:text-base text-verdalia-gray mt-3 max-w-2xl mx-auto">
-                {locale === "fr"
-                  ? "Réponses directes et transparentes pour les importateurs, négociants et industriels internationaux."
-                  : locale === "ar"
-                  ? "إجابات واضحة وموثوقة للمستوردين، التجار الدوليين، والمصانع الغذائية."
-                  : locale === "es"
-                  ? "Respuestas claras para importadores, comerciantes e industrias internacionales."
-                  : locale === "it"
-                  ? "Risposte chiare per importatori, distributori e acquirenti industriali."
-                  : "Direct answers for international importers, traders, and commercial food processors."}
-              </p>
-            </div>
+            <Reveal direction="up">
+              <div className="text-center mb-12">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-verdalia-light/60 text-verdalia-olive text-xs font-bold uppercase tracking-wider mb-3">
+                  <HelpCircle className="w-3.5 h-3.5" />
+                  {locale === "fr"
+                    ? "Questions Fréquentes"
+                    : locale === "ar"
+                    ? "الأسئلة الشائعة"
+                    : locale === "es"
+                    ? "Preguntas Frecuentes"
+                    : locale === "it"
+                    ? "Domande Frequenti"
+                    : "Frequently Asked Questions"}
+                </span>
+                <h2 className="font-serif text-3xl sm:text-4xl font-bold text-verdalia-dark mt-2">
+                  {locale === "fr"
+                    ? "Tout Savoir sur Verdalia Company & l'Export d'Huile d'Olive"
+                    : locale === "ar"
+                    ? "كل ما تحتاج معرفته حول شركة فيرداليا وتصدير زيت الزيتون"
+                    : locale === "es"
+                    ? "Todo sobre Verdalia Company y la Exportación de Aceite"
+                    : locale === "it"
+                    ? "Tutto su Verdalia Company e l'Esportazione di Olio d'Oliva"
+                    : "Everything About Verdalia Company & Olive Oil Export"}
+                </h2>
+                <p className="text-sm sm:text-base text-verdalia-gray mt-3 max-w-2xl mx-auto">
+                  {locale === "fr"
+                    ? "Réponses directes et transparentes pour les importateurs, négociants et industriels internationaux."
+                    : locale === "ar"
+                    ? "إجابات واضحة وموثوقة للمستوردين، التجار الدوليين، والمصانع الغذائية."
+                    : locale === "es"
+                    ? "Respuestas claras para importadores, comerciantes e industrias internacionales."
+                    : locale === "it"
+                    ? "Risposte chiare per importatori, distributori e acquirenti industriali."
+                    : "Direct answers for international importers, traders, and commercial food processors."}
+                </p>
+              </div>
+            </Reveal>
 
             <div className="space-y-4">
               {faqItems.map((item, idx) => {
@@ -914,7 +966,7 @@ export default function HomePage() {
                 return (
                   <div
                     key={idx}
-                    className="border border-verdalia-border rounded-xl overflow-hidden bg-verdalia-offwhite/50 transition-all duration-200 hover:border-verdalia-olive/40"
+                    className="border border-verdalia-border rounded-xl overflow-hidden bg-verdalia-offwhite/50 transition-all duration-200 hover:border-verdalia-olive/40 shadow-sm"
                   >
                     <button
                       type="button"
@@ -924,7 +976,7 @@ export default function HomePage() {
                     >
                       <span className="flex-1">{item.q}</span>
                       <div
-                        className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 transition-transform duration-200 ${
+                        className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 transition-transform duration-300 ${
                           isOpen
                             ? "bg-verdalia-olive text-white rotate-180"
                             : "bg-verdalia-light/60 text-verdalia-dark"
@@ -933,11 +985,21 @@ export default function HomePage() {
                         <ChevronDown className="w-4 h-4" />
                       </div>
                     </button>
-                    {isOpen && (
-                      <div className="px-5 sm:px-6 pb-6 pt-1 text-sm sm:text-base text-verdalia-gray leading-relaxed border-t border-verdalia-border/40">
-                        {item.a}
-                      </div>
-                    )}
+                    <AnimatePresence initial={false}>
+                      {isOpen && (
+                        <motion.div
+                          initial={{ height: 0, opacity: 0 }}
+                          animate={{ height: "auto", opacity: 1 }}
+                          exit={{ height: 0, opacity: 0 }}
+                          transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+                          className="overflow-hidden"
+                        >
+                          <div className="px-5 sm:px-6 pb-6 pt-1 text-sm sm:text-base text-verdalia-gray leading-relaxed border-t border-verdalia-border/40">
+                            {item.a}
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
                   </div>
                 );
               })}
@@ -958,26 +1020,30 @@ export default function HomePage() {
           </div>
           <div className="absolute inset-0 z-0 bg-[#203A1A]/80" />
           <div className="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-            <h2 className="font-serif text-3xl sm:text-4xl md:text-5xl font-bold mb-4">
-              {dict.contactCta.title}
-            </h2>
-            <p className="text-sm sm:text-base text-verdalia-light/90 max-w-2xl mx-auto mb-8 font-light">
-              {dict.contactCta.subtitle}
-            </p>
-            <div className="flex flex-wrap items-center justify-center gap-4">
-              <button
-                onClick={() => handleOpenQuote()}
-                className="btn-gold px-8 py-4 text-xs font-bold tracking-widest uppercase"
-              >
-                {dict.contactCta.btn}
-              </button>
-              <Link
-                href="/contact"
-                className="px-8 py-4 text-xs font-bold tracking-widest uppercase text-white rounded border border-white/30 hover:bg-white/10 transition-colors"
-              >
-                Contact direct
-              </Link>
-            </div>
+            <Reveal direction="up">
+              <div>
+                <h2 className="font-serif text-3xl sm:text-4xl md:text-5xl font-bold mb-4">
+                  {dict.contactCta.title}
+                </h2>
+                <p className="text-sm sm:text-base text-verdalia-light/90 max-w-2xl mx-auto mb-8 font-light">
+                  {dict.contactCta.subtitle}
+                </p>
+                <div className="flex flex-wrap items-center justify-center gap-4">
+                  <button
+                    onClick={() => handleOpenQuote()}
+                    className="btn-gold px-8 py-4 text-xs font-bold tracking-widest uppercase"
+                  >
+                    {dict.contactCta.btn}
+                  </button>
+                  <Link
+                    href="/contact"
+                    className="px-8 py-4 text-xs font-bold tracking-widest uppercase text-white rounded border border-white/30 hover:bg-white/10 transition-colors"
+                  >
+                    Contact direct
+                  </Link>
+                </div>
+              </div>
+            </Reveal>
           </div>
         </section>
       </main>
