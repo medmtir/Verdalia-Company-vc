@@ -317,7 +317,7 @@ export default function HomePage() {
 
       <main className="flex-grow pt-16">
         {/* Hero */}
-        <section className="relative min-h-[88vh] flex items-end md:items-center overflow-hidden bg-[#203A1A]">
+        <section className="relative min-h-screen flex items-center overflow-hidden bg-[#203A1A]">
           <HeroBackgroundParallax>
             <Image
               src={dict.hero.image_url || "/images/facility/storage-tanks.jpg"}

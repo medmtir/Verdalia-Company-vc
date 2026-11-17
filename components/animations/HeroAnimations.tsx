@@ -15,13 +15,15 @@ export const HeroBackgroundParallax: React.FC<HeroBackgroundParallaxProps> = ({
   const shouldReduceMotion = useReducedMotion();
   const { scrollY } = useScroll();
 
-  // Gentle parallax: as user scrolls down the first 800px, shift the background down slightly
-  const y = useTransform(scrollY, [0, 800], [0, shouldReduceMotion ? 0 : 120]);
-  const scale = useTransform(scrollY, [0, 800], [1.06, shouldReduceMotion ? 1 : 1.12]);
+  // Subtle parallax: as user scrolls down the first 800px, shift the background down smoothly
+  const y = useTransform(scrollY, [0, 800], [0, shouldReduceMotion ? 0 : 100]);
 
   return (
     <motion.div
-      style={{ y, scale }}
+      initial={shouldReduceMotion ? { scale: 1, opacity: 1 } : { scale: 1.16, opacity: 0.85 }}
+      animate={{ scale: 1.04, opacity: 1 }}
+      transition={{ duration: 2.4, ease: [0.16, 1, 0.3, 1] }}
+      style={{ y }}
       className={`absolute inset-0 z-0 origin-center will-change-transform ${className}`}
     >
       {children}
@@ -45,7 +47,7 @@ export const HeroSplitLine: React.FC<HeroSplitLineProps> = ({
   return (
     <div className={`overflow-hidden inline-block ${className}`}>
       <motion.div
-        initial={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, y: "100%" }}
+        initial={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, y: "105%" }}
         animate={{ opacity: 1, y: 0 }}
         transition={{
           duration: shouldReduceMotion ? 0.3 : 0.85,
