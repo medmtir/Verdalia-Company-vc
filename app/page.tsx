@@ -11,6 +11,7 @@ const QuoteModal = dynamic(() => import('@/components/ui/QuoteModal').then(m => 
 import { Reveal, StaggerContainer, StaggerItem } from "@/components/animations/Reveal";
 import { AnimatedCounter } from "@/components/animations/AnimatedCounter";
 import { HeroBackgroundParallax, HeroSplitLine } from "@/components/animations/HeroAnimations";
+import { OliveJourney } from "@/components/OliveJourney";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowRight,
@@ -35,9 +36,6 @@ export default function HomePage() {
   const { dict, locale, dir } = useI18n();
   const [quoteModalOpen, setQuoteModalOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState("");
-  const [isPlaying, setIsPlaying] = useState(true);
-  const [isMuted, setIsMuted] = useState(true);
-  const videoRef = React.useRef<HTMLVideoElement>(null);
 
   const [packagings, setPackagings] = useState<any[]>([
     {
@@ -92,25 +90,6 @@ export default function HomePage() {
       })
       .catch((err) => console.error("Error loading packagings:", err));
   }, []);
-
-  const toggleVideoPlay = () => {
-    if (videoRef.current) {
-      if (isPlaying) {
-        videoRef.current.pause();
-        setIsPlaying(false);
-      } else {
-        videoRef.current.play();
-        setIsPlaying(true);
-      }
-    }
-  };
-
-  const toggleVideoMute = () => {
-    if (videoRef.current) {
-      videoRef.current.muted = !isMuted;
-      setIsMuted(!isMuted);
-    }
-  };
 
   const handleOpenQuote = (productName = "") => {
     setSelectedProduct(productName);
@@ -725,96 +704,14 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* Cinematic Journey Video Section */}
-        <section className="relative py-20 bg-[#142611] text-white overflow-hidden border-y border-verdalia-gold/20 section-glow-divider">
+        {/* Scroll-Driven Olive Oil Journey */}
+        <OliveJourney />
+
+        {/* Packaging Preview Formats */}
+        <section className="py-20 bg-[#142611] text-white overflow-hidden border-b border-verdalia-gold/20 section-glow-divider">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <Reveal direction="up">
-              <div className="text-center max-w-3xl mx-auto mb-12">
-                <span className="text-xs font-bold uppercase tracking-[0.25em] text-verdalia-gold">
-                  {locale === "fr" ? "Du Terroir aux Ports Mondiaux" : locale === "ar" ? "من مزارع تونس إلى موانئ العالم" : "From Grove to Global Ports"}
-                </span>
-                <h2 className="font-serif text-3xl sm:text-4xl md:text-5xl font-bold mt-2">
-                  {locale === "fr" ? "L'Odyssée de l'Huile Verdalia" : locale === "ar" ? "رحلة زيت الزيتون فيرداليا" : "The Verdalia Olive Oil Journey"}
-                </h2>
-                <p className="text-xs sm:text-sm text-gray-300 mt-3 font-light leading-relaxed">
-                  {locale === "fr"
-                    ? "Suivez le parcours complet : récolte, pressage à froid, stockage sous azote, conditionnement sécurisé et expédition maritime internationale."
-                    : locale === "ar"
-                    ? "شاهد مسار الإنتاج والتصدير: من الجني والعصر البارد إلى التخزين الآمن والتحميل البحري عبر القارات."
-                    : "Watch the seamless supply chain: harvesting, cold extraction, inert nitrogen storage, bulk packaging, and container vessel shipment."}
-                </p>
-              </div>
-            </Reveal>
-
-            {/* Video Player Container */}
-            <div className="relative rounded-2xl overflow-hidden shadow-2xl border-2 border-verdalia-gold/30 bg-black aspect-video max-w-5xl mx-auto group">
-              <video
-                ref={videoRef}
-                src="/videos/verdalia-final.mp4"
-                poster="/images/facility/storage-tanks.jpg"
-                autoPlay
-                loop
-                muted={isMuted}
-                playsInline
-                className="w-full h-full object-cover"
-              />
-
-              {/* Video Gradient Overlay */}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/30 pointer-events-none" />
-
-              {/* Top Badge */}
-              <div className="absolute top-4 left-4 sm:top-6 sm:left-6 flex items-center gap-2 bg-black/60 backdrop-blur-md px-3.5 py-1.5 rounded-full border border-white/15">
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                <span className="text-[11px] font-bold tracking-wider uppercase text-white/90">
-                  Verdalia Global Logistics
-                </span>
-              </div>
-
-              {/* Video Controls Bar */}
-              <div className="absolute bottom-4 left-4 right-4 sm:bottom-6 sm:left-6 sm:right-6 flex items-center justify-between pointer-events-auto">
-                <div className="flex items-center gap-3">
-                  <button
-                    onClick={toggleVideoPlay}
-                    className="w-10 h-10 rounded-full bg-verdalia-gold hover:bg-verdalia-gold/90 text-verdalia-dark flex items-center justify-center shadow-lg transition-transform hover:scale-105 active:scale-95"
-                    title={isPlaying ? "Pause" : "Play"}
-                  >
-                    {isPlaying ? <Pause className="w-4 h-4 fill-current" /> : <Play className="w-4 h-4 fill-current ml-0.5" />}
-                  </button>
-
-                  <button
-                    onClick={toggleVideoMute}
-                    className="w-10 h-10 rounded-full bg-black/60 hover:bg-black/80 text-white backdrop-blur-md flex items-center justify-center border border-white/20 transition-colors"
-                    title={isMuted ? "Unmute" : "Mute"}
-                  >
-                    {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
-                  </button>
-
-                  <button
-                    onClick={() => {
-                      if (videoRef.current) {
-                        if (videoRef.current.requestFullscreen) {
-                          videoRef.current.requestFullscreen();
-                        }
-                      }
-                    }}
-                    className="w-10 h-10 rounded-full bg-black/60 hover:bg-black/80 text-white backdrop-blur-md flex items-center justify-center border border-white/20 transition-colors hidden sm:flex"
-                    title="Fullscreen"
-                  >
-                    <Maximize className="w-4 h-4" />
-                  </button>
-                </div>
-
-                <div className="hidden sm:flex items-center gap-4 text-xs font-semibold text-white/80 bg-black/50 backdrop-blur-md px-4 py-2 rounded-full border border-white/10">
-                  <span>⚓ Port de Radès & Sousse</span>
-                  <span>•</span>
-                  <span>🚢 <AnimatedCounter to={45} suffix="+" /> Destinations</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Packaging Preview Cards underneath video */}
-            <div className="mt-14 max-w-5xl mx-auto">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
+            <div className="max-w-5xl mx-auto">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-8">
                 <div>
                   <h3 className="font-serif text-lg sm:text-xl font-bold text-white">
                     {locale === "fr" ? "Conditionnements Disponibles à l'Export" : locale === "ar" ? "أشكال التعبئة المتوفرة للتصدير" : "Available Export Formats"}
