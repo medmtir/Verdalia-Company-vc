@@ -1,49 +1,76 @@
 "use client";
 
-import React, { useState, useEffect, useRef, useMemo } from "react";
+import React, { useState, useEffect, useRef } from "react";
+import Image from "next/image";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useReducedMotion, motion, AnimatePresence } from "framer-motion";
-import { useI18n } from "@/lib/i18n/context";
 
-interface JourneyChapter {
+interface OilStage {
   id: string;
   number: number;
-  start: number;
-  end: number;
-  desktopSrc: string;
-  mobileSrc: string;
-  fallbackSrc: string;
-  title: {
-    en: string;
-    fr: string;
-    ar: string;
-    es: string;
-    it: string;
-  };
-  desc: {
-    en: string;
-    fr: string;
-    ar: string;
-    es: string;
-    it: string;
-  };
+  src: string;
+  name: string;
+  tagline: string;
 }
 
-export const OliveJourney: React.FC = () => {
-  const { locale, dir } = useI18n();
-  const shouldReduceMotion = useReducedMotion();
+const OIL_STAGES: OilStage[] = [
+  {
+    id: "droplet",
+    number: 1,
+    src: "/images/oil3d/stage-01.jpg",
+    name: "Pure Essence",
+    tagline: "First Cold-Pressed Gold",
+  },
+  {
+    id: "splash",
+    number: 2,
+    src: "/images/oil3d/stage-02.jpg",
+    name: "Crown Impact",
+    tagline: "Kinetic Fluidity",
+  },
+  {
+    id: "ribbon",
+    number: 3,
+    src: "/images/oil3d/stage-03.jpg",
+    name: "Liquid Silk",
+    tagline: "Unfiltered Viscosity",
+  },
+  {
+    id: "cascade",
+    number: 4,
+    src: "/images/oil3d/stage-04.jpg",
+    name: "Golden Cascade",
+    tagline: "Mediterranean Harvest",
+  },
+  {
+    id: "swirl",
+    number: 5,
+    src: "/images/oil3d/stage-05.jpg",
+    name: "Amber Vortex",
+    tagline: "Controlled Aeration",
+  },
+  {
+    id: "bottle",
+    number: 6,
+    src: "/images/oil3d/stage-06.jpg",
+    name: "Verdalia Reserve",
+    tagline: "Bottled Perfection",
+  },
+];
 
+export const OliveJourney: React.FC = () => {
+  const shouldReduceMotion = useReducedMotion();
   const containerRef = useRef<HTMLDivElement>(null);
   const pinRef = useRef<HTMLDivElement>(null);
   const scrollTriggerRef = useRef<ScrollTrigger | null>(null);
 
   const [progress, setProgress] = useState(0);
-  const [activeChapterIndex, setActiveChapterIndex] = useState(0);
+  const [activeStageIndex, setActiveStageIndex] = useState(0);
   const [isReducedMotionState, setIsReducedMotionState] = useState(false);
-  const [hoveredStep, setHoveredStep] = useState<number | null>(null);
+  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
 
-  // Check prefers-reduced-motion
+  // Handle prefers-reduced-motion
   useEffect(() => {
     const mediaQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
     setIsReducedMotionState(mediaQuery.matches || Boolean(shouldReduceMotion));
@@ -56,174 +83,21 @@ export const OliveJourney: React.FC = () => {
     return () => mediaQuery.removeEventListener("change", handleChange);
   }, [shouldReduceMotion]);
 
-  const chapters: JourneyChapter[] = useMemo(
-    () => [
-      {
-        id: "groves",
-        number: 1,
-        start: 0.0,
-        end: 0.143,
-        desktopSrc: "/images/journey/01-groves-desktop.jpg",
-        mobileSrc: "/images/journey/01-groves-mobile.jpg",
-        fallbackSrc: "/images/facility/olive-grove.jpg",
-        title: {
-          en: "Olive Groves",
-          fr: "Les Oliveraies",
-          ar: "مزارع الزيتون",
-          es: "Los Olivares",
-          it: "Gli Uliveti",
-        },
-        desc: {
-          en: "Cultivated olive groves across Tunisia, delivering certified 100% Tunisian origin.",
-          fr: "Oliveraies de Tunisie garantissant une traçabilité et une origine 100% tunisienne.",
-          ar: "مزارع زيتون عبر تونس تضمن مصدراً وأصلاً تونسياً معتمداً بنسبة 100%.",
-          es: "Olivares en Túnez que garantizan origen 100% tunecino certificado.",
-          it: "Uliveti in Tunisia che garantiscono un'origine 100% tunisina certificata.",
-        },
-      },
-      {
-        id: "harvest",
-        number: 2,
-        start: 0.143,
-        end: 0.286,
-        desktopSrc: "/images/journey/02-harvest-desktop.jpg",
-        mobileSrc: "/images/journey/02-harvest-mobile.jpg",
-        fallbackSrc: "/images/facility/olive-grove.jpg",
-        title: {
-          en: "Harvest",
-          fr: "La Récolte",
-          ar: "موسم الجني",
-          es: "La Cosecha",
-          it: "La Raccolta",
-        },
-        desc: {
-          en: "Local harvest of selected Tunisian olive varieties for balanced acidity and flavor.",
-          fr: "Récolte locale d'olives tunisiennes sélectionnées pour un profil aromatique équilibré.",
-          ar: "جني محلي لمحصول الزيتون التونسي للحصول على توازن في الحموضة والنكهة.",
-          es: "Cosecha local de variedades de aceitunas tunecinas seleccionadas para acidez equilibrada.",
-          it: "Raccolta locale di olive tunisine selezionate per un'acidità equilibrata.",
-        },
-      },
-      {
-        id: "extraction",
-        number: 3,
-        start: 0.286,
-        end: 0.429,
-        desktopSrc: "/images/journey/03-extraction-desktop.jpg",
-        mobileSrc: "/images/journey/03-extraction-mobile.jpg",
-        fallbackSrc: "/images/facility/storage-tanks.jpg",
-        title: {
-          en: "Cold Extraction",
-          fr: "L'Extraction à Froid",
-          ar: "العصر على البارد",
-          es: "Extracción en Frío",
-          it: "Estrazione a Freddo",
-        },
-        desc: {
-          en: "Mechanical cold extraction safeguarding natural chemical and sensory quality.",
-          fr: "Extraction mécanique à froid préservant la qualité physico-chimique et sensorielle.",
-          ar: "عصر ميكانيكي على البارد يحافظ على الخصائص الكيميائية والحسية الطبيعية.",
-          es: "Extracción mecánica en frío preservando la calidad química y sensorial natural.",
-          it: "Estrazione meccanica a freddo che preserva la qualità chimica e sensoriale naturale.",
-        },
-      },
-      {
-        id: "filtration",
-        number: 4,
-        start: 0.429,
-        end: 0.571,
-        desktopSrc: "/images/journey/04-filtration-desktop.jpg",
-        mobileSrc: "/images/journey/04-filtration-mobile.jpg",
-        fallbackSrc: "/images/facility/storage-tanks.jpg",
-        title: {
-          en: "Filtration & Lab Testing",
-          fr: "Filtration & Contrôle Qualité",
-          ar: "الفلترة والتحاليل المخبرية",
-          es: "Filtración y Pruebas de Laboratorio",
-          it: "Filtrazione e Analisi di Laboratorio",
-        },
-        desc: {
-          en: "Precision filtration and laboratory batch-tested lots verifying purity and IOC standards.",
-          fr: "Filtration de précision et analyses en laboratoire par lot certifiant la conformité COI.",
-          ar: "فلترة دقيقة وتحاليل مخبرية لكل دفعة لتأكيد النقاء والمطابقة لمعايير المجلس الدولي للزيتون.",
-          es: "Filtración de precisión y análisis de laboratorio por lote verificando pureza y normas COI.",
-          it: "Filtrazione di precisione e analisi di laboratorio per lotto verificando purezza e norme COI.",
-        },
-      },
-      {
-        id: "storage",
-        number: 5,
-        start: 0.571,
-        end: 0.714,
-        desktopSrc: "/images/journey/05-storage-desktop.jpg",
-        mobileSrc: "/images/journey/05-storage-mobile.jpg",
-        fallbackSrc: "/images/facility/storage-tanks.jpg",
-        title: {
-          en: "Inert Nitrogen Storage",
-          fr: "Stockage sous Azote Inerte",
-          ar: "التخزين تحت غاز النيتروجين الخامل",
-          es: "Almacenamiento con Nitrógeno Inerte",
-          it: "Stoccaggio in Azoto Inerte",
-        },
-        desc: {
-          en: "Controlled storage in stainless steel tanks under inert nitrogen shielding against oxidation.",
-          fr: "Stockage contrôlé en cuves inox sous azote inerte pour préserver l'huile contre l'oxydation.",
-          ar: "تخزين خاضع للرقابة في خزانات من الفولاذ المقاوم للصدأ تحت النيتروجين الخامل للحماية من الأكسدة.",
-          es: "Almacenamiento controlado en tanques de acero inoxidable bajo nitrógeno inerte.",
-          it: "Stoccaggio controllato in serbatoi di acciaio inox sotto azoto inerte.",
-        },
-      },
-      {
-        id: "packaging",
-        number: 6,
-        start: 0.714,
-        end: 0.857,
-        desktopSrc: "/images/journey/06-packaging-desktop.jpg",
-        mobileSrc: "/images/journey/06-packaging-mobile.jpg",
-        fallbackSrc: "/images/packaging/ibc-container.jpg",
-        title: {
-          en: "Bulk Packaging",
-          fr: "Conditionnement Vrac",
-          ar: "التعبئة في أحجام كبرى",
-          es: "Envasado a Granel",
-          it: "Confezionamento Sfuso",
-        },
-        desc: {
-          en: "Bulk formats for export in 24,000L flexitanks, 1,000L IBC totes, and 208L steel drums.",
-          fr: "Formats vrac adaptés à l'export en flexitanks 24 000L, conteneurs IBC 1 000L et fûts 208L.",
-          ar: "تعبئة بأحجام كبرى للتصدير في حاويات فليكسي تانك 24,000 لتر، وخزانات IBC 1,000 لتر، وبراميل 208 لتر.",
-          es: "Formatos a granel para exportación en flexitanks de 24.000L, IBC de 1.000L y bidones de 208L.",
-          it: "Formati sfusi per l'esportazione in flexitank da 24.000L, IBC da 1.000L e fusti da 208L.",
-        },
-      },
-      {
-        id: "delivery",
-        number: 7,
-        start: 0.857,
-        end: 1.0,
-        desktopSrc: "/images/journey/07-delivery-desktop.jpg",
-        mobileSrc: "/images/journey/07-delivery-mobile.jpg",
-        fallbackSrc: "/images/facility/port-containers.jpg",
-        title: {
-          en: "Maritime Delivery",
-          fr: "Expédition Maritime",
-          ar: "الشحن البحري",
-          es: "Envío Marítimo",
-          it: "Spedizione Marittima",
-        },
-        desc: {
-          en: "Direct shipments from the commercial ports of Radès and Sousse to 45+ international markets.",
-          fr: "Expéditions maritimes depuis les ports de Radès et Sousse vers plus de 45 marchés internationaux.",
-          ar: "شحنات بحرية مباشرة من ميناءي رادس وسوسة نحو أكثر من 45 سوقاً دولياً.",
-          es: "Envíos directos desde los puertos de Radès y Sousse a más de 45 mercados internacionales.",
-          it: "Spedizioni dirette dai porti di Radès e Sousse verso oltre 45 mercati internazionali.",
-        },
-      },
-    ],
-    []
-  );
+  // Subtle interactive 3D mouse tilt on desktop
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (isReducedMotionState || window.innerWidth < 768) return;
+    const { clientX, clientY, currentTarget } = e;
+    const { width, height, left, top } = currentTarget.getBoundingClientRect();
+    const x = ((clientX - left) / width - 0.5) * 12; // tilt angle
+    const y = ((clientY - top) / height - 0.5) * -12;
+    setMousePos({ x, y });
+  };
 
-  // Setup GSAP ScrollTrigger for pinned scrub (~700vh total scroll)
+  const handleMouseLeave = () => {
+    setMousePos({ x: 0, y: 0 });
+  };
+
+  // GSAP ScrollTrigger pinned scrub across ~500vh
   useEffect(() => {
     if (isReducedMotionState) return;
 
@@ -233,25 +107,25 @@ export const OliveJourney: React.FC = () => {
     const pin = pinRef.current;
     if (!container || !pin) return;
 
+    const count = OIL_STAGES.length;
     const st = ScrollTrigger.create({
       trigger: container,
       start: "top top",
-      end: "+=600%",
+      end: "+=500%",
       pin: pin,
       pinSpacing: true,
       anticipatePin: 1,
-      scrub: 0.4,
+      scrub: 0.35,
       onUpdate: (self) => {
         const p = self.progress;
         setProgress(p);
 
-        // Find active chapter index
-        const foundIndex = chapters.findIndex(
-          (c) => p >= c.start && (p < c.end || c.number === chapters.length)
+        // Active stage index computation
+        const stageIndex = Math.min(
+          count - 1,
+          Math.max(0, Math.floor(p * count))
         );
-        if (foundIndex !== -1) {
-          setActiveChapterIndex(foundIndex);
-        }
+        setActiveStageIndex(stageIndex);
       },
     });
 
@@ -261,19 +135,20 @@ export const OliveJourney: React.FC = () => {
       st.kill();
       scrollTriggerRef.current = null;
     };
-  }, [isReducedMotionState, chapters]);
+  }, [isReducedMotionState]);
 
-  // Click on progress step to smoothly fly directly to that chapter
-  const handleStepClick = (index: number) => {
+  // Click on indicator dot to fly directly to that 3D oil stage
+  const handleJumpToStage = (index: number) => {
     if (isReducedMotionState) {
-      setActiveChapterIndex(index);
+      setActiveStageIndex(index);
       return;
     }
 
     const st = scrollTriggerRef.current;
     if (!st) return;
 
-    const targetProgress = chapters[index].start + 0.015;
+    const count = OIL_STAGES.length;
+    const targetProgress = (index + 0.05) / count;
     const scrollTarget = st.start + targetProgress * (st.end - st.start);
 
     window.scrollTo({
@@ -282,110 +157,114 @@ export const OliveJourney: React.FC = () => {
     });
   };
 
-  const currentChapter = chapters[activeChapterIndex] || chapters[0];
+  const currentStage = OIL_STAGES[activeStageIndex] || OIL_STAGES[0];
+  const totalStages = OIL_STAGES.length;
 
-  // Image fallback handler
-  const handleImageError = (
-    e: React.SyntheticEvent<HTMLImageElement, Event>,
-    fallbackSrc: string
-  ) => {
-    const target = e.currentTarget;
-    if (target.src !== fallbackSrc && !target.src.endsWith(fallbackSrc)) {
-      target.src = fallbackSrc;
-    }
-  };
-
-  // Reduced motion alternative: clean full-bleed stacked gallery
+  // Reduced motion alternative: static gallery showcase
   if (isReducedMotionState) {
     return (
-      <section className="bg-[#0b1609] text-white">
-        {chapters.map((ch) => (
-          <div
-            key={ch.id}
-            className="relative w-full min-h-screen flex items-end p-8 sm:p-16 overflow-hidden border-b border-white/10"
-          >
-            <picture className="absolute inset-0 z-0">
-              <source media="(max-width: 767px)" srcSet={ch.mobileSrc} />
-              <source media="(min-width: 768px)" srcSet={ch.desktopSrc} />
-              <img
-                src={ch.desktopSrc}
-                alt={ch.title.en}
-                onError={(e) => handleImageError(e, ch.fallbackSrc)}
-                className="w-full h-full object-cover"
-              />
-            </picture>
-            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-black/20 z-10" />
-
-            <div className="relative z-20 max-w-3xl">
-              <span className="text-xs uppercase tracking-[0.25em] text-verdalia-gold font-semibold block mb-2">
-                0{ch.number} / 07
-              </span>
-              <h2 className="font-serif text-3xl sm:text-5xl font-bold text-white mb-3">
-                {ch.title[locale as keyof typeof ch.title] || ch.title.en}
-              </h2>
-              <p className="text-base sm:text-lg text-gray-200 font-light leading-relaxed">
-                {ch.desc[locale as keyof typeof ch.desc] || ch.desc.en}
-              </p>
-            </div>
+      <section className="bg-[#0c190a] py-16 text-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6">
+          <div className="flex items-center justify-center mb-10">
+            <Image
+              src="/images/verdalia-logo.png"
+              alt="Verdalia Company"
+              width={160}
+              height={50}
+              className="h-10 w-auto brightness-0 invert opacity-90 drop-shadow"
+            />
           </div>
-        ))}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {OIL_STAGES.map((s) => (
+              <div
+                key={s.id}
+                className="relative aspect-video rounded-2xl overflow-hidden border border-verdalia-gold/20 shadow-2xl"
+              >
+                <img
+                  src={s.src}
+                  alt={s.name}
+                  loading="lazy"
+                  className="w-full h-full object-cover"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex items-end p-4">
+                  <span className="text-xs uppercase tracking-widest text-verdalia-gold font-semibold">
+                    0{s.number} · {s.name}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
       </section>
     );
   }
 
   return (
-    <section ref={containerRef} className="relative bg-[#070e06] text-white">
-      {/* 100vh Pinned Viewport Container - Edge-to-Edge Luxury Showcase */}
+    <section
+      ref={containerRef}
+      className="relative bg-[#081207] text-white"
+    >
+      {/* 100vh Pinned Viewport Container - Edge-to-Edge Pure Visual Experience */}
       <div
         ref={pinRef}
+        onMouseMove={handleMouseMove}
+        onMouseLeave={handleMouseLeave}
         className="relative w-full h-[100dvh] overflow-hidden flex flex-col justify-between select-none"
       >
         {/* ====================================================
-            FULL-SCREEN CINEMATIC CAMERA ZOOM & DISSOLVE STACK
+            CONTINUOUS 3D LIQUID GOLD SCENE STACK
             ==================================================== */}
-        <div className="absolute inset-0 z-0 overflow-hidden bg-black">
-          {chapters.map((ch, idx) => {
+        <div
+          className="absolute inset-0 z-0 overflow-hidden bg-black transition-transform duration-300 ease-out"
+          style={{
+            transform: `perspective(1000px) rotateY(${mousePos.x}deg) rotateX(${mousePos.y}deg)`,
+            transformStyle: "preserve-3d",
+          }}
+        >
+          {OIL_STAGES.map((stage, idx) => {
             const isFirst = idx === 0;
-            const slotDuration = ch.end - ch.start;
+            const slotSize = 1 / totalStages;
+            const stageStart = idx * slotSize;
+            const stageEnd = (idx + 1) * slotSize;
 
-            // Normalized local progress in chapter range: 0.0 -> 1.0
+            // Normalized local progress in current stage (0.0 -> 1.0)
             const localProgress = Math.min(
               1,
-              Math.max(0, (progress - ch.start) / slotDuration)
+              Math.max(0, (progress - stageStart) / slotSize)
             );
 
-            // Compute Scene Opacity & Camera Zoom (Fly-through / Zoom into the scene)
+            // Compute Opacity & Deep Camera Zoom-In
             let opacity = 0;
-            let scale = 1.0 + 0.32 * localProgress; // Continuous forward camera flight
+            let scale = 1.0 + 0.28 * localProgress; // Continuous camera push into the oil
 
-            if (idx === activeChapterIndex) {
-              if (localProgress > 0.8 && idx < chapters.length - 1) {
-                // Cross-dissolving out into the next scene while zooming deeper
+            if (idx === activeStageIndex) {
+              if (localProgress > 0.8 && idx < totalStages - 1) {
+                // Cross-dissolve out into next stage while continuing forward zoom
                 opacity = 1 - (localProgress - 0.8) / 0.2;
-                scale = 1.25 + 0.15 * ((localProgress - 0.8) / 0.2);
+                scale = 1.22 + 0.12 * ((localProgress - 0.8) / 0.2);
               } else {
                 opacity = 1;
               }
-            } else if (idx === activeChapterIndex + 1) {
-              // Next scene emerging seamlessly
-              const prevChapter = chapters[idx - 1];
+            } else if (idx === activeStageIndex + 1) {
+              // Next stage seamlessly emerging
+              const prevStart = (idx - 1) * slotSize;
               const prevLocal = Math.min(
                 1,
-                Math.max(0, (progress - prevChapter.start) / (prevChapter.end - prevChapter.start))
+                Math.max(0, (progress - prevStart) / slotSize)
               );
               if (prevLocal > 0.8) {
                 opacity = (prevLocal - 0.8) / 0.2;
-                scale = 1.0 + 0.06 * opacity;
+                scale = 1.0 + 0.05 * opacity;
               }
-            } else if (isFirst && progress < ch.start) {
+            } else if (isFirst && progress < stageStart) {
               opacity = 1;
               scale = 1.0;
             }
 
-            // GPU Optimization: do not render off-screen inactive scenes
+            // Only render active and immediately adjacent transitioning stages
             const isNearActive =
-              Math.abs(idx - activeChapterIndex) <= 1 ||
-              (isFirst && activeChapterIndex === 0);
+              Math.abs(idx - activeStageIndex) <= 1 ||
+              (isFirst && activeStageIndex === 0);
 
             if (!isNearActive && opacity === 0) {
               return null;
@@ -393,15 +272,15 @@ export const OliveJourney: React.FC = () => {
 
             return (
               <div
-                key={ch.id}
+                key={stage.id}
                 className="absolute inset-0 w-full h-full overflow-hidden will-change-transform"
                 style={{
                   zIndex: idx + 1,
                   opacity,
-                  transition: "opacity 0.25s linear",
+                  transition: "opacity 0.2s linear",
                 }}
               >
-                {/* 100% Full-Bleed Edge-to-Edge Picture with Continuous Camera Zoom */}
+                {/* 100% Full-Bleed 3D Liquid Gold Frame */}
                 <div
                   className="absolute inset-0 w-full h-full will-change-transform"
                   style={{
@@ -409,163 +288,133 @@ export const OliveJourney: React.FC = () => {
                     transformOrigin: "center center",
                   }}
                 >
-                  <picture className="w-full h-full block">
-                    <source media="(max-width: 767px)" srcSet={ch.mobileSrc} />
-                    <source media="(min-width: 768px)" srcSet={ch.desktopSrc} />
-                    <img
-                      src={ch.desktopSrc}
-                      alt={ch.title.en}
-                      loading={idx < 2 ? "eager" : "lazy"}
-                      decoding={idx < 2 ? "sync" : "async"}
-                      onError={(e) => handleImageError(e, ch.fallbackSrc)}
-                      className="w-full h-full object-cover object-center"
-                    />
-                  </picture>
+                  <img
+                    src={stage.src}
+                    alt={stage.name}
+                    loading={idx < 2 ? "eager" : "lazy"}
+                    decoding={idx < 2 ? "sync" : "async"}
+                    className="w-full h-full object-cover object-center"
+                  />
                 </div>
 
-                {/* Subtle Cinematic Vignette (Preserves maximum photo brilliance while ensuring text contrast) */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/15 to-black/40 pointer-events-none" />
-                <div className="absolute inset-0 bg-black/10 mix-blend-multiply pointer-events-none" />
+                {/* Subtle Cinematic Vignette */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/50 pointer-events-none" />
+                <div className="absolute inset-0 bg-[#142611]/15 mix-blend-color-burn pointer-events-none" />
               </div>
             );
           })}
         </div>
 
         {/* ====================================================
-            DISCREET LUXURY REAL-ESTATE TOP HEADER
-            (Minimal branding like "THE SOVEL", does not block image)
+            MINIMAL FLOATING TOP BRAND EMBLEM (Verdalia Logo)
             ==================================================== */}
         <div className="relative z-30 max-w-7xl mx-auto px-6 sm:px-10 lg:px-16 pt-7 sm:pt-9 w-full flex items-center justify-between pointer-events-none">
-          <div className="flex items-center gap-3">
-            <span className="w-2 h-2 rounded-full bg-verdalia-gold animate-pulse shadow-[0_0_10px_#C9A227]" />
-            <span className="text-[11px] sm:text-xs font-semibold uppercase tracking-[0.28em] text-white/90 drop-shadow">
-              VERDALIA COMPANY · THE JOURNEY
+          {/* Logo with luminous subtle sheen */}
+          <div className="flex items-center gap-3 bg-black/40 backdrop-blur-md px-4 py-2 rounded-full border border-white/10 shadow-lg">
+            <Image
+              src="/images/verdalia-logo.png"
+              alt="Verdalia Company"
+              width={110}
+              height={32}
+              priority
+              className="h-6 sm:h-7 w-auto object-contain brightness-0 invert opacity-95"
+            />
+            <span className="hidden sm:inline-block w-px h-3.5 bg-white/20" />
+            <span className="hidden sm:inline-block text-[10px] tracking-[0.28em] uppercase text-verdalia-gold font-bold">
+              3D Fluidity
             </span>
           </div>
 
-          <div className="flex items-center gap-3 bg-black/40 backdrop-blur-md px-3.5 py-1.5 rounded-full border border-white/10 text-xs font-mono tracking-widest text-white/80 shadow-sm">
+          {/* Minimal Numeric Stage Counter */}
+          <div className="flex items-center gap-2.5 bg-black/40 backdrop-blur-md px-3.5 py-1.5 rounded-full border border-white/10 text-xs font-mono tracking-widest text-white/90 shadow-md">
             <span className="text-verdalia-gold font-bold">
-              0{currentChapter.number}
+              0{currentStage.number}
             </span>
             <span className="text-white/30">/</span>
-            <span>07</span>
+            <span>0{totalStages}</span>
           </div>
         </div>
 
         {/* ====================================================
-            MINIMAL FLOATING CAPTION (Bottom-Left on Desktop & Mobile)
-            Discreet luxury overlay leaving 92%+ of screen completely clear
+            DISCREET FLOATING BOTTOM CAPTION PILL
+            (No blocking text cards — just minimal luxury subtitle)
             ==================================================== */}
-        <div className="relative z-30 max-w-7xl mx-auto px-6 sm:px-10 lg:px-16 pb-8 sm:pb-12 w-full flex flex-col justify-end pointer-events-none">
+        <div className="relative z-30 max-w-7xl mx-auto px-6 sm:px-10 lg:px-16 pb-8 sm:pb-12 w-full flex items-end justify-between pointer-events-none">
           <AnimatePresence mode="wait">
             <motion.div
-              key={currentChapter.id}
-              initial={{ opacity: 0, y: 12 }}
+              key={currentStage.id}
+              initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -12 }}
-              transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-              className="max-w-xl"
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+              className="inline-flex items-center gap-3 px-4 py-2 rounded-full bg-black/55 backdrop-blur-md border border-white/15 shadow-xl"
             >
-              {/* Elegant floating caption pill */}
-              <div className="inline-flex items-center gap-2.5 px-3.5 py-1 rounded-full bg-black/50 backdrop-blur-md border border-white/15 mb-3 shadow-md">
-                <span className="w-1.5 h-1.5 rounded-full bg-verdalia-gold" />
-                <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-[0.22em] text-verdalia-gold">
-                  {locale === "fr"
-                    ? `Étape 0${currentChapter.number}`
-                    : locale === "ar"
-                    ? `المرحلة 0${currentChapter.number}`
-                    : `Chapter 0${currentChapter.number}`}
-                </span>
-              </div>
-
-              {/* Chapter Title */}
-              <h2 className="font-serif text-2xl sm:text-4xl lg:text-5xl font-bold text-white tracking-wide mb-2 drop-shadow-[0_4px_16px_rgba(0,0,0,0.8)]">
-                {currentChapter.title[locale as keyof typeof currentChapter.title] ||
-                  currentChapter.title.en}
-              </h2>
-
-              {/* Verified Sentence */}
-              <p className="text-xs sm:text-base text-gray-200/95 font-light leading-relaxed drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)] max-w-lg">
-                {currentChapter.desc[locale as keyof typeof currentChapter.desc] ||
-                  currentChapter.desc.en}
-              </p>
+              <span className="w-2 h-2 rounded-full bg-verdalia-gold animate-pulse shadow-[0_0_8px_#C9A227]" />
+              <span className="text-xs sm:text-sm font-serif font-bold text-white tracking-wide">
+                {currentStage.name}
+              </span>
+              <span className="text-white/30 text-xs">•</span>
+              <span className="text-[11px] sm:text-xs text-verdalia-gold font-medium tracking-wider uppercase">
+                {currentStage.tagline}
+              </span>
             </motion.div>
           </AnimatePresence>
+
+          {/* Scroll Progress Indicator */}
+          <div className="hidden sm:flex items-center gap-2 text-[10px] font-mono tracking-widest text-white/60 bg-black/40 px-3 py-1.5 rounded-full border border-white/10">
+            <span>SCROLL TO EXPLORE</span>
+            <span className="w-1.5 h-1.5 rounded-full bg-verdalia-gold animate-ping" />
+          </div>
         </div>
 
         {/* ====================================================
-            MINIMALIST PROGRESS RAIL
+            SLIM INTERACTIVE PROGRESS RAIL
             Desktop: Sleek vertical dots on right edge
             Mobile: Sleek horizontal bar at bottom edge
             ==================================================== */}
         {/* Desktop Vertical Rail */}
         <div
-          className="hidden md:flex flex-col gap-3.5 absolute right-8 top-1/2 -translate-y-1/2 z-30 pointer-events-auto"
+          className="hidden md:flex flex-col gap-3 absolute right-8 top-1/2 -translate-y-1/2 z-30 pointer-events-auto"
           role="tablist"
-          aria-label="Olive Oil Journey Chapters"
+          aria-label="3D Oil Journey Sequence"
         >
-          {chapters.map((ch, idx) => {
-            const isActive = idx === activeChapterIndex;
+          {OIL_STAGES.map((s, idx) => {
+            const isActive = idx === activeStageIndex;
             return (
-              <div
-                key={ch.id}
-                className="relative flex items-center justify-end group"
-                onMouseEnter={() => setHoveredStep(idx)}
-                onMouseLeave={() => setHoveredStep(null)}
-              >
-                {/* Tooltip on hover */}
-                <div
-                  className={`absolute right-7 whitespace-nowrap px-3 py-1 rounded-md text-[11px] font-medium tracking-wide transition-all duration-200 pointer-events-none ${
-                    hoveredStep === idx
-                      ? "opacity-100 translate-x-0 bg-black/85 text-white border border-verdalia-gold/30 shadow-xl"
-                      : "opacity-0 translate-x-2"
-                  }`}
-                >
-                  <span className="text-verdalia-gold font-mono mr-1.5">
-                    0{ch.number}
-                  </span>
-                  {ch.title[locale as keyof typeof ch.title] || ch.title.en}
-                </div>
-
-                {/* Dot Button */}
-                <button
-                  onClick={() => handleStepClick(idx)}
-                  role="tab"
-                  aria-selected={isActive}
-                  aria-label={`Jump to chapter 0${ch.number}: ${ch.title.en}`}
-                  className={`w-3 h-3 rounded-full transition-all duration-300 flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-verdalia-gold ${
-                    isActive
-                      ? "bg-verdalia-gold scale-125 shadow-[0_0_12px_#C9A227]"
-                      : "bg-white/35 hover:bg-white/80 hover:scale-110"
-                  }`}
-                >
-                  {isActive && (
-                    <span className="w-1 h-1 rounded-full bg-white" />
-                  )}
-                </button>
-              </div>
+              <button
+                key={s.id}
+                onClick={() => handleJumpToStage(idx)}
+                role="tab"
+                aria-selected={isActive}
+                aria-label={`Jump to stage 0${s.number}: ${s.name}`}
+                className={`transition-all duration-300 rounded-full flex items-center justify-center focus:outline-none ${
+                  isActive
+                    ? "w-3 h-8 bg-verdalia-gold shadow-[0_0_12px_#C9A227]"
+                    : "w-3 h-3 bg-white/35 hover:bg-white/75 hover:scale-110"
+                }`}
+              />
             );
           })}
         </div>
 
         {/* Mobile Horizontal Rail */}
         <div
-          className="flex md:hidden items-center justify-center gap-2 pb-4 z-30 pointer-events-auto"
+          className="flex md:hidden items-center justify-center gap-2 pb-3 z-30 pointer-events-auto"
           role="tablist"
-          aria-label="Olive Oil Journey Chapters Mobile"
+          aria-label="3D Oil Journey Mobile"
         >
-          {chapters.map((ch, idx) => {
-            const isActive = idx === activeChapterIndex;
+          {OIL_STAGES.map((s, idx) => {
+            const isActive = idx === activeStageIndex;
             return (
               <button
-                key={ch.id}
-                onClick={() => handleStepClick(idx)}
+                key={s.id}
+                onClick={() => handleJumpToStage(idx)}
                 role="tab"
                 aria-selected={isActive}
-                aria-label={`Jump to chapter 0${ch.number}`}
+                aria-label={`Jump to stage 0${s.number}`}
                 className={`transition-all duration-300 rounded-full focus:outline-none ${
                   isActive
-                    ? "w-7 h-1.5 bg-verdalia-gold shadow-[0_0_8px_#C9A227]"
+                    ? "w-6 h-1.5 bg-verdalia-gold shadow-[0_0_8px_#C9A227]"
                     : "w-2 h-1.5 bg-white/40"
                 }`}
               />
