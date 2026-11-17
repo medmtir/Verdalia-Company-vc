@@ -81,16 +81,18 @@ export const OliveJourney: React.FC = () => {
         title: {
           en: "Olive Groves",
           fr: "Les Oliveraies",
-          ar: "مزارع الزيتون العريقة",
+          // TODO: Human review required for AR/ES/IT translations
+          ar: "مزارع الزيتون",
           es: "Los Olivares",
           it: "Gli Uliveti",
         },
         desc: {
-          en: "Centuries-old groves across Tunisia bathed in Mediterranean sun and fertile coastal soils.",
-          fr: "Des oliveraies séculaires à travers la Tunisie, bercées par le soleil méditerranéen.",
-          ar: "أشجار زيتون عريقة في ربوع تونس تنعم بشمس البحر الأبيض المتوسط والتربة الخصبة.",
-          es: "Olivares centenarios en Túnez bajo el sol mediterráneo y tierras fértiles.",
-          it: "Uliveti secolari in Tunisia baciati dal sole mediterraneo e da terreni fertili.",
+          en: "Cultivated olive groves across Tunisia, delivering certified 100% Tunisian origin.",
+          fr: "Oliveraies de Tunisie garantissant une traçabilité et une origine 100% tunisienne.",
+          // TODO: Human review required for AR/ES/IT translations
+          ar: "مزارع زيتون عبر تونس تضمن مصدراً وأصلاً تونسياً معتمداً بنسبة 100%.",
+          es: "Olivares en Túnez que garantizan origen 100% tunecino certificado.",
+          it: "Uliveti in Tunisia che garantiscono un'origine 100% tunisina certificata.",
         },
       },
       {
@@ -100,18 +102,20 @@ export const OliveJourney: React.FC = () => {
         start: 0.14,
         end: 0.28,
         title: {
-          en: "Hand-Picked Harvest",
-          fr: "La Récolte Manuelle",
-          ar: "موسم الجني اليدوي",
-          es: "La Cosecha Manual",
-          it: "La Raccolta a Mano",
+          en: "Harvest",
+          fr: "La Récolte",
+          // TODO: Human review required for AR/ES/IT translations
+          ar: "موسم الجني",
+          es: "La Cosecha",
+          it: "La Raccolta",
         },
         desc: {
-          en: "Harvested at peak fruit maturity to preserve polyphenol integrity and vibrant green notes.",
-          fr: "Cueillies avec soin à maturité optimale pour préserver une haute teneur en polyphénols.",
-          ar: "جني يدوي دقيق في مرحلة النضج المثالية للحفاظ على أعلى مستويات البوليفينول الطبيعي.",
-          es: "Cosechadas a mano en madurez óptima para asegurar la máxima riqueza en polifenoles.",
-          it: "Raccolte a mano a maturazione ottimale per garantire un alto contenuto di polifenoli.",
+          en: "Local harvest of selected Tunisian olive varieties for balanced acidity and flavor.",
+          fr: "Récolte locale d'olives tunisiennes sélectionnées pour un profil aromatique équilibré.",
+          // TODO: Human review required for AR/ES/IT translations
+          ar: "جني محلي لمحصول الزيتون التونسي للحصول على توازن في الحموضة والنكهة.",
+          es: "Cosecha local de variedades de aceitunas tunecinas seleccionadas para acidez equilibrada.",
+          it: "Raccolta locale di olive tunisine selezionate per un'acidità equilibrata.",
         },
       },
       {
@@ -123,16 +127,18 @@ export const OliveJourney: React.FC = () => {
         title: {
           en: "Cold Extraction",
           fr: "L'Extraction à Froid",
-          ar: "العصر الآلي على البارد",
+          // TODO: Human review required for AR/ES/IT translations
+          ar: "العصر على البارد",
           es: "Extracción en Frío",
           it: "Estrazione a Freddo",
         },
         desc: {
-          en: "Continuous extraction within 24 hours strictly below 27°C to lock in purity and flavor.",
-          fr: "Extraction continue en moins de 24h sous 27°C, préservant la fraîcheur aromatique.",
-          ar: "عصر ميكانيكي مستمر في أقل من 24 ساعة تحت 27 درجة مئوية لضمان النقاء والنكهة الفائقة.",
-          es: "Extracción continua en menos de 24h por debajo de 27°C para conservar toda la pureza.",
-          it: "Estrazione continua entro 24 ore sotto i 27°C per preservare purezza e freschezza.",
+          en: "Mechanical cold extraction safeguarding the natural chemical and sensory quality.",
+          fr: "Extraction mécanique à froid préservant la qualité physico-chimique et sensorielle.",
+          // TODO: Human review required for AR/ES/IT translations
+          ar: "عصر ميكانيكي على البارد يحافظ على الخصائص الكيميائية والحسية الطبيعية.",
+          es: "Extracción mecánica en frío preservando la calidad química y sensorial natural.",
+          it: "Estrazione meccanica a freddo che preserva la qualità chimica e sensoriale naturale.",
         },
       },
       {
@@ -142,18 +148,20 @@ export const OliveJourney: React.FC = () => {
         start: 0.42,
         end: 0.56,
         title: {
-          en: "Precision Filtration",
-          fr: "Filtration & Clarification",
-          ar: "الفلترة والتنقية الدقيقة",
-          es: "Filtración de Precisión",
-          it: "Filtrazione di Precisione",
+          en: "Filtration & Lab Testing",
+          fr: "Filtration & Contrôle Qualité",
+          // TODO: Human review required for AR/ES/IT translations
+          ar: "الفلترة والتحاليل المخبرية",
+          es: "Filtración y Pruebas de Laboratorio",
+          it: "Filtrazione e Analisi di Laboratorio",
         },
         desc: {
-          en: "Rigorous clarification ensuring crystal clarity and chemical stability for sea voyages.",
-          fr: "Clarification méticuleuse assurant une limpidité cristalline et une stabilité longue durée.",
-          ar: "تنقية دقيقة تضمن صفاء الزيت وثباته الكيميائي والفيزيائي طوال مسارات الشحن البحري.",
-          es: "Clarificación rigurosa garantizando transparencia cristalina y máxima estabilidad.",
-          it: "Chiarificazione rigorosa per garantire limpidezza cristallina e stabilità a lungo termine.",
+          en: "Precision filtration and laboratory batch-tested lots verifying purity and IOC standards compliance.",
+          fr: "Filtration de précision et analyses en laboratoire par lot garantissant la conformité aux normes COI.",
+          // TODO: Human review required for AR/ES/IT translations
+          ar: "فلترة دقيقة وتحاليل مخبرية لكل دفعة لتأكيد النقاء والمطابقة لمعايير المجلس الدولي للزيتون.",
+          es: "Filtración de precisión y análisis de laboratorio por lote verificando pureza y normas COI.",
+          it: "Filtrazione di precisione e analisi di laboratorio per lotto verificando purezza e norme COI.",
         },
       },
       {
@@ -165,16 +173,18 @@ export const OliveJourney: React.FC = () => {
         title: {
           en: "Inert Nitrogen Storage",
           fr: "Stockage sous Azote Inerte",
-          ar: "التخزين المعزول بالنيتروجين",
-          es: "Almacenamiento con Nitrógeno",
+          // TODO: Human review required for AR/ES/IT translations
+          ar: "التخزين تحت غاز النيتروجين الخامل",
+          es: "Almacenamiento con Nitrógeno Inerte",
           it: "Stoccaggio in Azoto Inerte",
         },
         desc: {
-          en: "Temperature-controlled stainless steel tanks shielded under nitrogen to prevent oxidation.",
-          fr: "Citernes inox thermo-régulées saturées d'azote inerte pour stopper toute oxydation.",
-          ar: "خزانات فولاذية مقاومة للصدأ معزولة بالكامل بغاز النيتروجين الخامل لمنع الأكسدة تماماً.",
-          es: "Tanques de acero inoxidable termorregulados con nitrógeno para evitar la oxidación.",
-          it: "Cisterne in acciaio inox termoregolate e inertizzate con azoto contro ogni ossidazione.",
+          en: "Controlled storage in stainless steel tanks under inert nitrogen to shield against oxidation.",
+          fr: "Stockage contrôlé en cuves inox sous azote inerte pour préserver l'huile contre l'oxydation.",
+          // TODO: Human review required for AR/ES/IT translations
+          ar: "تخزين خاضع للرقابة في خزانات من الفولاذ المقاوم للصدأ تحت النيتروجين الخامل للحماية من الأكسدة.",
+          es: "Almacenamiento controlado en tanques de acero inoxidable bajo nitrógeno inerte para proteger contra la oxidación.",
+          it: "Stoccaggio controllato in serbatoi di acciaio inox sotto azoto inerte per schermare dall'ossidazione.",
         },
       },
       {
@@ -185,17 +195,19 @@ export const OliveJourney: React.FC = () => {
         end: 0.85,
         title: {
           en: "Bulk Packaging",
-          fr: "Conditionnement Vrac Sécurisé",
-          ar: "التعبئة الصناعية الآمنة",
+          fr: "Conditionnement Vrac",
+          // TODO: Human review required for AR/ES/IT translations
+          ar: "التعبئة في أحجام كبرى",
           es: "Envasado a Granel",
           it: "Confezionamento Sfuso",
         },
         desc: {
-          en: "Food-grade 24,000L flexitanks, 1,000L IBC totes, and 208L sealed steel drums.",
-          fr: "Flexitanks certifiés 24 000L, conteneurs IBC 1 000L et fûts scellés 208L pour l'export.",
-          ar: "حاويات فليكسي تانك غذائية 24,000 لتر، وخزانات IBC سعة 1,000 لتر وبراميل فولاذية 208 لتر.",
-          es: "Flexitanks de 24.000L, contenedores IBC de 1.000L y bidones de acero de 208L.",
-          it: "Flexitank certificati da 24.000L, cisterne IBC da 1.000L e fusti sigillati da 208L.",
+          en: "Bulk formats tailored for export in 24,000L flexitanks, 1,000L IBC totes, and 208L drums.",
+          fr: "Formats vrac adaptés à l'export en flexitanks de 24 000L, conteneurs IBC de 1 000L et fûts de 208L.",
+          // TODO: Human review required for AR/ES/IT translations
+          ar: "تعبئة بأحجام كبرى للتصدير في حاويات فليكسي تانك 24,000 لتر، وخزانات IBC 1,000 لتر، وبراميل 208 لتر.",
+          es: "Formatos a granel para exportación en flexitanks de 24.000L, IBC de 1.000L y bidones de 208L.",
+          it: "Formati sfusi per l'esportazione in flexitank da 24.000L, IBC da 1.000L e fusti da 208L.",
         },
       },
       {
@@ -205,18 +217,20 @@ export const OliveJourney: React.FC = () => {
         start: 0.85,
         end: 1.0,
         title: {
-          en: "Global Maritime Delivery",
-          fr: "Expédition Maritime Mondiale",
-          ar: "الشحن البحري الدولي",
-          es: "Envío Marítimo Global",
-          it: "Spedizione Marittima Globale",
+          en: "Maritime Delivery",
+          fr: "Expédition Maritime",
+          // TODO: Human review required for AR/ES/IT translations
+          ar: "الشحن البحري",
+          es: "Envío Marítimo",
+          it: "Spedizione Marittima",
         },
         desc: {
-          en: "Fast vessel loading from Radès and Sousse ports serving 45+ international markets.",
-          fr: "Départ direct des ports de Radès et Sousse vers plus de 45 destinations mondiales.",
-          ar: "انطلاق بحري سريع ومباشر من ميناءي رادس وسوسة نحو أكثر من 45 وجهة دولية حول العالم.",
-          es: "Embarque rápido desde los puertos de Radès y Sousse hacia más de 45 países.",
-          it: "Spedizione rapida dai porti di Radès e Sousse verso oltre 45 mercati internazionali.",
+          en: "Direct shipments from the commercial ports of Radès and Sousse to 45+ international markets.",
+          fr: "Expéditions maritimes depuis les ports de Radès et Sousse vers plus de 45 marchés internationaux.",
+          // TODO: Human review required for AR/ES/IT translations
+          ar: "شحنات بحرية مباشرة من ميناءي رادس وسوسة نحو أكثر من 45 سوقاً دولياً.",
+          es: "Envíos directos desde los puertos de Radès y Sousse a más de 45 mercados internacionales.",
+          it: "Spedizioni dirette dai porti di Radès e Sousse verso oltre 45 mercati internazionali.",
         },
       },
     ],
