@@ -50,6 +50,13 @@ export const OliveJourney: React.FC = () => {
   const pinRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const scrollTriggerRef = useRef<ScrollTrigger | null>(null);
+  const targetTimeRef = useRef<number>(0);
+  const rafIdRef = useRef<number | null>(null);
+
+  // Video scrub optimization note:
+  // To generate an ultra-smooth, zero-seek-latency all-keyframe version (GOP=1), run:
+  // ffmpeg -i verdalia-final.mp4 -an -c:v libx264 -g 1 -crf 23 -pix_fmt yuv420p -movflags +faststart verdalia-scrub.mp4
+  const videoSrc = "/videos/verdalia-final.mp4";
 
   const [progress, setProgress] = useState(0);
   const [activeChapterIndex, setActiveChapterIndex] = useState(0);
@@ -253,6 +260,26 @@ export const OliveJourney: React.FC = () => {
     const isMobile = window.innerWidth < 768;
     const scrollDistance = isMobile ? "+=350%" : "+=550%";
 
+    // Smooth scrub loop using requestAnimationFrame lerp
+    const lerp = (start: number, end: number, factor: number) =>
+      start + (end - start) * factor;
+
+    const updateVideoFrame = () => {
+      if (video && video.duration && !isNaN(video.duration)) {
+        const delta = targetTimeRef.current - video.currentTime;
+        // Avoid seeking when the delta is tiny (< 0.03s) to prevent jitter and excessive decode operations
+        if (Math.abs(delta) > 0.03) {
+          video.currentTime = lerp(
+            video.currentTime,
+            targetTimeRef.current,
+            isMobile ? 0.24 : 0.16
+          );
+        }
+      }
+      rafIdRef.current = requestAnimationFrame(updateVideoFrame);
+    };
+    rafIdRef.current = requestAnimationFrame(updateVideoFrame);
+
     const st = ScrollTrigger.create({
       trigger: container,
       start: "top top",
@@ -265,11 +292,12 @@ export const OliveJourney: React.FC = () => {
         const p = self.progress;
         setProgress(p);
 
-        // Update video current time smoothly
+        // Update target scrub time
         if (video && video.duration && !isNaN(video.duration)) {
-          const targetTime = p * video.duration;
-          // Guard against out of bounds
-          video.currentTime = Math.min(Math.max(targetTime, 0), video.duration);
+          targetTimeRef.current = Math.min(
+            Math.max(p * video.duration, 0),
+            video.duration
+          );
         }
 
         // Determine active chapter based on progress range
@@ -285,6 +313,10 @@ export const OliveJourney: React.FC = () => {
     scrollTriggerRef.current = st;
 
     return () => {
+      if (rafIdRef.current) {
+        cancelAnimationFrame(rafIdRef.current);
+        rafIdRef.current = null;
+      }
       st.kill();
       scrollTriggerRef.current = null;
     };
@@ -343,11 +375,11 @@ export const OliveJourney: React.FC = () => {
 
           <div className="relative rounded-2xl overflow-hidden shadow-2xl border-2 border-verdalia-gold/30 bg-black aspect-video max-w-5xl mx-auto mb-12">
             <video
-              src="/videos/verdalia-final.mp4"
+              src={videoSrc}
               poster="/images/facility/storage-tanks.jpg"
               controls
               playsInline
-              preload="metadata"
+              preload="auto"
               className="w-full h-full object-cover"
             />
           </div>
@@ -393,7 +425,7 @@ export const OliveJourney: React.FC = () => {
         <div className="absolute inset-0 z-0">
           <video
             ref={videoRef}
-            src="/videos/verdalia-final.mp4"
+            src={videoSrc}
             poster="/images/facility/storage-tanks.jpg"
             muted={isMuted}
             playsInline
