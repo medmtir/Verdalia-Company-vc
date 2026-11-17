@@ -1,12 +1,20 @@
 "use client";
 
 import { useEffect } from "react";
+import { usePathname } from "next/navigation";
 import Lenis from "lenis";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 export function SmoothScroll() {
+  const pathname = usePathname();
+
   useEffect(() => {
+    // Disable on admin routes to prevent conflicts with dashboard scrolling
+    if (pathname?.startsWith("/admin")) {
+      return;
+    }
+
     // Respect user's motion preferences
     const prefersReducedMotion = window.matchMedia(
       "(prefers-reduced-motion: reduce)"
@@ -41,7 +49,7 @@ export function SmoothScroll() {
       gsap.ticker.remove(updateTicker);
       lenis.destroy();
     };
-  }, []);
+  }, [pathname]);
 
   return null;
 }
