@@ -1,511 +1,466 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
-import Image from "next/image";
-import { useReducedMotion, motion } from "framer-motion";
+import React, { useState, useEffect, useRef, useMemo, useCallback } from "react";
+import { useReducedMotion, motion, AnimatePresence } from "framer-motion";
 import { useI18n } from "@/lib/i18n/context";
 import {
-  TreePine,
-  Wheat,
-  Droplets,
-  ShieldCheck,
-  Container,
-  Ship,
-  ArrowRight,
-  CheckCircle2,
+  Play,
+  Pause,
+  RotateCcw,
+  Volume2,
+  VolumeX,
+  ChevronDown,
+  Sparkles,
 } from "lucide-react";
 
 interface JourneyStage {
   id: string;
   number: number;
-  desktopSrc: string;
-  mobileSrc: string;
-  icon: any;
+  time: number;
   title: {
     en: string;
     fr: string;
     ar: string;
   };
-  subtitle: {
+  tag: {
     en: string;
     fr: string;
     ar: string;
-  };
-  desc: {
-    en: string;
-    fr: string;
-    ar: string;
-  };
-  highlights: {
-    en: string[];
-    fr: string[];
-    ar: string[];
   };
 }
 
-const STAGES: JourneyStage[] = [
-  {
-    id: "groves",
-    number: 1,
-    desktopSrc: "/images/journey/stage-1.webp",
-    mobileSrc: "/images/journey/stage-1-mobile.webp",
-    icon: TreePine,
-    title: {
-      en: "Tunisian Groves",
-      fr: "Oliveraies de Tunisie",
-      ar: "المزارع التونسية",
-    },
-    subtitle: {
-      en: "Mediterranean terroir & ancient soil",
-      fr: "Terroir méditerranéen & sols préservés",
-      ar: "تربة متوسطية خصبة ومزارع عريقة",
-    },
-    desc: {
-      en: "Centuries of olive-growing tradition across central and northern Tunisia, yielding certified 100% single-origin Tunisian olive oil.",
-      fr: "Des siècles de tradition oléicole à travers le centre et le nord de la Tunisie, garantissant une origine 100% tunisienne certifiée et traçable.",
-      ar: "تقاليد فلاحية عريقة في ربوع تونس لإنتاج زيت زيتون تونسي معتمد ومضمون المصدر بنسبة 100%.",
-    },
-    highlights: {
-      en: ["100% Tunisian Origin", "Chemlali & Chétoui cultivars", "Sustainable agriculture"],
-      fr: ["Origine 100% Tunisie", "Variétés Chemlali & Chétoui", "Agriculture raisonnée"],
-      ar: ["مصدر تونسي 100%", "أصناف شملالي وشتوي", "فلاحة مستدامة"],
-    },
-  },
-  {
-    id: "harvest",
-    number: 2,
-    desktopSrc: "/images/journey/stage-2.webp",
-    mobileSrc: "/images/journey/stage-2-mobile.webp",
-    icon: Wheat,
-    title: {
-      en: "Harvest & Mill Entry",
-      fr: "Récolte & Entrée Moulin",
-      ar: "الجني ودخول المعصرة",
-    },
-    subtitle: {
-      en: "Fresh lot selection & sorting",
-      fr: "Tri rigoureux des lots frais",
-      ar: "فرز دقيق للمحصول الطازج",
-    },
-    desc: {
-      en: "Olives are harvested at optimal maturity and delivered promptly to our certified milling units to preserve aromatic freshness and low acidity.",
-      fr: "Récolte soignée à maturité optimale et acheminement rapide vers nos unités de trituration pour préserver la fraîcheur et une acidité minimale.",
-      ar: "جني المحصول في مرحلة النضج المثالية ونقله السريع إلى معاصرنا للحفاظ على النكهة الطازجة وأدنى نسبة حموضة.",
-    },
-    highlights: {
-      en: ["Optimal harvest timing", "Leaf-stripping & washing", "Strict lot traceability"],
-      fr: ["Récolte à maturité idéale", "Effeuillage & lavage doux", "Traçabilité par lot"],
-      ar: ["جني في أوج النضج", "إزالة الشوائب والغسيل", "تتبع دقيق لكل دفعة"],
-    },
-  },
-  {
-    id: "extraction",
-    number: 3,
-    desktopSrc: "/images/journey/stage-3.webp",
-    mobileSrc: "/images/journey/stage-3-mobile.webp",
-    icon: Droplets,
-    title: {
-      en: "Cold Extraction",
-      fr: "Extraction à Froid",
-      ar: "العصر الميكانيكي على البارد",
-    },
-    subtitle: {
-      en: "Mechanical first cold-press (<27°C)",
-      fr: "Première pression mécanique (<27°C)",
-      ar: "عصر أولي ميكانيكي (<27°C)",
-    },
-    desc: {
-      en: "Continuous physical extraction using modern Alfa Laval stainless steel decanters without chemical solvents, locking in natural polyphenols and flavor.",
-      fr: "Extraction continue par centrifugation mécanique sur lignes inox modernes sans aucun solvant, préservant la pureté physico-chimique et sensorielle.",
-      ar: "عصر ميكانيكي مستمر بواسطة أحدث الآلات الفولاذية دون إضافات كيميائية، لحماية النقاء الطبيعي والنكهة.",
-    },
-    highlights: {
-      en: ["Strictly below 27°C", "Solvent-free physical process", "IOC standard certified"],
-      fr: ["Température contrôlée (<27°C)", "Procédé 100% mécanique", "Conforme aux normes COI"],
-      ar: ["حرارة تحت 27 درجة مئوية", "عصر فيزيائي خالص", "مطابق لمواصفات المجلس الدولي"],
-    },
-  },
-  {
-    id: "storage",
-    number: 4,
-    desktopSrc: "/images/journey/stage-4.webp",
-    mobileSrc: "/images/journey/stage-4-mobile.webp",
-    icon: ShieldCheck,
-    title: {
-      en: "Inert Nitrogen Storage",
-      fr: "Stockage sous Azote Inerte",
-      ar: "التخزين تحت النيتروجين الخامل",
-    },
-    subtitle: {
-      en: "Stainless steel tanks & zero oxidation",
-      fr: "Cuves inox & protection anti-oxydation",
-      ar: "خزانات فولاذية عازلة للأكسدة",
-    },
-    desc: {
-      en: "Oil is transferred into temperature-controlled food-grade stainless steel tanks capped with an inert nitrogen blanket to eliminate air contact.",
-      fr: "L'huile est stockée en cuves inox thermorégulées sous couverture d'azote inerte pour stopper toute oxydation et garantir une stabilité parfaite jusqu'à l'embarquement.",
-      ar: "حفظ الزيت في خزانات فولاذية صحية معزولة تماماً بغطاء من غاز النيتروجين الخامل لمنع الأكسدة وضمان استقرار الجودة.",
-    },
-    highlights: {
-      en: ["AISI 316 stainless tanks", "Inert N₂ gas barrier", "Constant temperature control"],
-      fr: ["Cuves inox alimentaire 316", "Inertage systématique à l'azote", "Thermorégulation constante"],
-      ar: ["فولاذ صحي 316", "عزل تام بالنيتروجين N₂", "تحكم حراري دائم"],
-    },
-  },
-  {
-    id: "packaging",
-    number: 5,
-    desktopSrc: "/images/journey/stage-5.webp",
-    mobileSrc: "/images/journey/stage-5-mobile.webp",
-    icon: Container,
-    title: {
-      en: "Bulk Packaging",
-      fr: "Conditionnement Vrac",
-      ar: "التعبئة الصناعية والشحن السائب",
-    },
-    subtitle: {
-      en: "Flexitank 24,000L · IBC · 208L Drums",
-      fr: "Flexitanks 24 000L · IBC 1 000L · Fûts 208L",
-      ar: "فليكسي تانك 24,000 لتر · خزانات IBC · براميل",
-    },
-    desc: {
-      en: "Fitted into multi-layer food-grade flexitanks in 20ft maritime containers, IBC totes, or sealed steel drums under sterile nitrogen-flushed procedures.",
-      fr: "Empotage sécurisé en flexitanks multicouches 24 000L dans conteneurs maritimes 20 pieds, conteneurs IBC 1 000L et fûts métalliques scellés.",
-      ar: "تعبئة آمنة في حاويات فليكسي تانك 24,000 لتر وخزانات IBC 1,000 لتر وبراميل فولاذية مغلقة ومجهزة للتصدير.",
-    },
-    highlights: {
-      en: ["24,000L flexitank FCL", "Food-grade certified liners", "Camlock safety valves"],
-      fr: ["Flexitank 24 000L FCL", "Poches alimentaires certifiées", "Vannes sécurisées Camlock"],
-      ar: ["فليكسي تانك 24,000 لتر", "مواد غذائية معتمدة", "صمامات أمان محكمة"],
-    },
-  },
-  {
-    id: "shipping",
-    number: 6,
-    desktopSrc: "/images/journey/stage-6.webp",
-    mobileSrc: "/images/journey/stage-6-mobile.webp",
-    icon: Ship,
-    title: {
-      en: "Shipping from Radès & Sousse",
-      fr: "Expédition Radès & Sousse",
-      ar: "الشحن من ميناءي رادس وسوسة",
-    },
-    subtitle: {
-      en: "Direct sea routes to 45+ countries",
-      fr: "Lignes maritimes directes vers 45+ pays",
-      ar: "رحلات بحرية مباشرة إلى أكثر من 45 دولة",
-    },
-    desc: {
-      en: "Fast vessel loading at Tunisia's primary commercial ports with full export documentation, laboratory certificates of analysis, and global shipping lines.",
-      fr: "Embarquement rapide aux ports de Radès et Sousse avec dossiers d'export complets, certificats d'analyse officiels et liaisons maritimes directes vers les 5 continents.",
-      ar: "شحن سريع من الموانئ التجارية التونسية مصحوباً بكافة الوثائق الجمركية وشهادات التحاليل المخبرية الرسمية إلى الموانئ العالمية.",
-    },
-    highlights: {
-      en: ["Radès & Sousse ports", "FOB / CIF commercial terms", "Fast Mediterranean transit"],
-      fr: ["Ports de Radès & Sousse", "Modalités FOB & CIF sur mesure", "Transits maritimes rapides"],
-      ar: ["ميناءا رادس وسوسة", "شروط تسليم FOB وCIF", "رحلات بحرية سريعة"],
-    },
-  },
-];
-
 export const OliveJourney: React.FC = () => {
-  const { locale } = useI18n();
+  const { locale, dir } = useI18n();
   const shouldReduceMotion = useReducedMotion();
+
+  const containerRef = useRef<HTMLDivElement>(null);
+  const stickyRef = useRef<HTMLDivElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  const [progress, setProgress] = useState(0);
   const [activeStageIndex, setActiveStageIndex] = useState(0);
-  const stageRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [isMuted, setIsMuted] = useState(true);
+  const [isVideoReady, setIsVideoReady] = useState(false);
+  const [videoDuration, setVideoDuration] = useState(10);
 
-  // IntersectionObserver to highlight stages without scroll-hijacking or per-frame re-renders
-  useEffect(() => {
-    if (typeof window === "undefined") return;
+  const isScrubbingRef = useRef(false);
+  const targetTimeRef = useRef(0);
+  const rafIdRef = useRef<number | null>(null);
 
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            const index = Number(entry.target.getAttribute("data-stage-index"));
-            if (!isNaN(index)) {
-              setActiveStageIndex(index);
-            }
-          }
-        });
+  const stages: JourneyStage[] = useMemo(
+    () => [
+      {
+        id: "groves",
+        number: 1,
+        time: 0.0,
+        title: {
+          en: "Tunisian Groves & Terroir",
+          fr: "Oliveraies & Terroir Tunisien",
+          ar: "المزارع التونسية العريقة",
+        },
+        tag: {
+          en: "100% Single-Origin",
+          fr: "Origine 100% Tunisie",
+          ar: "أصل تونسي 100%",
+        },
       },
       {
-        rootMargin: "-25% 0px -45% 0px",
-        threshold: 0.2,
-      }
-    );
+        id: "harvest",
+        number: 2,
+        time: 1.7,
+        title: {
+          en: "Careful Harvest & Mill Entry",
+          fr: "Récolte & Entrée au Moulin",
+          ar: "الجني والفرز الفوري",
+        },
+        tag: {
+          en: "< 0.3% Low Acidity Target",
+          fr: "Acidité Minimale < 0.3%",
+          ar: "حموضة دنيا < 0.3%",
+        },
+      },
+      {
+        id: "extraction",
+        number: 3,
+        time: 3.5,
+        title: {
+          en: "Continuous Cold Extraction",
+          fr: "Extraction à Froid Continue",
+          ar: "عصر ميكانيكي بارد",
+        },
+        tag: {
+          en: "Cold Pressed < 27°C",
+          fr: "Pression à Froid < 27°C",
+          ar: "عصر بارد أقل من 27°س",
+        },
+      },
+      {
+        id: "storage",
+        number: 4,
+        time: 5.5,
+        title: {
+          en: "Nitrogen-Inerted Storage",
+          fr: "Stockage sous Azote Inerte",
+          ar: "تخزين خامل تحت النيتروجين",
+        },
+        tag: {
+          en: "Zero Oxidation Tanks",
+          fr: "Cuves Inox Anti-Oxydation",
+          ar: "خزانات فولاذية معزولة",
+        },
+      },
+      {
+        id: "packaging",
+        number: 5,
+        time: 7.3,
+        title: {
+          en: "Bulk Flexitank & IBC Packaging",
+          fr: "Empotage Vrac Flexitank & IBC",
+          ar: "التعبئة السائبة وفليكسي تانك",
+        },
+        tag: {
+          en: "24,000L FCL / 1,000L IBC",
+          fr: "Flexitank 24 000L / IBC",
+          ar: "حاويات 24,000 لتر و IBC",
+        },
+      },
+      {
+        id: "shipping",
+        number: 6,
+        time: 9.0,
+        title: {
+          en: "Maritime Export to 45+ Markets",
+          fr: "Export Maritime vers 45+ Pays",
+          ar: "شحن بحري دولي نحو 45+ دولة",
+        },
+        tag: {
+          en: "Radès & Sousse Ports",
+          fr: "Ports de Radès & Sousse",
+          ar: "ميناءا رادس وسوسة",
+        },
+      },
+    ],
+    []
+  );
 
-    stageRefs.current.forEach((el) => {
-      if (el) observer.observe(el);
-    });
-
-    return () => observer.disconnect();
-  }, []);
-
-  const currentStage = STAGES[activeStageIndex] || STAGES[0];
-
-  const handleStageClick = (index: number) => {
-    const el = stageRefs.current[index];
-    if (el) {
-      el.scrollIntoView({ behavior: "smooth", block: "center" });
+  // Initialize video metadata
+  const handleLoadedMetadata = () => {
+    if (videoRef.current) {
+      setVideoDuration(videoRef.current.duration || 10);
+      setIsVideoReady(true);
     }
   };
 
-  return (
-    <section className="relative bg-[#152512] text-white py-20 lg:py-28 overflow-hidden border-t border-verdalia-gold/20">
-      {/* Background ambient lighting */}
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_50%_-20%,rgba(201,162,39,0.15),transparent)] pointer-events-none" />
+  // Smooth scroll sync via requestAnimationFrame
+  const updateScroll = useCallback(() => {
+    if (!containerRef.current || !videoRef.current) return;
 
-      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Section Header */}
-        <div className="text-center max-w-3xl mx-auto mb-16 lg:mb-20">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-black/40 border border-verdalia-gold/30 text-verdalia-gold text-xs font-bold uppercase tracking-[0.25em] mb-4">
-            <span className="w-2 h-2 rounded-full bg-verdalia-gold animate-pulse" />
-            <span>
-              {locale === "fr"
-                ? "Traçabilité & Savoir-Faire"
-                : locale === "ar"
-                ? "الجودة والمسار المتكامل"
-                : "From Grove to Global Ports"}
+    const rect = containerRef.current.getBoundingClientRect();
+    const windowHeight = window.innerHeight;
+    const totalScroll = rect.height - windowHeight;
+
+    if (totalScroll <= 0) return;
+
+    // Calculate how far down the section is scrolled (0 to 1)
+    const scrolled = Math.max(0, Math.min(1, -rect.top / totalScroll));
+    setProgress(scrolled);
+
+    // Only scrub if the user is in scroll mode (not during manual autoplay)
+    if (!isPlaying) {
+      const dur = videoRef.current.duration || videoDuration || 10;
+      targetTimeRef.current = scrolled * (dur - 0.05);
+
+      // Smooth seek towards targetTime
+      const current = videoRef.current.currentTime;
+      const diff = targetTimeRef.current - current;
+
+      if (Math.abs(diff) > 0.02) {
+        if ("fastSeek" in videoRef.current && typeof (videoRef.current as any).fastSeek === "function") {
+          try {
+            (videoRef.current as any).fastSeek(targetTimeRef.current);
+          } catch {
+            videoRef.current.currentTime = targetTimeRef.current;
+          }
+        } else {
+          videoRef.current.currentTime = targetTimeRef.current;
+        }
+      }
+    }
+
+    // Determine active stage
+    const currentVideoTime = videoRef.current.currentTime;
+    let currentIdx = 0;
+    for (let i = stages.length - 1; i >= 0; i--) {
+      if (currentVideoTime >= stages[i].time - 0.2) {
+        currentIdx = i;
+        break;
+      }
+    }
+    setActiveStageIndex(currentIdx);
+  }, [isPlaying, stages, videoDuration]);
+
+  // Main scroll & animation loop
+  useEffect(() => {
+    let ticking = false;
+
+    const onScrollOrResize = () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          updateScroll();
+          ticking = false;
+        });
+        ticking = true;
+      }
+    };
+
+    window.addEventListener("scroll", onScrollOrResize, { passive: true });
+    window.addEventListener("resize", onScrollOrResize);
+
+    // Initial calculation
+    updateScroll();
+
+    return () => {
+      window.removeEventListener("scroll", onScrollOrResize);
+      window.removeEventListener("resize", onScrollOrResize);
+      if (rafIdRef.current) cancelAnimationFrame(rafIdRef.current);
+    };
+  }, [updateScroll]);
+
+  // Update time when video plays automatically
+  const handleTimeUpdate = () => {
+    if (!videoRef.current) return;
+    const current = videoRef.current.currentTime;
+    const dur = videoRef.current.duration || videoDuration || 10;
+
+    if (isPlaying) {
+      const p = current / dur;
+      setProgress(p);
+
+      let currentIdx = 0;
+      for (let i = stages.length - 1; i >= 0; i--) {
+        if (current >= stages[i].time - 0.2) {
+          currentIdx = i;
+          break;
+        }
+      }
+      setActiveStageIndex(currentIdx);
+    }
+  };
+
+  const togglePlay = () => {
+    if (!videoRef.current) return;
+    if (isPlaying) {
+      videoRef.current.pause();
+      setIsPlaying(false);
+    } else {
+      videoRef.current.play();
+      setIsPlaying(true);
+    }
+  };
+
+  const toggleMute = () => {
+    if (!videoRef.current) return;
+    videoRef.current.muted = !isMuted;
+    setIsMuted(!isMuted);
+  };
+
+  const jumpToStage = (index: number) => {
+    if (!containerRef.current || !videoRef.current) return;
+    const stage = stages[index];
+    if (!stage) return;
+
+    const dur = videoRef.current.duration || videoDuration || 10;
+    const targetProgress = Math.min(1, Math.max(0, stage.time / dur));
+
+    const rect = containerRef.current.getBoundingClientRect();
+    const scrollTop = window.scrollY + rect.top;
+    const totalScroll = rect.height - window.innerHeight;
+    const targetScrollY = scrollTop + targetProgress * totalScroll;
+
+    window.scrollTo({
+      top: targetScrollY,
+      behavior: "smooth",
+    });
+
+    videoRef.current.currentTime = stage.time;
+    setActiveStageIndex(index);
+    setProgress(targetProgress);
+  };
+
+  const currentStage = stages[activeStageIndex] || stages[0];
+  const currentTitle =
+    currentStage.title[locale as "en" | "fr" | "ar"] || currentStage.title.en;
+  const currentTag =
+    currentStage.tag[locale as "en" | "fr" | "ar"] || currentStage.tag.en;
+
+  return (
+    <div
+      ref={containerRef}
+      className="relative w-full bg-black text-white"
+      style={{
+        // 320vh height gives enough scroll runway for a smooth 10s video scrubbing experience
+        height: "320vh",
+      }}
+    >
+      {/* Sticky Fullscreen 100vw x 100dvh Viewport */}
+      <div
+        ref={stickyRef}
+        className="sticky top-0 w-full h-screen h-[100dvh] overflow-hidden flex items-center justify-center bg-black"
+      >
+        {/* Fullscreen Video with dynamic subtle 3D camera zoom on scroll */}
+        <div
+          className="absolute inset-0 w-full h-full overflow-hidden transition-transform duration-300 ease-out"
+          style={{
+            transform: shouldReduceMotion
+              ? "none"
+              : `scale(${1 + progress * 0.08})`,
+          }}
+        >
+          <video
+            ref={videoRef}
+            src="/videos/verdalia-final.mp4"
+            poster="/images/facility/storage-tanks.jpg"
+            muted={isMuted}
+            playsInline
+            preload="auto"
+            loop
+            onLoadedMetadata={handleLoadedMetadata}
+            onTimeUpdate={handleTimeUpdate}
+            className="w-full h-full object-cover select-none pointer-events-none"
+          />
+
+          {/* Subtle cinematic vignette scrim for contrast and depth */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-black/60 pointer-events-none" />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_45%,rgba(0,0,0,0.75)_100%)] pointer-events-none" />
+        </div>
+
+        {/* =======================================================
+            MINIMAL LUXURY HUD OVERLAYS (NO HEAVY TEXT CLUTTER)
+            ======================================================= */}
+
+        {/* TOP BAR: Brand Badge & Active Chapter */}
+        <header className="absolute top-0 inset-x-0 z-20 px-6 sm:px-12 py-6 sm:py-8 flex items-center justify-between pointer-events-auto">
+          <div className="flex items-center gap-3">
+            <span className="w-2.5 h-2.5 rounded-full bg-verdalia-gold animate-pulse shadow-[0_0_12px_#C9A227]" />
+            <span className="text-xs sm:text-sm font-bold uppercase tracking-[0.3em] text-white/95 drop-shadow">
+              VERDALIA · THE JOURNEY
             </span>
           </div>
 
-          <h2 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-bold text-white tracking-tight">
-            {locale === "fr" ? (
-              <>
-                L&apos;Odyssée de l&apos;Huile d&apos;Olive{" "}
-                <span className="italic font-normal text-verdalia-gold">Verdalia</span>
-              </>
-            ) : locale === "ar" ? (
-              <>
-                رحلة زيت الزيتون من الأرض إلى التصدير{" "}
-                <span className="text-verdalia-gold">فيرداليا</span>
-              </>
-            ) : (
-              <>
-                The Verdalia Olive Oil{" "}
-                <span className="italic font-normal text-verdalia-gold">Journey</span>
-              </>
-            )}
-          </h2>
+          {/* Active Stage Badge */}
+          <div className="flex items-center gap-2.5 bg-black/60 backdrop-blur-md px-4 py-1.5 rounded-full border border-white/20 text-xs sm:text-sm font-mono tracking-wider shadow-lg">
+            <span className="text-verdalia-gold font-bold">
+              0{currentStage.number}
+            </span>
+            <span className="text-white/30">/</span>
+            <span className="text-gray-300">0{stages.length}</span>
+          </div>
+        </header>
 
-          <p className="mt-4 text-sm sm:text-base text-gray-300 font-light leading-relaxed">
-            {locale === "fr"
-              ? "De nos oliveraies tunisiennes jusqu'aux terminaux portuaires mondiaux : une chaîne d'approvisionnement B2B sans intermédiaire, maîtrisée de bout en bout."
-              : locale === "ar"
-              ? "من مزارع الزيتون التونسية إلى موانئ التصدير العالمية: سلسلة توريد صناعية متكاملة وموثوقة لكبرى الشركات العالمية."
-              : "From Tunisian olive groves to international shipping terminals: a secure, vertically integrated B2B supply chain engineered for global bulk importers."}
-          </p>
+        {/* CENTER / BOTTOM FLOATING TITLE: Sleek 1-Line Indicator */}
+        <div className="absolute bottom-20 sm:bottom-24 inset-x-6 sm:inset-x-12 z-20 pointer-events-none flex flex-col items-center sm:items-start max-w-4xl">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={currentStage.id}
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -15 }}
+              transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+              className="flex flex-col items-center sm:items-start"
+            >
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-black/70 backdrop-blur-md border border-verdalia-gold/40 text-verdalia-gold text-[10px] sm:text-xs font-mono uppercase tracking-widest mb-2 shadow-md">
+                <Sparkles className="w-3 h-3 text-verdalia-gold" />
+                <span>
+                  {locale === "fr"
+                    ? `Étape 0${currentStage.number}`
+                    : locale === "ar"
+                    ? `المرحلة 0${currentStage.number}`
+                    : `Stage 0${currentStage.number}`}{" "}
+                  · {currentTag}
+                </span>
+              </div>
+
+              <h2 className="font-serif text-2xl sm:text-4xl md:text-5xl font-bold text-white drop-shadow-[0_4px_16px_rgba(0,0,0,0.9)] tracking-tight text-center sm:text-left">
+                {currentTitle}
+              </h2>
+            </motion.div>
+          </AnimatePresence>
         </div>
 
-        {/* ====================================================
-            DESKTOP LAYOUT (2 COLUMNS: STICKY IMAGE + NATURAL SCROLLING STAGES)
-            No scroll hijacking! Moderate height, silky smooth natural scroll.
-            ==================================================== */}
-        <div className="hidden lg:grid lg:grid-cols-12 gap-12 xl:gap-16 items-start">
-          {/* Left Column: Sticky Large Image Showcase */}
-          <div className="lg:col-span-6 sticky top-28 h-[72vh] min-h-[520px] max-h-[680px] rounded-2xl overflow-hidden border border-white/15 shadow-[0_20px_50px_rgba(0,0,0,0.6)] bg-black/60">
-            {STAGES.map((s, idx) => {
+        {/* BOTTOM QUICK STAGE NAVIGATION PILLS */}
+        <div className="absolute bottom-6 inset-x-6 sm:inset-x-12 z-20 flex items-center justify-between gap-4 pointer-events-auto">
+          {/* Stage selector dots / pills */}
+          <div className="flex items-center gap-2 sm:gap-3 overflow-x-auto py-1 scrollbar-none">
+            {stages.map((st, idx) => {
               const isActive = idx === activeStageIndex;
               return (
-                <div
-                  key={s.id}
-                  className={`absolute inset-0 transition-opacity duration-700 ease-out will-change-transform ${
-                    isActive ? "opacity-100 z-10" : "opacity-0 z-0 pointer-events-none"
+                <button
+                  key={st.id}
+                  onClick={() => jumpToStage(idx)}
+                  className={`group relative flex items-center gap-2 px-3 sm:px-4 py-1.5 rounded-full text-xs font-medium transition-all duration-300 focus:outline-none ${
+                    isActive
+                      ? "bg-verdalia-gold text-verdalia-dark shadow-[0_0_15px_rgba(201,162,39,0.5)] font-bold scale-105"
+                      : "bg-black/50 backdrop-blur-md text-white/70 hover:text-white hover:bg-black/75 border border-white/10"
                   }`}
+                  aria-label={`Jump to stage ${st.number}`}
                 >
-                  <Image
-                    src={s.desktopSrc}
-                    alt={s.title.en}
-                    fill
-                    sizes="(min-width: 1024px) 50vw, 100vw"
-                    priority={idx === 0}
-                    loading={idx === 0 ? "eager" : "lazy"}
-                    className={`object-cover object-center transition-transform duration-1000 ease-out ${
-                      isActive && !shouldReduceMotion ? "scale-105" : "scale-100"
-                    }`}
-                  />
-                  {/* Cinematic gradient overlays */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-black/30 pointer-events-none" />
-                  <div className="absolute inset-0 bg-[#152512]/15 mix-blend-multiply pointer-events-none" />
-
-                  {/* Top-right floating stage pill */}
-                  <div className="absolute top-6 right-6 z-20 flex items-center gap-2 bg-black/55 backdrop-blur-md px-3.5 py-1.5 rounded-full border border-white/15 text-xs font-mono">
-                    <span className="text-verdalia-gold font-bold">0{s.number}</span>
-                    <span className="text-white/40">/</span>
-                    <span className="text-gray-300">06</span>
-                  </div>
-
-                  {/* Bottom caption bar */}
-                  <div className="absolute bottom-6 inset-x-6 z-20 bg-black/60 backdrop-blur-md p-4 rounded-xl border border-white/15 flex items-center justify-between">
-                    <div>
-                      <p className="text-[11px] uppercase tracking-widest text-verdalia-gold font-bold">
-                        {s.subtitle[locale as keyof typeof s.subtitle] || s.subtitle.en}
-                      </p>
-                      <h4 className="font-serif text-lg font-bold text-white mt-0.5">
-                        {s.title[locale as keyof typeof s.title] || s.title.en}
-                      </h4>
-                    </div>
-                    <span className="w-8 h-8 rounded-full bg-verdalia-gold/20 border border-verdalia-gold/40 flex items-center justify-center text-verdalia-gold font-mono text-xs font-bold">
-                      0{s.number}
-                    </span>
-                  </div>
-                </div>
+                  <span className="font-mono text-[11px]">0{st.number}</span>
+                  <span className="hidden md:inline whitespace-nowrap text-[11px] uppercase tracking-wider">
+                    {st.title[locale as "en" | "fr" | "ar"]?.split(" ")[0] ||
+                      st.title.en.split(" ")[0]}
+                  </span>
+                </button>
               );
             })}
           </div>
 
-          {/* Right Column: 6 Stages with Slim Gold Progress Rail */}
-          <div className="lg:col-span-6 relative pl-8 xl:pl-10">
-            {/* Slim Gold Vertical Progress Line */}
-            <div className="absolute left-2.5 top-6 bottom-6 w-0.5 bg-white/15">
-              <div
-                className="w-full bg-verdalia-gold transition-all duration-500 ease-out"
-                style={{
-                  height: `${((activeStageIndex + 1) / STAGES.length) * 100}%`,
-                }}
-              />
-            </div>
+          {/* Video Control Buttons (Play/Pause & Mute) */}
+          <div className="flex items-center gap-2">
+            <button
+              onClick={togglePlay}
+              className="w-9 h-9 rounded-full bg-black/60 backdrop-blur-md border border-white/20 text-white hover:text-verdalia-gold hover:border-verdalia-gold flex items-center justify-center transition-all shadow-md focus:outline-none"
+              aria-label={isPlaying ? "Pause video" : "Play video"}
+              title={isPlaying ? "Pause" : "Play"}
+            >
+              {isPlaying ? (
+                <Pause className="w-4 h-4" />
+              ) : (
+                <Play className="w-4 h-4 translate-x-0.5" />
+              )}
+            </button>
 
-            {/* Stages Stack */}
-            <div className="space-y-24 py-6">
-              {STAGES.map((stage, idx) => {
-                const isActive = idx === activeStageIndex;
-                const Icon = stage.icon;
-
-                return (
-                  <div
-                    key={stage.id}
-                    ref={(el) => {
-                      stageRefs.current[idx] = el;
-                    }}
-                    data-stage-index={idx}
-                    onClick={() => handleStageClick(idx)}
-                    className={`relative cursor-pointer transition-all duration-500 group rounded-2xl p-6 sm:p-8 border ${
-                      isActive
-                        ? "bg-black/45 border-verdalia-gold/45 shadow-[0_10px_30px_rgba(0,0,0,0.4)]"
-                        : "bg-white/[0.02] border-white/10 hover:border-white/20 opacity-70 hover:opacity-95"
-                    }`}
-                  >
-                    {/* Stage number bullet on rail */}
-                    <div
-                      className={`absolute -left-[37px] top-8 w-5 h-5 rounded-full border-2 transition-all duration-300 flex items-center justify-center ${
-                        isActive
-                          ? "bg-verdalia-gold border-verdalia-gold scale-125 shadow-[0_0_12px_#C9A227]"
-                          : "bg-[#152512] border-white/30 group-hover:border-white/60"
-                      }`}
-                    >
-                      {isActive && <div className="w-1.5 h-1.5 rounded-full bg-black" />}
-                    </div>
-
-                    {/* Header */}
-                    <div className="flex items-center gap-3.5 mb-3">
-                      <span className="w-10 h-10 rounded-xl bg-verdalia-gold/15 border border-verdalia-gold/30 flex items-center justify-center text-verdalia-gold">
-                        <Icon className="w-5 h-5" />
-                      </span>
-                      <div>
-                        <span className="text-[11px] font-mono font-bold tracking-widest text-verdalia-gold uppercase block">
-                          Stage 0{stage.number}
-                        </span>
-                        <h3 className="font-serif text-xl sm:text-2xl font-bold text-white group-hover:text-verdalia-gold transition-colors">
-                          {stage.title[locale as keyof typeof stage.title] || stage.title.en}
-                        </h3>
-                      </div>
-                    </div>
-
-                    <p className="text-xs uppercase tracking-widest text-verdalia-gold/90 font-medium mb-3">
-                      {stage.subtitle[locale as keyof typeof stage.subtitle] || stage.subtitle.en}
-                    </p>
-
-                    <p className="text-sm text-gray-300 font-light leading-relaxed mb-5">
-                      {stage.desc[locale as keyof typeof stage.desc] || stage.desc.en}
-                    </p>
-
-                    {/* Key Technical Highlights */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-2 border-t border-white/10">
-                      {(stage.highlights[locale as keyof typeof stage.highlights] || stage.highlights.en).map(
-                        (h, hIdx) => (
-                          <div key={hIdx} className="flex items-center gap-2 text-xs text-gray-200">
-                            <CheckCircle2 className="w-3.5 h-3.5 text-verdalia-gold flex-shrink-0" />
-                            <span>{h}</span>
-                          </div>
-                        )
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
+            <button
+              onClick={toggleMute}
+              className="w-9 h-9 rounded-full bg-black/60 backdrop-blur-md border border-white/20 text-white hover:text-verdalia-gold hover:border-verdalia-gold flex items-center justify-center transition-all shadow-md focus:outline-none"
+              aria-label={isMuted ? "Unmute video" : "Mute video"}
+              title={isMuted ? "Unmute" : "Mute"}
+            >
+              {isMuted ? (
+                <VolumeX className="w-4 h-4" />
+              ) : (
+                <Volume2 className="w-4 h-4" />
+              )}
+            </button>
           </div>
         </div>
 
-        {/* ====================================================
-            MOBILE LAYOUT (NO PINNING, NO SCROLL HIJACKING)
-            100% natural scroll with clean vertical cards & optimized WebP images
-            ==================================================== */}
-        <div className="lg:hidden space-y-8">
-          {STAGES.map((stage) => {
-            const Icon = stage.icon;
-
-            return (
-              <div
-                key={stage.id}
-                className="bg-black/50 border border-white/15 rounded-2xl overflow-hidden shadow-xl"
-              >
-                {/* Mobile-Sized Image */}
-                <div className="relative aspect-[16/10] w-full bg-black/80">
-                  <Image
-                    src={stage.mobileSrc}
-                    alt={stage.title.en}
-                    fill
-                    sizes="(max-width: 768px) 100vw, 50vw"
-                    loading="lazy"
-                    className="object-cover"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-transparent to-black/30 pointer-events-none" />
-
-                  {/* Stage badge */}
-                  <div className="absolute top-4 left-4 z-10 flex items-center gap-2 bg-black/60 backdrop-blur-md px-3 py-1 rounded-full border border-white/15 text-xs font-mono">
-                    <span className="w-2 h-2 rounded-full bg-verdalia-gold" />
-                    <span className="text-verdalia-gold font-bold">0{stage.number} / 06</span>
-                  </div>
-                </div>
-
-                {/* Content */}
-                <div className="p-6">
-                  <div className="flex items-center gap-3 mb-2">
-                    <span className="w-8 h-8 rounded-lg bg-verdalia-gold/20 text-verdalia-gold flex items-center justify-center">
-                      <Icon className="w-4 h-4" />
-                    </span>
-                    <h3 className="font-serif text-xl font-bold text-white">
-                      {stage.title[locale as keyof typeof stage.title] || stage.title.en}
-                    </h3>
-                  </div>
-
-                  <p className="text-[11px] uppercase tracking-wider text-verdalia-gold font-medium mb-3">
-                    {stage.subtitle[locale as keyof typeof stage.subtitle] || stage.subtitle.en}
-                  </p>
-
-                  <p className="text-xs sm:text-sm text-gray-300 font-light leading-relaxed mb-4">
-                    {stage.desc[locale as keyof typeof stage.desc] || stage.desc.en}
-                  </p>
-
-                  <div className="space-y-1.5 pt-3 border-t border-white/10">
-                    {(stage.highlights[locale as keyof typeof stage.highlights] || stage.highlights.en).map(
-                      (h, hIdx) => (
-                        <div key={hIdx} className="flex items-center gap-2 text-xs text-gray-200">
-                          <CheckCircle2 className="w-3.5 h-3.5 text-verdalia-gold flex-shrink-0" />
-                          <span>{h}</span>
-                        </div>
-                      )
-                    )}
-                  </div>
-                </div>
-              </div>
-            );
-          })}
+        {/* BOTTOM FULL-WIDTH HAIRLINE PROGRESS BAR */}
+        <div className="absolute bottom-0 inset-x-0 h-1 bg-white/15 z-30">
+          <div
+            className="h-full bg-gradient-to-r from-verdalia-gold to-[#f0d068] transition-all duration-75 shadow-[0_0_10px_#C9A227]"
+            style={{ width: `${Math.min(100, Math.max(0, progress * 100))}%` }}
+          />
         </div>
+
+        {/* SCROLL HELPER HINT (Only visible at the very beginning) */}
+        {progress < 0.08 && (
+          <div className="absolute bottom-28 right-6 sm:right-12 z-20 pointer-events-none hidden sm:flex items-center gap-2 bg-black/50 backdrop-blur-md px-3.5 py-1.5 rounded-full border border-white/15 text-white/80 text-[11px] uppercase tracking-widest font-mono animate-bounce">
+            <span>Scroll to explore</span>
+            <ChevronDown className="w-3.5 h-3.5 text-verdalia-gold" />
+          </div>
+        )}
       </div>
-    </section>
+    </div>
   );
 };
