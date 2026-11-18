@@ -23,15 +23,20 @@ export const AnimatedCounter: React.FC<AnimatedCounterProps> = ({
   const ref = useRef<HTMLSpanElement>(null);
   const isInView = useInView(ref, { once: true, margin: "-40px" });
   const shouldReduceMotion = useReducedMotion();
-  const [current, setCurrent] = useState(from);
+  const [current, setCurrent] = useState(to); // Default to final value for SSR / SEO
+  const hasAnimated = useRef(false);
 
   useEffect(() => {
-    if (!isInView) return;
+    if (!isInView || hasAnimated.current) return;
+    hasAnimated.current = true;
 
     if (shouldReduceMotion) {
       setCurrent(to);
       return;
     }
+
+    // Start from `from` on the client only when entering viewport
+    setCurrent(from);
 
     let startTimestamp: number | null = null;
     let animationFrameId: number;
